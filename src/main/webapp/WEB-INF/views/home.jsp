@@ -14,196 +14,179 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background-color: #f8f9fa;
+            background-color: #0f0f0f;
         }
-        .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .welcome-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            height: 600px;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+            url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920') center/cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: white;
-            padding: 60px 0;
-            border-radius: 15px;
-            margin: 30px 0;
-            box-shadow: 0 8px 20px rgba(102,126,234,0.3);
+            text-align: center;
+            margin-bottom: 50px;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.5);
         }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            background: linear-gradient(135deg, #fff 0%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-content p {
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            color: #e0e0e0;
+        }
+
+        .btn-explore {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #1a1a1a;
+            border: none;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-explore:hover {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+            color: #000;
+        }
+
+        /* Car Cards */
         .car-card {
             transition: transform 0.3s, box-shadow 0.3s;
             height: 100%;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #1a1a1a;
+            border: 1px solid #333;
         }
+
         .car-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.3);
+            border-color: #ffd700;
         }
+
         .car-card img {
             height: 220px;
             object-fit: cover;
+            transition: transform 0.3s;
         }
-        .action-btn {
-            padding: 25px;
-            border-radius: 15px;
-            text-decoration: none;
-            color: white;
-            transition: all 0.3s;
-            display: block;
+
+        .car-card:hover img {
+            transform: scale(1.1);
+        }
+
+        .car-card .card-body {
+            padding: 20px;
+            background: #1a1a1a;
+        }
+
+        .car-card .card-title {
+            color: #f8f9fa;
+        }
+
+        .car-card .text-primary {
+            color: #ffd700 !important;
+        }
+
+        .car-card .small {
+            color: #ffd700 !important;
+        }
+
+        .car-card .btn-primary {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border: none;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .car-card .btn-primary:hover {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .section-title {
             text-align: center;
+            margin-bottom: 40px;
         }
-        .action-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            color: white;
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f8f9fa;
+            margin-bottom: 10px;
         }
-        .action-cars {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        .section-title p {
+            color: #888;
+            font-size: 1.1rem;
         }
-        .action-profile {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+
+        .section-title .fa-star {
+            color: #ffd700;
         }
-        .action-contact {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+
+        .btn-outline-primary {
+            border-color: #ffd700;
+            color: #ffd700;
+            font-weight: 600;
         }
+
+        .btn-outline-primary:hover {
+            background: #ffd700;
+            border-color: #ffd700;
+            color: #1a1a1a;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
         footer {
             margin-top: auto;
-            background-color: #2f3542;
-            color: white;
         }
     </style>
 </head>
 <body>
-<!-- Navbar -->
+<!-- Header -->
 <jsp:include page="header.jsp" />
 
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-content">
+        <h1>Khám phá thế giới xe hơi đẳng cấp</h1>
+        <p>Tận hưởng trải nghiệm lái xe tuyệt vời với những mẫu xe mới nhất.</p>
+        <a href="${pageContext.request.contextPath}/cars" class="btn btn-primary btn-explore">
+            Khám Phá Ngay
+        </a>
+    </div>
+</div>
+
 <!-- Main Content -->
-<div class="container my-5">
-    <!-- Welcome Section -->
-    <div class="welcome-section">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="display-4 fw-bold mb-3">
-                        <i class="fas fa-hand-sparkles"></i>
-                        Chào mừng <c:out value="${sessionScope.user.name}" default="bạn"/>!
-                    </h1>
-                    <p class="lead">Khám phá bộ sưu tập xe hơi đẳng cấp của chúng tôi ngay hôm nay</p>
-                </div>
-                <div class="col-md-4 text-center">
-                    <i class="fas fa-car fa-5x opacity-50"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- User Info and Quick Actions -->
-    <div class="row g-4 mb-5">
-        <!-- User Information Card -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-user-circle"></i> Thông Tin Cá Nhân
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3 pb-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted">
-                                <i class="fas fa-user"></i> Tên đầy đủ:
-                            </span>
-                            <span class="fw-bold">
-                                <c:out value="${sessionScope.user.name}" default="N/A"/>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="mb-3 pb-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted">
-                                <i class="fas fa-envelope"></i> Email:
-                            </span>
-                            <span class="fw-bold">
-                                <c:out value="${sessionScope.user.email}" default="N/A"/>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="mb-3 pb-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted">
-                                <i class="fas fa-phone"></i> Số điện thoại:
-                            </span>
-                            <span class="fw-bold">
-                                <c:out value="${sessionScope.user.phone}" default="Chưa cập nhật"/>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted">
-                                <i class="fas fa-map-marker-alt"></i> Địa chỉ:
-                            </span>
-                            <span class="fw-bold">
-                                <c:out value="${sessionScope.user.address}" default="Chưa cập nhật"/>
-                            </span>
-                        </div>
-                    </div>
-                    <a href="${pageContext.request.contextPath}/profile" class="btn btn-primary w-100 mt-3">
-                        <i class="fas fa-edit"></i> Chỉnh Sửa Thông Tin
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="col-lg-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-bolt"></i> Hành Động Nhanh
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <a href="${pageContext.request.contextPath}/cars" class="action-btn action-cars">
-                                <i class="fas fa-search fa-2x mb-2"></i>
-                                <h6 class="fw-bold mb-0">Tìm Xe</h6>
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a href="${pageContext.request.contextPath}/favorites" class="action-btn action-profile">
-                                <i class="fas fa-heart fa-2x mb-2"></i>
-                                <h6 class="fw-bold mb-0">Yêu Thích</h6>
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a href="${pageContext.request.contextPath}/contact" class="action-btn action-contact">
-                                <i class="fas fa-envelope fa-2x mb-2"></i>
-                                <h6 class="fw-bold mb-0">Liên Hệ</h6>
-                            </a>
-                        </div>
-                        <div class="col-md-6">
-                            <a href="${pageContext.request.contextPath}/cart" class="btn btn-outline-primary w-100 py-3">
-                                <i class="fas fa-shopping-cart fa-lg"></i><br>
-                                <small>Giỏ Hàng</small>
-                            </a>
-                        </div>
-                        <div class="col-md-6">
-                            <a href="${pageContext.request.contextPath}/orders" class="btn btn-outline-success w-100 py-3">
-                                <i class="fas fa-receipt fa-lg"></i><br>
-                                <small>Đơn Hàng</small>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Featured Cars -->
+<div class="container">
+    <!-- Featured Cars Section -->
     <div class="mb-5">
-        <div class="text-center mb-4">
-            <h2 class="display-6 fw-bold">
+        <div class="section-title">
+            <h2>
                 <i class="fas fa-star text-warning"></i> Xe Nổi Bật
             </h2>
-            <p class="text-muted">Khám phá những mẫu xe được yêu thích nhất</p>
+            <p>Khám phá những mẫu xe được yêu thích nhất</p>
         </div>
 
         <div class="row g-4">
@@ -211,7 +194,7 @@
                 <c:when test="${not empty cars}">
                     <c:forEach var="car" items="${cars}" begin="0" end="7">
                         <div class="col-lg-3 col-md-4 col-sm-6">
-                            <div class="card car-card border-0 shadow-sm">
+                            <div class="card car-card shadow-sm">
                                 <c:set var="mainImage" value=""/>
                                 <c:forEach var="img" items="${car.images}">
                                     <c:if test="${img.mainImage}">
@@ -251,15 +234,15 @@
                 <c:otherwise>
                     <div class="col-12 text-center py-5">
                         <i class="fas fa-car-crash fa-4x text-muted mb-3"></i>
-                        <h3>Hiện chưa có xe nào để hiển thị</h3>
+                        <h3 style="color: #888;">Hiện chưa có xe nào để hiển thị</h3>
                     </div>
                 </c:otherwise>
             </c:choose>
         </div>
 
-        <div class="text-center mt-4">
-            <a href="${pageContext.request.contextPath}/cars" class="btn btn-outline-primary btn-lg">
-                <i class="fas fa-th"></i> Xem Tất Cả Xe
+        <div class="text-center mt-5">
+            <a href="${pageContext.request.contextPath}/cars" class="btn btn-outline-primary btn-lg px-5">
+                <i class="fas fa-th me-2"></i> Xem Tất Cả Xe
             </a>
         </div>
     </div>
