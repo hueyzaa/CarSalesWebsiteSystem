@@ -34,7 +34,7 @@ public class CartRemoveServlet extends HttpServlet {
 
         try {
             int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
-            boolean success = cartDAO.removeFromCart(cartItemId);
+            boolean success = cartDAO.removeCartItem(cartItemId);  // ✅ Fixed method name
 
             if (success) {
                 session.setAttribute("success", "Đã xóa sản phẩm khỏi giỏ hàng!");
@@ -44,8 +44,18 @@ public class CartRemoveServlet extends HttpServlet {
         } catch (NumberFormatException e) {
             logger.error("Invalid cart item ID", e);
             session.setAttribute("error", "ID không hợp lệ!");
+        } catch (Exception e) {
+            logger.error("Error removing cart item", e);
+            session.setAttribute("error", "Đã xảy ra lỗi khi xóa sản phẩm!");
         }
 
         response.sendRedirect(request.getContextPath() + "/cart");
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Support POST method as well
+        doGet(request, response);
     }
 }

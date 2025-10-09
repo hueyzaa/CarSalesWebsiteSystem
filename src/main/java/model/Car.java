@@ -1,98 +1,199 @@
 package model;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.List;
 
-public class Car {
-    private int carId;
-    private int brandId;
-    private String brandName;
-    private String model;
-    private BigDecimal price;
-    private String status;
-    private String description;
-    private String imageUrl;
+public class Car implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-    // For JSP compatibility
+    // Basic fields
     private int id;
-    private String name;
-    private List<CarImage> images = new ArrayList<>();
+    private int brandId;
+    private String name;          // model in database
+    private double price;
+    private int year;
+    private String color;
+    private String description;
+    private int stock;
+    private String status;
 
-    public Car() {}
+    // Additional fields (from joins)
+    private String brandName;
+    private String imageUrl;      // Main/primary image
+    private List<CarImage> images; // All images
 
-    public Car(int carId, int brandId, String model, BigDecimal price, String status, String description) {
-        this.carId = carId;
-        this.id = carId;
-        this.brandId = brandId;
-        this.model = model;
-        this.name = model;
+    // Timestamps
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+
+    // Constructors
+    public Car() {
+    }
+
+    public Car(int id, String name, double price) {
+        this.id = id;
+        this.name = name;
         this.price = price;
-        this.status = status;
-        this.description = description;
     }
 
     // Getters and Setters
-    public int getCarId() { return carId; }
-    public void setCarId(int carId) {
-        this.carId = carId;
-        this.id = carId;
+    public int getId() {
+        return id;
     }
 
-    public int getId() { return carId; }
     public void setId(int id) {
         this.id = id;
-        this.carId = id;
     }
 
-    public int getBrandId() { return brandId; }
-    public void setBrandId(int brandId) { this.brandId = brandId; }
+    // Alias method for backward compatibility
+    public int getCarId() {
+        return id;
+    }
 
-    public String getBrandName() { return brandName; }
-    public void setBrandName(String brandName) { this.brandName = brandName; }
+    public void setCarId(int id) {
+        this.id = id;
+    }
 
-    public String getModel() { return model; }
+    public int getBrandId() {
+        return brandId;
+    }
+
+    public void setBrandId(int brandId) {
+        this.brandId = brandId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    // Alias for model field
+    public String getModel() {
+        return name;
+    }
+
     public void setModel(String model) {
-        this.model = model;
         this.name = model;
     }
 
-    public String getName() { return model; }
-    public void setName(String name) {
-        this.name = name;
-        this.model = name;
+    public double getPrice() {
+        return price;
     }
 
-    public BigDecimal getPrice() { return price; }
-    public void setPrice(BigDecimal price) { this.price = price; }
+    public void setPrice(double price) {
+        this.price = price;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public int getYear() {
+        return year;
+    }
 
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public void setYear(int year) {
+        this.year = year;
+    }
 
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public String getColor() {
+        return color;
+    }
 
-    public List<CarImage> getImages() { return images; }
-    public void setImages(List<CarImage> images) { this.images = images; }
+    public void setColor(String color) {
+        this.color = color;
+    }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public void setStock(int stock) {
+        this.stock = stock;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getBrandName() {
+        return brandName;
+    }
+
+    public void setBrandName(String brandName) {
+        this.brandName = brandName;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public List<CarImage> getImages() {
+        return images;
+    }
+
+    public void setImages(List<CarImage> images) {
+        this.images = images;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    // Convenience methods
     public boolean isAvailable() {
-        return "AVAILABLE".equals(status);
+        return stock > 0 && "AVAILABLE".equals(status);
     }
 
     public String getFormattedPrice() {
-        return String.format("%,d VNĐ", price.longValue());
+        return String.format("%,.0f ₫", price);
+    }
+
+    public boolean hasStock() {
+        return stock > 0;
+    }
+
+    public boolean hasEnoughStock(int quantity) {
+        return stock >= quantity;
     }
 
     @Override
     public String toString() {
         return "Car{" +
-                "carId=" + carId +
+                "id=" + id +
+                ", name='" + name + '\'' +
                 ", brandName='" + brandName + '\'' +
-                ", model='" + model + '\'' +
                 ", price=" + price +
+                ", year=" + year +
+                ", stock=" + stock +
                 ", status='" + status + '\'' +
                 '}';
     }

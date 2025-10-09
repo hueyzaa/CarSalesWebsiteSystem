@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,9 +54,27 @@ public class AddCarServlet extends HttpServlet {
             // Validate and extract parameters
             int brandId = ValidationUtil.validatePositiveInt(request.getParameter("brandId"), "Hãng xe");
             String model = ValidationUtil.validateString(request.getParameter("model"), "Tên mẫu xe", 100);
-            BigDecimal price = ValidationUtil.validatePrice(request.getParameter("price"));
+            double price = ValidationUtil.validatePrice(request.getParameter("price")).doubleValue();  // ✅ Convert to double
             String status = ValidationUtil.validateStatus(request.getParameter("status"));
             String description = request.getParameter("description");
+
+            // Validate optional fields
+            Integer year = null;
+            String yearParam = request.getParameter("year");
+            if (yearParam != null && !yearParam.trim().isEmpty()) {
+                year = ValidationUtil.validatePositiveInt(yearParam, "Năm sản xuất");
+            }
+
+            String color = request.getParameter("color");
+            if (color != null && !color.trim().isEmpty()) {
+                color = ValidationUtil.validateString(color, "Màu sắc", 50);
+            }
+
+            Integer stock = null;
+            String stockParam = request.getParameter("stock");
+            if (stockParam != null && !stockParam.trim().isEmpty()) {
+                stock = ValidationUtil.validatePositiveInt(stockParam, "Số lượng tồn kho");
+            }
 
             // Validate description
             if (description != null && !description.trim().isEmpty()) {
@@ -85,10 +102,23 @@ public class AddCarServlet extends HttpServlet {
             // Create car object
             Car car = new Car();
             car.setBrandId(brandId);
-            car.setModel(model);
+            car.setName(model);  // Use setName() instead of setModel()
             car.setPrice(price);
             car.setStatus(status);
             car.setDescription(description);
+
+            // Set optional fields
+            if (year != null) {
+                car.setYear(year);
+            }
+            if (color != null) {
+                car.setColor(color);
+            }
+            if (stock != null) {
+                car.setStock(stock);
+            } else {
+                car.setStock(0);  // Default stock
+            }
 
             // Add car to database
             int carId = carDAO.addCar(car);
@@ -111,13 +141,16 @@ public class AddCarServlet extends HttpServlet {
                     }
                 }
 
-                carDAO.addCarImages(carId, validImageUrls, primaryIndex);
+                boolean imageSuccess = carDAO.addCarImages(carId, validImageUrls, primaryIndex);
+                if (!imageSuccess) {
+                    logger.warn("Failed to add images for car ID: {}", carId);
+                }
             }
 
             // Success
             logger.info("Car added successfully with ID: {}", carId);
             request.getSession().setAttribute("success", "Thêm xe thành công!");
-            response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            response.sendRedirect(request.getContextPath() + "/admin/cars");
 
         } catch (ValidationException e) {
             logger.warn("Validation error in add car: {}", e.getMessage());
@@ -146,6 +179,9 @@ public class AddCarServlet extends HttpServlet {
         request.setAttribute("status", request.getParameter("status"));
         request.setAttribute("description", request.getParameter("description"));
         request.setAttribute("brandId", request.getParameter("brandId"));
+        request.setAttribute("year", request.getParameter("year"));
+        request.setAttribute("color", request.getParameter("color"));
+        request.setAttribute("stock", request.getParameter("stock"));
 
         // Reload brand list
         try {

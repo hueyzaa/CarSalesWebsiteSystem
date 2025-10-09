@@ -1,5 +1,6 @@
 package dao;
 
+import model.Car;
 import model.CartItem;
 import util.DBContext;
 import exception.DatabaseException;
@@ -68,19 +69,21 @@ public class CartDAO {
     }
 
     /**
-     * Get cart items by user ID
+     * Get cart items by user ID (WITH Car object populated)
      */
     public List<CartItem> getCartItemsByUserId(int userId) {
         List<CartItem> cartItems = new ArrayList<>();
-        String sql = "SELECT ci.cart_item_id, ci.car_id, ci.quantity, c.model, c.price, " +
-                "ci_img.image_url, b.brand_name " +
+        String sql = "SELECT ci.cart_item_id, ci.car_id, ci.quantity, " +
+                "c.car_id, c.model, c.price, c.description, c.status, " +
+                "b.brand_name, " +
+                "img.image_url " +
                 "FROM CartItem ci " +
                 "JOIN Cart ct ON ci.cart_id = ct.cart_id " +
                 "JOIN Car c ON ci.car_id = c.car_id " +
                 "JOIN Brand b ON c.brand_id = b.brand_id " +
-                "LEFT JOIN CarImage ci_img ON c.car_id = ci_img.car_id AND ci_img.is_primary = 1 " +
+                "LEFT JOIN CarImage img ON c.car_id = img.car_id AND img.is_primary = 1 " +
                 "WHERE ct.user_id = ? " +
-                "ORDER BY ci.created_at DESC";
+                "ORDER BY ci.cart_item_id DESC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -89,14 +92,23 @@ public class CartDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
+                    // Create Car object
+                    Car car = new Car();
+                    car.setId(rs.getInt("car_id"));
+                    car.setName(rs.getString("model"));
+                    car.setPrice(rs.getDouble("price"));
+                    car.setDescription(rs.getString("description"));
+                    car.setStatus(rs.getString("status"));
+                    car.setBrandName(rs.getString("brand_name"));
+                    car.setImageUrl(rs.getString("image_url"));
+
+                    // Create CartItem with Car object
                     CartItem item = new CartItem();
-                    item.setCartItemId(rs.getInt("cart_item_id"));
+                    item.setId(rs.getInt("cart_item_id"));
                     item.setCarId(rs.getInt("car_id"));
                     item.setQuantity(rs.getInt("quantity"));
-                    item.setCarModel(rs.getString("model"));
-                    item.setCarPrice(rs.getBigDecimal("price"));
-                    item.setImageUrl(rs.getString("image_url"));
-                    item.setBrandName(rs.getString("brand_name"));
+                    item.setCar(car); // Important: Set the Car object
+
                     cartItems.add(item);
                 }
             }
@@ -111,35 +123,9 @@ public class CartDAO {
     }
 
     /**
-     * Remove item from cart
+     * Update cart item quantity (renamed from updateQuantity)
      */
-    public boolean removeFromCart(int cartItemId) {
-        String sql = "DELETE FROM CartItem WHERE cart_item_id = ?";
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, cartItemId);
-            boolean success = stmt.executeUpdate() > 0;
-
-            if (success) {
-                logger.info("Removed cart item: {}", cartItemId);
-            } else {
-                logger.warn("No cart item removed for ID: {}", cartItemId);
-            }
-
-            return success;
-
-        } catch (SQLException e) {
-            logger.error("Error removing from cart: {}", cartItemId, e);
-            throw new DatabaseException("Failed to remove item from cart", e);
-        }
-    }
-
-    /**
-     * Update cart item quantity
-     */
-    public boolean updateQuantity(int cartItemId, int quantity) {
+    public boolean updateCartItem(int cartItemId, int quantity) {
         String sql = "UPDATE CartItem SET quantity = ? WHERE cart_item_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -163,6 +149,32 @@ public class CartDAO {
     }
 
     /**
+     * Remove cart item (renamed from removeFromCart)
+     */
+    public boolean removeCartItem(int cartItemId) {
+        String sql = "DELETE FROM CartItem WHERE cart_item_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, cartItemId);
+            boolean success = stmt.executeUpdate() > 0;
+
+            if (success) {
+                logger.info("Removed cart item: {}", cartItemId);
+            } else {
+                logger.warn("No cart item removed for ID: {}", cartItemId);
+            }
+
+            return success;
+
+        } catch (SQLException e) {
+            logger.error("Error removing from cart: {}", cartItemId, e);
+            throw new DatabaseException("Failed to remove item from cart", e);
+        }
+    }
+
+    /**
      * Clear all items from user's cart
      */
     public boolean clearCart(int userId) {
@@ -173,17 +185,41 @@ public class CartDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, userId);
-            boolean success = stmt.executeUpdate() > 0;
+            stmt.executeUpdate();
 
-            if (success) {
-                logger.info("Cleared cart for userId: {}", userId);
-            }
-
+            logger.info("Cleared cart for userId: {}", userId);
             return true; // Return true even if no items (idempotent)
 
         } catch (SQLException e) {
             logger.error("Error clearing cart for userId: {}", userId, e);
             throw new DatabaseException("Failed to clear cart", e);
+        }
+    }
+
+    /**
+     * Get total number of items in cart
+     */
+    public int getCartItemCount(int userId) {
+        String sql = "SELECT COUNT(*) FROM CartItem ci " +
+                "JOIN Cart c ON ci.cart_id = c.cart_id " +
+                "WHERE c.user_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+
+            return 0;
+
+        } catch (SQLException e) {
+            logger.error("Error getting cart item count for userId: {}", userId, e);
+            return 0;
         }
     }
 

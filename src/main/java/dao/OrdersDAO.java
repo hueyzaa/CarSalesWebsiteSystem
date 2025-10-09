@@ -1,6 +1,7 @@
 package dao;
 
 import model.Order;
+import model.CartItem;
 import util.DBContext;
 import exception.DatabaseException;
 import org.slf4j.Logger;
@@ -83,7 +84,11 @@ public class OrdersDAO {
     /**
      * Create order from cart items (with transaction)
      */
-    public int createOrder(int userId, List<model.CartItem> cartItems) {
+    public int createOrder(int userId, List<CartItem> cartItems) {
+        if (cartItems == null || cartItems.isEmpty()) {
+            throw new IllegalArgumentException("Cart items cannot be null or empty");
+        }
+
         String sqlOrder = "INSERT INTO Orders (user_id, status) VALUES (?, 'PENDING')";
         String sqlOrderDetail = "INSERT INTO OrderDetail (order_id, car_id, price, quantity) " +
                 "VALUES (?, ?, ?, ?)";
@@ -109,10 +114,15 @@ public class OrdersDAO {
 
             // Add order details (batch)
             try (PreparedStatement stmt = conn.prepareStatement(sqlOrderDetail)) {
-                for (model.CartItem item : cartItems) {
+                for (CartItem item : cartItems) {
+                    // Validate cart item has car object
+                    if (item.getCar() == null) {
+                        throw new IllegalStateException("CartItem must have Car object populated");
+                    }
+
                     stmt.setInt(1, orderId);
                     stmt.setInt(2, item.getCarId());
-                    stmt.setBigDecimal(3, item.getCarPrice());
+                    stmt.setDouble(3, item.getCar().getPrice());  // ✅ Get price from Car object
                     stmt.setInt(4, item.getQuantity());
                     stmt.addBatch();
                 }
@@ -163,6 +173,27 @@ public class OrdersDAO {
     }
 
     /**
+     * Cancel order
+     */
+    public boolean cancelOrder(int orderId) {
+        return updateOrderStatus(orderId, "CANCELLED");
+    }
+
+    /**
+     * Complete order
+     */
+    public boolean completeOrder(int orderId) {
+        return updateOrderStatus(orderId, "COMPLETED");
+    }
+
+    /**
+     * Approve order
+     */
+    public boolean approveOrder(int orderId) {
+        return updateOrderStatus(orderId, "APPROVED");
+    }
+
+    /**
      * Get all orders (admin)
      */
     public List<Order> getAllOrders() {
@@ -193,6 +224,65 @@ public class OrdersDAO {
     }
 
     /**
+     * Get orders by status
+     */
+    public List<Order> getOrdersByStatus(String status) {
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT order_id, user_id, status, created_at FROM Orders " +
+                "WHERE status = ? ORDER BY created_at DESC";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, status);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Order order = new Order();
+                    order.setOrderId(rs.getInt("order_id"));
+                    order.setUserId(rs.getInt("user_id"));
+                    order.setStatus(rs.getString("status"));
+                    order.setCreatedAt(rs.getTimestamp("created_at"));
+                    orders.add(order);
+                }
+            }
+
+            logger.debug("Retrieved {} orders with status: {}", orders.size(), status);
+            return orders;
+
+        } catch (SQLException e) {
+            logger.error("Error getting orders by status: {}", status, e);
+            throw new DatabaseException("Failed to retrieve orders by status", e);
+        }
+    }
+
+    /**
+     * Calculate order total
+     */
+    public double getOrderTotal(int orderId) {
+        String sql = "SELECT SUM(price * quantity) as total FROM OrderDetail " +
+                "WHERE order_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, orderId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getDouble("total");
+                }
+            }
+
+            return 0.0;
+
+        } catch (SQLException e) {
+            logger.error("Error calculating order total for orderId: {}", orderId, e);
+            return 0.0;
+        }
+    }
+
+    /**
      * Get order statistics
      */
     public OrderStats getOrderStats() {
@@ -200,7 +290,8 @@ public class OrdersDAO {
                 "COUNT(*) as total_orders, " +
                 "SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed, " +
                 "SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) as pending, " +
-                "SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelled " +
+                "SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelled, " +
+                "SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) as approved " +
                 "FROM Orders";
 
         try (Connection conn = DBContext.getConnection();
@@ -213,6 +304,7 @@ public class OrdersDAO {
                 stats.setCompletedOrders(rs.getInt("completed"));
                 stats.setPendingOrders(rs.getInt("pending"));
                 stats.setCancelledOrders(rs.getInt("cancelled"));
+                stats.setApprovedOrders(rs.getInt("approved"));
 
                 logger.debug("Retrieved order statistics");
                 return stats;
@@ -261,6 +353,7 @@ public class OrdersDAO {
         private int completedOrders;
         private int pendingOrders;
         private int cancelledOrders;
+        private int approvedOrders;
 
         public int getTotalOrders() { return totalOrders; }
         public void setTotalOrders(int total) { this.totalOrders = total; }
@@ -273,5 +366,19 @@ public class OrdersDAO {
 
         public int getCancelledOrders() { return cancelledOrders; }
         public void setCancelledOrders(int cancelled) { this.cancelledOrders = cancelled; }
+
+        public int getApprovedOrders() { return approvedOrders; }
+        public void setApprovedOrders(int approved) { this.approvedOrders = approved; }
+
+        @Override
+        public String toString() {
+            return "OrderStats{" +
+                    "total=" + totalOrders +
+                    ", completed=" + completedOrders +
+                    ", pending=" + pendingOrders +
+                    ", approved=" + approvedOrders +
+                    ", cancelled=" + cancelledOrders +
+                    '}';
+        }
     }
 }

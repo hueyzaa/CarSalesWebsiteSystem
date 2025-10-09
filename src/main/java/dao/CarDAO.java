@@ -21,7 +21,7 @@ public class CarDAO {
     public List<Car> getAllCars() {
         List<Car> cars = new ArrayList<>();
         String sql = "SELECT c.car_id, c.brand_id, b.brand_name, c.model, c.price, " +
-                "c.status, c.description, ci.image_url " +
+                "c.status, c.description, c.year, c.color, c.stock, ci.image_url " +
                 "FROM Car c " +
                 "INNER JOIN Brand b ON c.brand_id = b.brand_id " +
                 "LEFT JOIN CarImage ci ON c.car_id = ci.car_id AND ci.is_primary = 1 " +
@@ -33,8 +33,7 @@ public class CarDAO {
 
             while (rs.next()) {
                 Car car = extractCarFromResultSet(rs);
-                // Load all images for the car
-                car.setImages(getCarImageObjects(car.getCarId()));
+                car.setImages(getCarImageObjects(car.getId()));
                 cars.add(car);
             }
 
@@ -53,7 +52,7 @@ public class CarDAO {
     public List<Car> getAvailableCars() {
         List<Car> cars = new ArrayList<>();
         String sql = "SELECT c.car_id, c.brand_id, b.brand_name, c.model, c.price, " +
-                "c.status, c.description, ci.image_url " +
+                "c.status, c.description, c.year, c.color, c.stock, ci.image_url " +
                 "FROM Car c " +
                 "INNER JOIN Brand b ON c.brand_id = b.brand_id " +
                 "LEFT JOIN CarImage ci ON c.car_id = ci.car_id AND ci.is_primary = 1 " +
@@ -66,7 +65,7 @@ public class CarDAO {
 
             while (rs.next()) {
                 Car car = extractCarFromResultSet(rs);
-                car.setImages(getCarImageObjects(car.getCarId()));
+                car.setImages(getCarImageObjects(car.getId()));
                 cars.add(car);
             }
 
@@ -84,7 +83,7 @@ public class CarDAO {
      */
     public Car getCarById(int carId) {
         String sql = "SELECT c.car_id, c.brand_id, b.brand_name, c.model, c.price, " +
-                "c.status, c.description, ci.image_url " +
+                "c.status, c.description, c.year, c.color, c.stock, ci.image_url " +
                 "FROM Car c " +
                 "INNER JOIN Brand b ON c.brand_id = b.brand_id " +
                 "LEFT JOIN CarImage ci ON c.car_id = ci.car_id AND ci.is_primary = 1 " +
@@ -129,7 +128,7 @@ public class CarDAO {
 
         List<Car> cars = new ArrayList<>();
         String sql = "SELECT c.car_id, c.brand_id, b.brand_name, c.model, c.price, " +
-                "c.status, c.description, ci.image_url " +
+                "c.status, c.description, c.year, c.color, c.stock, ci.image_url " +
                 "FROM Car c " +
                 "INNER JOIN Brand b ON c.brand_id = b.brand_id " +
                 "LEFT JOIN CarImage ci ON c.car_id = ci.car_id AND ci.is_primary = 1 " +
@@ -146,7 +145,7 @@ public class CarDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Car car = extractCarFromResultSet(rs);
-                    car.setImages(getCarImageObjects(car.getCarId()));
+                    car.setImages(getCarImageObjects(car.getId()));
                     cars.add(car);
                 }
             }
@@ -166,7 +165,7 @@ public class CarDAO {
     public List<Car> getCarsByBrand(int brandId) {
         List<Car> cars = new ArrayList<>();
         String sql = "SELECT c.car_id, c.brand_id, b.brand_name, c.model, c.price, " +
-                "c.status, c.description, ci.image_url " +
+                "c.status, c.description, c.year, c.color, c.stock, ci.image_url " +
                 "FROM Car c " +
                 "INNER JOIN Brand b ON c.brand_id = b.brand_id " +
                 "LEFT JOIN CarImage ci ON c.car_id = ci.car_id AND ci.is_primary = 1 " +
@@ -181,7 +180,7 @@ public class CarDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Car car = extractCarFromResultSet(rs);
-                    car.setImages(getCarImageObjects(car.getCarId()));
+                    car.setImages(getCarImageObjects(car.getId()));
                     cars.add(car);
                 }
             }
@@ -201,7 +200,7 @@ public class CarDAO {
     public List<Car> getCarsByPriceRange(double minPrice, double maxPrice) {
         List<Car> cars = new ArrayList<>();
         String sql = "SELECT c.car_id, c.brand_id, b.brand_name, c.model, c.price, " +
-                "c.status, c.description, ci.image_url " +
+                "c.status, c.description, c.year, c.color, c.stock, ci.image_url " +
                 "FROM Car c " +
                 "INNER JOIN Brand b ON c.brand_id = b.brand_id " +
                 "LEFT JOIN CarImage ci ON c.car_id = ci.car_id AND ci.is_primary = 1 " +
@@ -217,7 +216,7 @@ public class CarDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     Car car = extractCarFromResultSet(rs);
-                    car.setImages(getCarImageObjects(car.getCarId()));
+                    car.setImages(getCarImageObjects(car.getId()));
                     cars.add(car);
                 }
             }
@@ -235,17 +234,20 @@ public class CarDAO {
      * Add a new car
      */
     public int addCar(Car car) {
-        String sql = "INSERT INTO Car (brand_id, model, price, status, description) " +
-                "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Car (brand_id, model, price, status, description, year, color, stock) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setInt(1, car.getBrandId());
-            stmt.setString(2, car.getModel());
-            stmt.setBigDecimal(3, car.getPrice());
+            stmt.setString(2, car.getName());
+            stmt.setDouble(3, car.getPrice());
             stmt.setString(4, car.getStatus());
             stmt.setString(5, car.getDescription());
+            stmt.setInt(6, car.getYear());
+            stmt.setString(7, car.getColor());
+            stmt.setInt(8, car.getStock());
 
             int affectedRows = stmt.executeUpdate();
 
@@ -378,22 +380,25 @@ public class CarDAO {
      */
     public boolean updateCar(Car car) {
         String sql = "UPDATE Car SET brand_id = ?, model = ?, price = ?, " +
-                "status = ?, description = ? WHERE car_id = ?";
+                "status = ?, description = ?, year = ?, color = ?, stock = ? WHERE car_id = ?";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, car.getBrandId());
-            stmt.setString(2, car.getModel());
-            stmt.setBigDecimal(3, car.getPrice());
+            stmt.setString(2, car.getName());
+            stmt.setDouble(3, car.getPrice());
             stmt.setString(4, car.getStatus());
             stmt.setString(5, car.getDescription());
-            stmt.setInt(6, car.getCarId());
+            stmt.setInt(6, car.getYear());
+            stmt.setString(7, car.getColor());
+            stmt.setInt(8, car.getStock());
+            stmt.setInt(9, car.getId());
 
             boolean success = stmt.executeUpdate() > 0;
 
             if (success) {
-                logger.info("Updated car with ID: {}", car.getCarId());
+                logger.info("Updated car with ID: {}", car.getId());
             }
 
             return success;
@@ -455,17 +460,75 @@ public class CarDAO {
     }
 
     /**
+     * Update car stock
+     */
+    public boolean updateCarStock(int carId, int stock) {
+        String sql = "UPDATE Car SET stock = ? WHERE car_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, stock);
+            stmt.setInt(2, carId);
+
+            boolean success = stmt.executeUpdate() > 0;
+
+            if (success) {
+                logger.info("Updated stock for car ID {} to {}", carId, stock);
+            }
+
+            return success;
+
+        } catch (SQLException e) {
+            logger.error("Error updating car stock for ID: {}", carId, e);
+            throw new DatabaseException("Failed to update car stock", e);
+        }
+    }
+
+    /**
+     * Decrease car stock (for orders)
+     */
+    public boolean decreaseStock(int carId, int quantity) {
+        String sql = "UPDATE Car SET stock = stock - ? WHERE car_id = ? AND stock >= ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, quantity);
+            stmt.setInt(2, carId);
+            stmt.setInt(3, quantity);
+
+            boolean success = stmt.executeUpdate() > 0;
+
+            if (success) {
+                logger.info("Decreased stock for car ID {} by {}", carId, quantity);
+            } else {
+                logger.warn("Failed to decrease stock for car ID {} - insufficient stock", carId);
+            }
+
+            return success;
+
+        } catch (SQLException e) {
+            logger.error("Error decreasing stock for car ID: {}", carId, e);
+            throw new DatabaseException("Failed to decrease car stock", e);
+        }
+    }
+
+    /**
      * Extract Car object from ResultSet
      */
     private Car extractCarFromResultSet(ResultSet rs) throws SQLException {
         Car car = new Car();
-        car.setCarId(rs.getInt("car_id"));
+        car.setId(rs.getInt("car_id"));
         car.setBrandId(rs.getInt("brand_id"));
         car.setBrandName(rs.getString("brand_name"));
-        car.setModel(rs.getString("model"));
-        car.setPrice(rs.getBigDecimal("price"));
+        car.setName(rs.getString("model"));
+        car.setPrice(rs.getDouble("price"));
         car.setStatus(rs.getString("status"));
         car.setDescription(rs.getString("description"));
+        car.setYear(rs.getInt("year"));
+        car.setColor(rs.getString("color"));
+        car.setStock(rs.getInt("stock"));
         car.setImageUrl(rs.getString("image_url"));
         return car;
     }

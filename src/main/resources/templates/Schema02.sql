@@ -28,6 +28,9 @@ CREATE TABLE Car (
                      price DECIMAL(15,2),
                      status NVARCHAR(20) CHECK (status IN ('AVAILABLE','UNAVAILABLE')) DEFAULT 'AVAILABLE',
                      description NVARCHAR(MAX),
+                     year INT,
+                     color NVARCHAR(50) NULL,
+                     stock INT DEFAULT 0,
                      FOREIGN KEY (brand_id) REFERENCES Brand(brand_id)
 );
 
