@@ -11,6 +11,10 @@ public class User {
     private String oauthProvider;
     private Date createdAt;
 
+    // Additional fields for JSP display
+    private String phone;
+    private String address;
+
     public User() {}
 
     public User(int userId, String name, String email, String role) {
@@ -27,6 +31,10 @@ public class User {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
+    // Alias for fullname used in JSPs
+    public String getFullname() { return name; }
+    public void setFullname(String name) { this.name = name; }
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
@@ -41,4 +49,10 @@ public class User {
 
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 }
