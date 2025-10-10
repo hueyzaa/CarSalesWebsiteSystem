@@ -1,18 +1,22 @@
 package controller.servlet;
 
 import dao.UserDAO;
+import model.User;
+import util.ValidationUtil;
+import exception.ValidationException;
+import exception.DatabaseException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import model.User;
+import jakarta.servlet.http.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
+    private static final Logger logger = LoggerFactory.getLogger(RegisterServlet.class);
     private UserDAO userDAO;
 
     @Override
@@ -24,12 +28,18 @@ public class RegisterServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Nếu đã đăng nhập, chuyển về home
+
+        // Check if already logged in
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("user") != null) {
             response.sendRedirect(request.getContextPath() + "/home");
             return;
         }
+
+        // Generate CSRF token
+        String csrfToken = UUID.randomUUID().toString();
+        request.getSession().setAttribute("csrfToken", csrfToken);
+        request.setAttribute("csrfToken", csrfToken);
 
         request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
     }
@@ -41,86 +51,142 @@ public class RegisterServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         response.setCharacterEncoding("UTF-8");
 
-        String name = request.getParameter("name");
-        String email = request.getParameter("email");
-        String password = request.getParameter("password");
-        String confirmPassword = request.getParameter("confirmPassword");
+        try {
+            // Verify CSRF token
+            validateCsrfToken(request);
 
-        // Validation
-        if (name == null || email == null || password == null || confirmPassword == null ||
-                name.trim().isEmpty() || email.trim().isEmpty() ||
-                password.trim().isEmpty() || confirmPassword.trim().isEmpty()) {
+            // Validate input
+            String name = ValidationUtil.validateString(
+                    request.getParameter("name"), "Họ và tên", 100);
 
-            request.setAttribute("error", "Vui lòng nhập đầy đủ thông tin!");
-            request.setAttribute("name", name);
-            request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
-            return;
-        }
+            String email = ValidationUtil.validateEmail(request.getParameter("email"));
 
-        // Validate email format
-        if (!isValidEmail(email)) {
-            request.setAttribute("error", "Email không hợp lệ!");
-            request.setAttribute("name", name);
-            request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
-            return;
-        }
-
-        // Validate password length
-        if (password.length() < 6) {
-            request.setAttribute("error", "Mật khẩu phải có ít nhất 6 ký tự!");
-            request.setAttribute("name", name);
-            request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
-            return;
-        }
-
-        // Check password match
-        if (!password.equals(confirmPassword)) {
-            request.setAttribute("error", "Mật khẩu xác nhận không khớp!");
-            request.setAttribute("name", name);
-            request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
-            return;
-        }
-
-        // Check email exists
-        if (userDAO.emailExists(email)) {
-            request.setAttribute("error", "Email đã được sử dụng!");
-            request.setAttribute("name", name);
-            request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
-            return;
-        }
-
-        // Register user
-        boolean success = userDAO.register(name, email, password);
-
-        if (success) {
-            // Tự động đăng nhập sau khi đăng ký thành công
-            User user = userDAO.login(email, password);
-            if (user != null) {
-                HttpSession session = request.getSession();
-                session.setAttribute("user", user);
-                session.setAttribute("userId", user.getUserId());
-                session.setAttribute("userName", user.getName());
-                session.setAttribute("userRole", user.getRole());
-
-                response.sendRedirect(request.getContextPath() + "/home");
+            // Phone (optional)
+            String phone = request.getParameter("phone");
+            if (phone != null && !phone.trim().isEmpty()) {
+                phone = ValidationUtil.validatePhone(phone);
             } else {
-                request.setAttribute("success", "Đăng ký thành công! Vui lòng đăng nhập.");
-                response.sendRedirect(request.getContextPath() + "/login");
+                phone = null;
             }
-        } else {
-            request.setAttribute("error", "Đăng ký thất bại! Vui lòng thử lại.");
-            request.setAttribute("name", name);
-            request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
+
+            // Address (optional)
+            String address = request.getParameter("address");
+            if (address != null && !address.trim().isEmpty()) {
+                address = ValidationUtil.validateString(address, "Địa chỉ", 255);
+            } else {
+                address = null;
+            }
+
+            String password = request.getParameter("password");
+            String confirmPassword = request.getParameter("confirmPassword");
+
+            // Validate password
+            ValidationUtil.validatePassword(password);
+
+            // Check password match
+            if (!password.equals(confirmPassword)) {
+                throw new ValidationException("confirmPassword",
+                        "Mật khẩu xác nhận không khớp");
+            }
+
+            // Check email exists
+            if (userDAO.emailExists(email)) {
+                throw new ValidationException("email", "Email đã được sử dụng");
+            }
+
+            // Register user with phone and address
+            boolean success = userDAO.register(name, email, password, phone, address);
+
+            if (success) {
+                logger.info("User registered successfully: {}", email);
+
+                // Auto-login after registration
+                User user = userDAO.login(email, password);
+
+                if (user != null) {
+                    createUserSession(request, user);
+                    response.sendRedirect(request.getContextPath() + "/home");
+                } else {
+                    // Redirect to login if auto-login fails
+                    HttpSession session = request.getSession();
+                    session.setAttribute("success", "Đăng ký thành công! Vui lòng đăng nhập.");
+                    response.sendRedirect(request.getContextPath() + "/login");
+                }
+            } else {
+                throw new DatabaseException("Đăng ký thất bại. Vui lòng thử lại.");
+            }
+
+        } catch (ValidationException e) {
+            logger.debug("Validation error in register: {}", e.getMessage());
+            handleError(request, response, e.getMessage(), e.getFieldName());
+
+        } catch (DatabaseException e) {
+            logger.error("Database error in register", e);
+            handleError(request, response, e.getMessage(), null);
+
+        } catch (Exception e) {
+            logger.error("Unexpected error in register", e);
+            handleError(request, response, "Đã xảy ra lỗi. Vui lòng thử lại.", null);
         }
     }
 
-    private boolean isValidEmail(String email) {
-        return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    /**
+     * Validate CSRF token
+     */
+    private void validateCsrfToken(HttpServletRequest request) throws ValidationException {
+        HttpSession session = request.getSession(false);
+
+        if (session == null) {
+            throw new ValidationException("Phiên làm việc đã hết hạn");
+        }
+
+        String sessionToken = (String) session.getAttribute("csrfToken");
+        String requestToken = request.getParameter("csrfToken");
+
+        if (sessionToken == null || !sessionToken.equals(requestToken)) {
+            logger.warn("CSRF token validation failed during registration");
+            throw new ValidationException("Yêu cầu không hợp lệ (CSRF)");
+        }
+    }
+
+    /**
+     * Create session for user
+     */
+    private void createUserSession(HttpServletRequest request, User user) {
+        HttpSession session = request.getSession();
+        session.setAttribute("user", user);
+        session.setAttribute("userId", user.getUserId());
+        session.setAttribute("userName", user.getName());
+        session.setAttribute("userRole", user.getRole());
+
+        // Security: Set session timeout (30 minutes)
+        session.setMaxInactiveInterval(30 * 60);
+
+        // Security: Regenerate session ID to prevent session fixation
+        request.changeSessionId();
+
+        logger.info("User session created for: {}", user.getEmail());
+    }
+
+    /**
+     * Handle error and show registration form again
+     */
+    private void handleError(HttpServletRequest request, HttpServletResponse response,
+                             String errorMessage, String fieldName)
+            throws ServletException, IOException {
+        request.setAttribute("error", errorMessage);
+
+        // Preserve form data
+        request.setAttribute("name", request.getParameter("name"));
+        request.setAttribute("email", request.getParameter("email"));
+        request.setAttribute("phone", request.getParameter("phone"));
+        request.setAttribute("address", request.getParameter("address"));
+
+        // Generate new CSRF token
+        String csrfToken = UUID.randomUUID().toString();
+        request.getSession().setAttribute("csrfToken", csrfToken);
+        request.setAttribute("csrfToken", csrfToken);
+
+        request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
     }
 }
