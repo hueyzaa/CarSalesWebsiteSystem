@@ -1,7 +1,3 @@
--- =========================================
--- 🚗 CAR SALES WEBSITE DATABASE (UPDATED)
--- =========================================
-
 -- USERS TABLE
 CREATE TABLE AppUsers (
                           user_id INT IDENTITY(1,1) PRIMARY KEY,
@@ -116,3 +112,47 @@ CREATE TABLE CarImage (
                           created_at DATETIME DEFAULT GETDATE(),
                           FOREIGN KEY (car_id) REFERENCES Car(car_id) ON DELETE CASCADE
 );
+
+-- =============================================
+-- TRIGGERS
+-- =============================================
+
+-- Drop trigger if exists
+IF OBJECT_ID('trg_UpdateCarStatus', 'TR') IS NOT NULL
+DROP TRIGGER trg_UpdateCarStatus;
+GO
+
+-- Trigger to auto-update car status based on stock
+CREATE TRIGGER trg_UpdateCarStatus
+    ON Car
+    AFTER INSERT, UPDATE
+                      AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Update status to UNAVAILABLE when stock <= 0
+UPDATE Car
+SET status = 'UNAVAILABLE'
+    FROM Car c
+    INNER JOIN inserted i ON c.car_id = i.car_id
+WHERE i.stock <= 0 AND c.status = 'AVAILABLE';
+
+-- Update status to AVAILABLE when stock > 0
+UPDATE Car
+SET status = 'AVAILABLE'
+    FROM Car c
+    INNER JOIN inserted i ON c.car_id = i.car_id
+WHERE i.stock > 0 AND c.status = 'UNAVAILABLE';
+
+-- Log changes
+IF EXISTS (SELECT * FROM inserted WHERE stock <= 0)
+BEGIN
+        PRINT 'Updated car(s) to UNAVAILABLE due to 0 stock';
+END
+
+    IF EXISTS (SELECT * FROM inserted WHERE stock > 0)
+BEGIN
+        PRINT 'Updated car(s) to AVAILABLE due to stock replenished';
+END
+END;
+GO
