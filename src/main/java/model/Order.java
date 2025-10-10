@@ -12,12 +12,17 @@ public class Order implements Serializable {
     private String status;  // PENDING, APPROVED, CANCELLED, COMPLETED
     private Timestamp createdAt;
 
+    // Payment-related fields
+    private String paymentType;  // FULL, DEPOSIT, SHOWROOM
+    private Double depositAmount;
+    private Double remainingAmount;
+    private String notes;
+
     // Additional fields for display
     private List<OrderDetail> orderDetails;
     private List<Transaction> transactions;
     private double totalAmount;
     private double paidAmount;
-    private double remainingAmount;
     private User user;  // For admin view
 
     // Constructors
@@ -27,6 +32,12 @@ public class Order implements Serializable {
     public Order(int userId, String status) {
         this.userId = userId;
         this.status = status;
+    }
+
+    public Order(int userId, String status, String paymentType) {
+        this.userId = userId;
+        this.status = status;
+        this.paymentType = paymentType;
     }
 
     // Getters and Setters
@@ -62,6 +73,38 @@ public class Order implements Serializable {
         this.createdAt = createdAt;
     }
 
+    public String getPaymentType() {
+        return paymentType;
+    }
+
+    public void setPaymentType(String paymentType) {
+        this.paymentType = paymentType;
+    }
+
+    public Double getDepositAmount() {
+        return depositAmount;
+    }
+
+    public void setDepositAmount(Double depositAmount) {
+        this.depositAmount = depositAmount;
+    }
+
+    public Double getRemainingAmount() {
+        return remainingAmount;
+    }
+
+    public void setRemainingAmount(Double remainingAmount) {
+        this.remainingAmount = remainingAmount;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
     public List<OrderDetail> getOrderDetails() {
         return orderDetails;
     }
@@ -94,14 +137,6 @@ public class Order implements Serializable {
         this.paidAmount = paidAmount;
     }
 
-    public double getRemainingAmount() {
-        return remainingAmount;
-    }
-
-    public void setRemainingAmount(double remainingAmount) {
-        this.remainingAmount = remainingAmount;
-    }
-
     public User getUser() {
         return user;
     }
@@ -110,7 +145,12 @@ public class Order implements Serializable {
         this.user = user;
     }
 
-    // Convenience methods
+    // Calculated remaining amount based on total and paid
+    public double getCalculatedRemainingAmount() {
+        return Math.max(0, totalAmount - paidAmount);
+    }
+
+    // Status convenience methods
     public boolean isPending() {
         return "PENDING".equalsIgnoreCase(status);
     }
@@ -135,10 +175,28 @@ public class Order implements Serializable {
         return isApproved();
     }
 
+    // Payment type convenience methods
+    public boolean isFullPayment() {
+        return "FULL".equalsIgnoreCase(paymentType);
+    }
+
+    public boolean isDepositPayment() {
+        return "DEPOSIT".equalsIgnoreCase(paymentType);
+    }
+
+    public boolean isShowroomPayment() {
+        return "SHOWROOM".equalsIgnoreCase(paymentType);
+    }
+
     public boolean isFullyPaid() {
         return paidAmount >= totalAmount;
     }
 
+    public boolean requiresPayment() {
+        return !isFullyPaid();
+    }
+
+    // Display methods
     public String getStatusDisplay() {
         switch (status != null ? status.toUpperCase() : "") {
             case "PENDING":
@@ -157,15 +215,70 @@ public class Order implements Serializable {
     public String getStatusColor() {
         switch (status != null ? status.toUpperCase() : "") {
             case "PENDING":
-                return "warning";
+                return "pending";
             case "APPROVED":
-                return "info";
+                return "approved";
             case "CANCELLED":
-                return "danger";
+                return "cancelled";
             case "COMPLETED":
-                return "success";
+                return "completed";
             default:
                 return "secondary";
+        }
+    }
+
+    public String getPaymentTypeDisplay() {
+        if (isFullPayment()) {
+            return "Thanh toán toàn bộ";
+        } else if (isDepositPayment()) {
+            return "Đặt cọc";
+        } else if (isShowroomPayment()) {
+            return "Thanh toán tại Showroom";
+        }
+        return paymentType != null ? paymentType : "N/A";
+    }
+
+    /**
+     * Get payment status display text
+     */
+    public String getPaymentStatusDisplay() {
+        if (isFullPayment()) {
+            // FULL payment
+            if (paidAmount >= totalAmount) {
+                return "Đã thanh toán toàn bộ";
+            } else {
+                return "Chờ thanh toán toàn bộ";
+            }
+        } else if (isDepositPayment()) {
+            // DEPOSIT payment
+            if (paidAmount >= totalAmount) {
+                return "Đã thanh toán toàn bộ";
+            } else if (paidAmount > 0) {
+                return "Đã đặt cọc - Còn nợ";
+            } else {
+                return "Chờ thanh toán đặt cọc";
+            }
+        } else if (isShowroomPayment()) {
+            // SHOWROOM payment
+            if (paidAmount > 0) {
+                return "Đã thanh toán";
+            } else {
+                return "Chưa thanh toán - Thanh toán tại showroom";
+            }
+        }
+        return "Chưa xác định";
+    }
+
+    /**
+     * Get payment status color
+     */
+    public String getPaymentStatusColor() {
+        if (isFullyPaid()) {
+            return "success";  // Green
+        } else if (paidAmount > 0) {
+            return "warning";  // Orange/Yellow
+        } else {
+            return "danger";   // Red
         }
     }
 
@@ -178,7 +291,12 @@ public class Order implements Serializable {
     }
 
     public String getFormattedRemaining() {
-        return String.format("%,.0f ₫", remainingAmount);
+        double remaining = remainingAmount != null && remainingAmount > 0 ? remainingAmount : getCalculatedRemainingAmount();
+        return String.format("%,.0f ₫", remaining);
+    }
+
+    public String getFormattedDepositAmount() {
+        return depositAmount != null ? String.format("%,.0f ₫", depositAmount) : "N/A";
     }
 
     public int getTotalItems() {
@@ -194,7 +312,11 @@ public class Order implements Serializable {
                 "orderId=" + orderId +
                 ", userId=" + userId +
                 ", status='" + status + '\'' +
+                ", paymentType='" + paymentType + '\'' +
                 ", totalAmount=" + totalAmount +
+                ", paidAmount=" + paidAmount +
+                ", remainingAmount=" + remainingAmount +
+                ", depositAmount=" + depositAmount +
                 ", createdAt=" + createdAt +
                 '}';
     }

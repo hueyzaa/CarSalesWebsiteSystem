@@ -82,9 +82,19 @@ public class OrderDetailServlet extends HttpServlet {
             double total = orderDetailDAO.calculateOrderTotal(orderId);
             double paid = transactionDAO.getTotalPaidAmount(orderId);
 
+            // ✅ SET totalAmount và paidAmount
             order.setTotalAmount(total);
             order.setPaidAmount(paid);
-            order.setRemainingAmount(total - paid);
+
+            // ✅ KHÔNG GHI ĐÈ remainingAmount nếu đã có từ database
+            // remainingAmount đã được set từ database trong ordersDAO.getOrderById()
+            // Chỉ tính lại nếu chưa có hoặc cần cập nhật
+            if (order.getRemainingAmount() == null) {
+                order.setRemainingAmount(total - paid);
+            }
+
+            logger.info("Order {}: Total={}, Paid={}, Remaining={}, PaymentType={}",
+                    orderId, total, paid, order.getRemainingAmount(), order.getPaymentType());
 
             // Set attributes
             request.setAttribute("order", order);

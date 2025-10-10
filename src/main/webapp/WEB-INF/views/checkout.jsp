@@ -167,6 +167,7 @@
             margin: 0;
             font-weight: 600;
             color: #f8f9fa;
+            font-size: 1.05rem;
         }
 
         .payment-description {
@@ -174,6 +175,12 @@
             font-size: 0.9rem;
             margin-top: 10px;
             padding-left: 35px;
+            line-height: 1.5;
+        }
+
+        .payment-highlight {
+            color: #ffd700;
+            font-weight: 600;
         }
 
         .deposit-input-group {
@@ -378,6 +385,22 @@
                         <i class="fas fa-credit-card"></i> Hình Thức Thanh Toán
                     </h3>
                     <div class="payment-method">
+                        <!-- Showroom Payment -->
+                        <div class="payment-option" onclick="selectPayment('SHOWROOM', this)">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentType" id="showroomPayment" value="SHOWROOM" required>
+                                <label for="showroomPayment">
+                                    <i class="fas fa-store"></i> Thanh Toán Tại Showroom
+                                </label>
+                            </div>
+                            <div class="payment-description">
+                                Đặt xe ngay, thanh toán sau khi đến showroom.
+                                <br><span class="payment-highlight">✓ Không cần thanh toán trước</span>
+                                <br><span class="payment-highlight">✓ Kiểm tra xe trực tiếp trước khi thanh toán</span>
+                                <br>Chúng tôi sẽ liên hệ để xác nhận và hẹn lịch đến showroom.
+                            </div>
+                        </div>
+
                         <!-- Full Payment -->
                         <div class="payment-option" onclick="selectPayment('FULL', this)">
                             <div class="d-flex align-items-center">
@@ -387,7 +410,9 @@
                                 </label>
                             </div>
                             <div class="payment-description">
-                                Thanh toán 100% giá trị đơn hàng ngay. Đơn hàng sẽ được xử lý nhanh hơn.
+                                Thanh toán 100% giá trị đơn hàng ngay.
+                                <br><span class="payment-highlight">✓ Đơn hàng được xử lý ưu tiên</span>
+                                <br><span class="payment-highlight">✓ Giao xe nhanh chóng</span>
                             </div>
                         </div>
 
@@ -401,6 +426,8 @@
                             </div>
                             <div class="payment-description">
                                 Đặt cọc tối thiểu 20% giá trị đơn hàng. Phần còn lại thanh toán khi nhận xe.
+                                <br><span class="payment-highlight">✓ Giữ chỗ xe ưa thích</span>
+                                <br><span class="payment-highlight">✓ Linh hoạt thanh toán</span>
                             </div>
                             <div class="deposit-input-group" id="depositInputGroup">
                                 <label class="form-label">Số tiền đặt cọc:</label>
@@ -484,8 +511,12 @@
         // Add selected class to clicked option
         element.classList.add('selected');
 
-        // Check the radio button
-        if (type === 'FULL') {
+        // Handle radio buttons and deposit input
+        if (type === 'SHOWROOM') {
+            document.getElementById('showroomPayment').checked = true;
+            document.getElementById('depositInputGroup').classList.remove('show');
+            document.getElementById('depositAmount').removeAttribute('required');
+        } else if (type === 'FULL') {
             document.getElementById('fullPayment').checked = true;
             document.getElementById('depositInputGroup').classList.remove('show');
             document.getElementById('depositAmount').removeAttribute('required');
@@ -524,7 +555,17 @@
             }
         }
 
-        return confirm('Xác nhận đặt hàng?');
+        // Confirmation message based on payment type
+        let confirmMessage = '';
+        if (paymentType.value === 'SHOWROOM') {
+            confirmMessage = 'Xác nhận đặt xe? Bạn sẽ thanh toán khi đến showroom.';
+        } else if (paymentType.value === 'FULL') {
+            confirmMessage = 'Xác nhận thanh toán toàn bộ đơn hàng?';
+        } else {
+            confirmMessage = 'Xác nhận đặt cọc?';
+        }
+
+        return confirm(confirmMessage);
     });
 </script>
 </body>

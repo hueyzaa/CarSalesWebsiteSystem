@@ -19,8 +19,9 @@ public class OrdersDAO {
      */
     public List<Order> getOrdersByUserId(int userId) {
         List<Order> orders = new ArrayList<>();
-        String sql = "SELECT order_id, user_id, status, created_at FROM Orders " +
-                "WHERE user_id = ? ORDER BY created_at DESC";
+        String sql = "SELECT order_id, user_id, status, created_at, payment_type, " +
+                "deposit_amount, remaining_amount, notes " +
+                "FROM Orders WHERE user_id = ? ORDER BY created_at DESC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -29,11 +30,7 @@ public class OrdersDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Order order = new Order();
-                    order.setOrderId(rs.getInt("order_id"));
-                    order.setUserId(rs.getInt("user_id"));
-                    order.setStatus(rs.getString("status"));
-                    order.setCreatedAt(rs.getTimestamp("created_at"));
+                    Order order = extractOrderFromResultSet(rs);
                     orders.add(order);
                 }
             }
@@ -51,8 +48,9 @@ public class OrdersDAO {
      * Get order by ID
      */
     public Order getOrderById(int orderId) {
-        String sql = "SELECT order_id, user_id, status, created_at FROM Orders " +
-                "WHERE order_id = ?";
+        String sql = "SELECT order_id, user_id, status, created_at, payment_type, " +
+                "deposit_amount, remaining_amount, notes " +
+                "FROM Orders WHERE order_id = ?";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -61,12 +59,7 @@ public class OrdersDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    Order order = new Order();
-                    order.setOrderId(rs.getInt("order_id"));
-                    order.setUserId(rs.getInt("user_id"));
-                    order.setStatus(rs.getString("status"));
-                    order.setCreatedAt(rs.getTimestamp("created_at"));
-
+                    Order order = extractOrderFromResultSet(rs);
                     logger.debug("Retrieved order: {}", orderId);
                     return order;
                 }
@@ -82,14 +75,28 @@ public class OrdersDAO {
     }
 
     /**
-     * Create order from cart items (with transaction)
+     * Create order from cart items with payment information
      */
-    public int createOrder(int userId, List<CartItem> cartItems) {
+    public int createOrder(int userId, List<CartItem> cartItems, String paymentType,
+                           Double depositAmount, String notes) {
         if (cartItems == null || cartItems.isEmpty()) {
             throw new IllegalArgumentException("Cart items cannot be null or empty");
         }
 
-        String sqlOrder = "INSERT INTO Orders (user_id, status) VALUES (?, 'PENDING')";
+        // Calculate total and remaining amount
+        double totalAmount = cartItems.stream()
+                .mapToDouble(CartItem::getSubtotal)
+                .sum();
+
+        Double remainingAmount = null;
+        if ("DEPOSIT".equals(paymentType) && depositAmount != null) {
+            remainingAmount = totalAmount - depositAmount;
+        } else if ("SHOWROOM".equals(paymentType)) {
+            remainingAmount = totalAmount;
+        }
+
+        String sqlOrder = "INSERT INTO Orders (user_id, status, payment_type, deposit_amount, remaining_amount, notes) " +
+                "VALUES (?, 'PENDING', ?, ?, ?, ?)";
         String sqlOrderDetail = "INSERT INTO OrderDetail (order_id, car_id, price, quantity) " +
                 "VALUES (?, ?, ?, ?)";
         Connection conn = null;
@@ -102,6 +109,22 @@ public class OrdersDAO {
             int orderId;
             try (PreparedStatement stmt = conn.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setInt(1, userId);
+                stmt.setString(2, paymentType);
+
+                if (depositAmount != null) {
+                    stmt.setDouble(3, depositAmount);
+                } else {
+                    stmt.setNull(3, Types.DECIMAL);
+                }
+
+                if (remainingAmount != null) {
+                    stmt.setDouble(4, remainingAmount);
+                } else {
+                    stmt.setNull(4, Types.DECIMAL);
+                }
+
+                stmt.setString(5, notes);
+
                 stmt.executeUpdate();
 
                 ResultSet rs = stmt.getGeneratedKeys();
@@ -115,14 +138,13 @@ public class OrdersDAO {
             // Add order details (batch)
             try (PreparedStatement stmt = conn.prepareStatement(sqlOrderDetail)) {
                 for (CartItem item : cartItems) {
-                    // Validate cart item has car object
                     if (item.getCar() == null) {
                         throw new IllegalStateException("CartItem must have Car object populated");
                     }
 
                     stmt.setInt(1, orderId);
                     stmt.setInt(2, item.getCarId());
-                    stmt.setDouble(3, item.getCar().getPrice());  // ✅ Get price from Car object
+                    stmt.setDouble(3, item.getCar().getPrice());
                     stmt.setInt(4, item.getQuantity());
                     stmt.addBatch();
                 }
@@ -130,8 +152,8 @@ public class OrdersDAO {
             }
 
             conn.commit();
-            logger.info("Created order {} for userId: {} with {} items",
-                    orderId, userId, cartItems.size());
+            logger.info("Created order {} for userId: {} with {} items - Payment Type: {}",
+                    orderId, userId, cartItems.size(), paymentType);
             return orderId;
 
         } catch (SQLException e) {
@@ -142,6 +164,13 @@ public class OrdersDAO {
         } finally {
             closeConnection(conn);
         }
+    }
+
+    /**
+     * Create order from cart items (backward compatibility - default to FULL payment)
+     */
+    public int createOrder(int userId, List<CartItem> cartItems) {
+        return createOrder(userId, cartItems, "FULL", null, null);
     }
 
     /**
@@ -173,6 +202,63 @@ public class OrdersDAO {
     }
 
     /**
+     * Update order payment information
+     */
+    public boolean updateOrderPaymentInfo(int orderId, Double depositAmount, Double remainingAmount) {
+        String sql = "UPDATE Orders SET deposit_amount = ?, remaining_amount = ? WHERE order_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            if (depositAmount != null) {
+                stmt.setDouble(1, depositAmount);
+            } else {
+                stmt.setNull(1, Types.DECIMAL);
+            }
+
+            if (remainingAmount != null) {
+                stmt.setDouble(2, remainingAmount);
+            } else {
+                stmt.setNull(2, Types.DECIMAL);
+            }
+
+            stmt.setInt(3, orderId);
+
+            boolean success = stmt.executeUpdate() > 0;
+
+            if (success) {
+                logger.info("Updated order {} payment info", orderId);
+            }
+
+            return success;
+
+        } catch (SQLException e) {
+            logger.error("Error updating order payment info for orderId: {}", orderId, e);
+            throw new DatabaseException("Failed to update order payment info", e);
+        }
+    }
+
+    /**
+     * Update order notes
+     */
+    public boolean updateOrderNotes(int orderId, String notes) {
+        String sql = "UPDATE Orders SET notes = ? WHERE order_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, notes);
+            stmt.setInt(2, orderId);
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            logger.error("Error updating order notes for orderId: {}", orderId, e);
+            throw new DatabaseException("Failed to update order notes", e);
+        }
+    }
+
+    /**
      * Cancel order
      */
     public boolean cancelOrder(int orderId) {
@@ -198,19 +284,16 @@ public class OrdersDAO {
      */
     public List<Order> getAllOrders() {
         List<Order> orders = new ArrayList<>();
-        String sql = "SELECT order_id, user_id, status, created_at FROM Orders " +
-                "ORDER BY created_at DESC";
+        String sql = "SELECT order_id, user_id, status, created_at, payment_type, " +
+                "deposit_amount, remaining_amount, notes " +
+                "FROM Orders ORDER BY created_at DESC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-                Order order = new Order();
-                order.setOrderId(rs.getInt("order_id"));
-                order.setUserId(rs.getInt("user_id"));
-                order.setStatus(rs.getString("status"));
-                order.setCreatedAt(rs.getTimestamp("created_at"));
+                Order order = extractOrderFromResultSet(rs);
                 orders.add(order);
             }
 
@@ -228,8 +311,9 @@ public class OrdersDAO {
      */
     public List<Order> getOrdersByStatus(String status) {
         List<Order> orders = new ArrayList<>();
-        String sql = "SELECT order_id, user_id, status, created_at FROM Orders " +
-                "WHERE status = ? ORDER BY created_at DESC";
+        String sql = "SELECT order_id, user_id, status, created_at, payment_type, " +
+                "deposit_amount, remaining_amount, notes " +
+                "FROM Orders WHERE status = ? ORDER BY created_at DESC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -238,11 +322,7 @@ public class OrdersDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    Order order = new Order();
-                    order.setOrderId(rs.getInt("order_id"));
-                    order.setUserId(rs.getInt("user_id"));
-                    order.setStatus(rs.getString("status"));
-                    order.setCreatedAt(rs.getTimestamp("created_at"));
+                    Order order = extractOrderFromResultSet(rs);
                     orders.add(order);
                 }
             }
@@ -253,6 +333,64 @@ public class OrdersDAO {
         } catch (SQLException e) {
             logger.error("Error getting orders by status: {}", status, e);
             throw new DatabaseException("Failed to retrieve orders by status", e);
+        }
+    }
+
+    /**
+     * Get orders by payment type
+     */
+    public List<Order> getOrdersByPaymentType(String paymentType) {
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT order_id, user_id, status, created_at, payment_type, " +
+                "deposit_amount, remaining_amount, notes " +
+                "FROM Orders WHERE payment_type = ? ORDER BY created_at DESC";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, paymentType);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Order order = extractOrderFromResultSet(rs);
+                    orders.add(order);
+                }
+            }
+
+            logger.debug("Retrieved {} orders with payment type: {}", orders.size(), paymentType);
+            return orders;
+
+        } catch (SQLException e) {
+            logger.error("Error getting orders by payment type: {}", paymentType, e);
+            throw new DatabaseException("Failed to retrieve orders by payment type", e);
+        }
+    }
+
+    /**
+     * Get pending showroom payment orders
+     */
+    public List<Order> getPendingShowroomOrders() {
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT order_id, user_id, status, created_at, payment_type, " +
+                "deposit_amount, remaining_amount, notes " +
+                "FROM Orders WHERE payment_type = 'SHOWROOM' AND status = 'PENDING' " +
+                "ORDER BY created_at DESC";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                Order order = extractOrderFromResultSet(rs);
+                orders.add(order);
+            }
+
+            logger.debug("Retrieved {} pending showroom orders", orders.size());
+            return orders;
+
+        } catch (SQLException e) {
+            logger.error("Error getting pending showroom orders", e);
+            throw new DatabaseException("Failed to retrieve pending showroom orders", e);
         }
     }
 
@@ -315,6 +453,32 @@ public class OrdersDAO {
         }
 
         return new OrderStats();
+    }
+
+    /**
+     * Extract Order object from ResultSet
+     */
+    private Order extractOrderFromResultSet(ResultSet rs) throws SQLException {
+        Order order = new Order();
+        order.setOrderId(rs.getInt("order_id"));
+        order.setUserId(rs.getInt("user_id"));
+        order.setStatus(rs.getString("status"));
+        order.setCreatedAt(rs.getTimestamp("created_at"));
+        order.setPaymentType(rs.getString("payment_type"));
+
+        double depositAmount = rs.getDouble("deposit_amount");
+        if (!rs.wasNull()) {
+            order.setDepositAmount(depositAmount);
+        }
+
+        double remainingAmount = rs.getDouble("remaining_amount");
+        if (!rs.wasNull()) {
+            order.setRemainingAmount(remainingAmount);
+        }
+
+        order.setNotes(rs.getString("notes"));
+
+        return order;
     }
 
     /**

@@ -446,7 +446,7 @@
                     </div>
 
                     <a href="${pageContext.request.contextPath}/checkout" class="btn btn-checkout">
-                        <i class="fas fa-credit-card"></i> Thanh Toán
+                        <i class="fas fa-credit-card"></i> Đặt Hàng
                     </a>
 
                     <a href="${pageContext.request.contextPath}/cars" class="btn btn-continue">
