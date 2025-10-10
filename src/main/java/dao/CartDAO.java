@@ -69,12 +69,12 @@ public class CartDAO {
     }
 
     /**
-     * Get cart items by user ID (WITH Car object populated)
+     * Get cart items by user ID (WITH Car object populated - FIXED VERSION)
      */
     public List<CartItem> getCartItemsByUserId(int userId) {
         List<CartItem> cartItems = new ArrayList<>();
         String sql = "SELECT ci.cart_item_id, ci.car_id, ci.quantity, " +
-                "c.car_id, c.model, c.price, c.description, c.status, " +
+                "c.car_id, c.model, c.price, c.description, c.status, c.stock, c.year, c.color, " +
                 "b.brand_name, " +
                 "img.image_url " +
                 "FROM CartItem ci " +
@@ -92,13 +92,16 @@ public class CartDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    // Create Car object
+                    // Create Car object with FULL details
                     Car car = new Car();
                     car.setId(rs.getInt("car_id"));
                     car.setName(rs.getString("model"));
                     car.setPrice(rs.getDouble("price"));
                     car.setDescription(rs.getString("description"));
                     car.setStatus(rs.getString("status"));
+                    car.setStock(rs.getInt("stock"));        // ✅ FIXED: Added stock
+                    car.setYear(rs.getInt("year"));          // ✅ FIXED: Added year
+                    car.setColor(rs.getString("color"));     // ✅ FIXED: Added color
                     car.setBrandName(rs.getString("brand_name"));
                     car.setImageUrl(rs.getString("image_url"));
 

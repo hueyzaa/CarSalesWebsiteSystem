@@ -1,40 +1,28 @@
 package model;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.List;
 
 public class Car implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    // Basic fields
-    private int id;
+    private int id;  // car_id
     private int brandId;
-    private String name;          // model in database
+    private String model;  // model name from database
     private double price;
-    private int year;
-    private String color;
-    private String description;
-    private int stock;
     private String status;
+    private String description;
+    private Integer year;
+    private String color;
+    private int stock;
 
-    // Additional fields (from joins)
+    // Additional fields for display
     private String brandName;
-    private String imageUrl;      // Main/primary image
-    private List<CarImage> images; // All images
-
-    // Timestamps
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private String imageUrl;
+    private List<CarImage> images;
 
     // Constructors
     public Car() {
-    }
-
-    public Car(int id, String name, double price) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
     }
 
     // Getters and Setters
@@ -46,15 +34,6 @@ public class Car implements Serializable {
         this.id = id;
     }
 
-    // Alias method for backward compatibility
-    public int getCarId() {
-        return id;
-    }
-
-    public void setCarId(int id) {
-        this.id = id;
-    }
-
     public int getBrandId() {
         return brandId;
     }
@@ -63,21 +42,21 @@ public class Car implements Serializable {
         this.brandId = brandId;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    // Alias for model field
     public String getModel() {
-        return name;
+        return model;
     }
 
     public void setModel(String model) {
-        this.name = model;
+        this.model = model;
+    }
+
+    // ✅ CRITICAL: Alias methods for getName/setName to work with DAO code
+    public String getName() {
+        return model;
+    }
+
+    public void setName(String name) {
+        this.model = name;
     }
 
     public double getPrice() {
@@ -88,11 +67,27 @@ public class Car implements Serializable {
         this.price = price;
     }
 
-    public int getYear() {
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Integer getYear() {
         return year;
     }
 
-    public void setYear(int year) {
+    public void setYear(Integer year) {
         this.year = year;
     }
 
@@ -104,28 +99,12 @@ public class Car implements Serializable {
         this.color = color;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public int getStock() {
         return stock;
     }
 
     public void setStock(int stock) {
         this.stock = stock;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public String getBrandName() {
@@ -152,49 +131,35 @@ public class Car implements Serializable {
         this.images = images;
     }
 
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Timestamp getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Timestamp updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
     // Convenience methods
     public boolean isAvailable() {
-        return stock > 0 && "AVAILABLE".equals(status);
+        return "AVAILABLE".equalsIgnoreCase(status) && stock > 0;
+    }
+
+    public boolean isUnavailable() {
+        return "UNAVAILABLE".equalsIgnoreCase(status) || stock <= 0;
     }
 
     public String getFormattedPrice() {
         return String.format("%,.0f ₫", price);
     }
 
-    public boolean hasStock() {
-        return stock > 0;
-    }
-
-    public boolean hasEnoughStock(int quantity) {
-        return stock >= quantity;
+    public String getFullName() {
+        return brandName != null ? brandName + " " + model : model;
     }
 
     @Override
     public String toString() {
         return "Car{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
-                ", brandName='" + brandName + '\'' +
+                ", brandId=" + brandId +
+                ", model='" + model + '\'' +
                 ", price=" + price +
-                ", year=" + year +
-                ", stock=" + stock +
                 ", status='" + status + '\'' +
+                ", year=" + year +
+                ", color='" + color + '\'' +
+                ", stock=" + stock +
+                ", brandName='" + brandName + '\'' +
                 '}';
     }
 }

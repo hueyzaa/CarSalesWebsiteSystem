@@ -484,6 +484,33 @@ public class CarDAO {
             throw new DatabaseException("Failed to update car stock", e);
         }
     }
+    /**
+     * Increase car stock (for cancelled orders)
+     */
+    public boolean increaseStock(int carId, int quantity) {
+        String sql = "UPDATE Car SET stock = stock + ? WHERE car_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, quantity);
+            stmt.setInt(2, carId);
+
+            int rowsAffected = stmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                logger.info("Increased stock for car ID {} by {} units", carId, quantity);
+                return true;
+            } else {
+                logger.warn("No car found with ID: {}", carId);
+                return false;
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error increasing stock for car ID: {}", carId, e);
+            throw new DatabaseException("Failed to increase car stock", e);
+        }
+    }
 
     /**
      * Decrease car stock (for orders)
@@ -553,4 +580,5 @@ public class CarDAO {
             }
         }
     }
+
 }

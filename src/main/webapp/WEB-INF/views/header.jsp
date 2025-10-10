@@ -207,9 +207,6 @@
                                     <li><a class="dropdown-item" href="${pageContext.request.contextPath}/orders">
                                         <i class="fas fa-receipt"></i> Đơn Hàng
                                     </a></li>
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/favorites">
-                                        <i class="fas fa-heart"></i> Yêu Thích
-                                    </a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
                                         <i class="fas fa-sign-out-alt"></i> Đăng Xuất

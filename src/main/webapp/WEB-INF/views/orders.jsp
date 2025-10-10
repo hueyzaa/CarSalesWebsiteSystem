@@ -340,7 +340,7 @@
                                 <fmt:formatDate value="${order.createdAt}" pattern="dd/MM/yyyy HH:mm" />
                             </td>
                             <td class="text-center">
-                                <a href="${pageContext.request.contextPath}/orders/detail?id=${order.orderId}"
+                                <a href="${pageContext.request.contextPath}/order-detail?id=${order.orderId}"
                                    class="btn btn-detail">
                                     <i class="fas fa-eye"></i> Chi Tiết
                                 </a>
