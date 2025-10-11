@@ -313,6 +313,34 @@ SET o.remaining_amount = (
 PRINT 'Trigger: Updated remaining_amount after DELETE transaction';
 END;
 GO
+--Sau khi tạo trigger, chạy script này để fix tất cả orders cũ
+-- Update remaining_amount cho TẤT CẢ orders hiện tại
+UPDATE o
+SET o.remaining_amount = (
+                             -- Tính total từ OrderDetail
+                             SELECT COALESCE(SUM(od.price * od.quantity), 0)
+                             FROM OrderDetail od
+                             WHERE od.order_id = o.order_id
+                         ) - (
+                             -- Trừ đi tổng số tiền đã thanh toán (status = PAID)
+                             SELECT COALESCE(SUM(t.amount), 0)
+                             FROM Transactions t
+                             WHERE t.order_id = o.order_id
+                               AND t.payment_status = 'PAID'
+                         )
+    FROM Orders o;
+
+-- Kiểm tra kết quả
+SELECT
+    o.order_id,
+    o.payment_type,
+    (SELECT SUM(od.price * od.quantity) FROM OrderDetail od WHERE od.order_id = o.order_id) as total,
+    (SELECT COALESCE(SUM(t.amount), 0) FROM Transactions t WHERE t.order_id = o.order_id AND t.payment_status = 'PAID') as paid,
+    o.remaining_amount,
+    o.deposit_amount,
+    o.status
+FROM Orders o
+ORDER BY o.order_id DESC;
 -- =============================================
 -- INDEXES
 -- =============================================
