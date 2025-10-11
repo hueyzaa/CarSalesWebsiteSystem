@@ -65,7 +65,7 @@ public class OrderDetailServlet extends HttpServlet {
                 return;
             }
 
-            // Check permission: user can only view their own orders (unless admin)
+            // Check permission
             if (!user.isAdmin() && order.getUserId() != user.getId()) {
                 logger.warn("User {} attempted to access order {} belonging to user {}",
                         user.getId(), orderId, order.getUserId());
@@ -82,19 +82,23 @@ public class OrderDetailServlet extends HttpServlet {
             double total = orderDetailDAO.calculateOrderTotal(orderId);
             double paid = transactionDAO.getTotalPaidAmount(orderId);
 
-            // ✅ SET totalAmount và paidAmount
+            // Set amounts
             order.setTotalAmount(total);
             order.setPaidAmount(paid);
 
-            // ✅ KHÔNG GHI ĐÈ remainingAmount nếu đã có từ database
-            // remainingAmount đã được set từ database trong ordersDAO.getOrderById()
-            // Chỉ tính lại nếu chưa có hoặc cần cập nhật
+            // ✅ KHÔNG GHI ĐÈ remainingAmount từ database
+            // remainingAmount đã được set từ ordersDAO.getOrderById()
             if (order.getRemainingAmount() == null) {
-                order.setRemainingAmount(total - paid);
+                order.setRemainingAmount(Math.max(0, total - paid));
             }
 
-            logger.info("Order {}: Total={}, Paid={}, Remaining={}, PaymentType={}",
-                    orderId, total, paid, order.getRemainingAmount(), order.getPaymentType());
+            logger.info("Order {} details:", orderId);
+            logger.info("  - Payment Type: {}", order.getPaymentType());
+            logger.info("  - Total: {}", total);
+            logger.info("  - Paid: {}", paid);
+            logger.info("  - Remaining (DB): {}", order.getRemainingAmount());
+            logger.info("  - Status: {}", order.getStatus());
+            logger.info("  - Fully Paid: {}", order.isFullyPaid());
 
             // Set attributes
             request.setAttribute("order", order);

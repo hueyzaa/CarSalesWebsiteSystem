@@ -186,20 +186,20 @@ public class CheckoutServlet extends HttpServlet {
             double paymentAmount = 0;
             Double depositAmount = null;
             String notes = null;
-            String paymentStatus = "PENDING";  // Default to PENDING for all payment types
+            String paymentStatus = "PENDING";  // All start as PENDING
 
             switch (paymentType) {
                 case "SHOWROOM":
                     // Showroom payment - no upfront payment
                     paymentAmount = 0;
-                    paymentStatus = "PENDING";  // Chưa thanh toán
+                    paymentStatus = "PENDING";
                     notes = "Khách hàng sẽ thanh toán tại showroom. " +
                             "Vui lòng liên hệ để xác nhận và hẹn lịch.";
                     logger.info("Showroom payment selected for order. User: {}", userId);
                     break;
 
                 case "FULL":
-                    // Full payment - CHỜ THANH TOÁN
+                    // Full payment - Wait for VNPay payment
                     paymentAmount = orderTotal;
                     paymentStatus = "PENDING";  // ✅ Chờ thanh toán qua VNPay
                     notes = "Chờ thanh toán toàn bộ đơn hàng qua VNPay.";
@@ -207,7 +207,7 @@ public class CheckoutServlet extends HttpServlet {
                     break;
 
                 case "DEPOSIT":
-                    // Deposit payment - CHỜ THANH TOÁN
+                    // Deposit payment - Wait for VNPay payment
                     try {
                         depositAmount = Double.parseDouble(depositAmountStr);
 
@@ -258,7 +258,7 @@ public class CheckoutServlet extends HttpServlet {
                 return;
             }
 
-            logger.info("Order created successfully with ID: {} for user {}", orderId, userId);
+            logger.info("✅ Order created successfully with ID: {} for user {}", orderId, userId);
 
             // ✅ CHỈ GIẢM STOCK CHO SHOWROOM PAYMENT (không cần thanh toán trước)
             // FULL và DEPOSIT sẽ giảm stock sau khi thanh toán thành công trong PaymentCallbackServlet
@@ -266,24 +266,24 @@ public class CheckoutServlet extends HttpServlet {
                 for (CartItem item : cartItems) {
                     boolean stockUpdated = carDAO.decreaseStock(item.getCarId(), item.getQuantity());
                     if (!stockUpdated) {
-                        logger.warn("Failed to decrease stock for car ID: {} in order {}",
+                        logger.warn("❌ Failed to decrease stock for car ID: {} in order {}",
                                 item.getCarId(), orderId);
                     } else {
-                        logger.debug("Stock decreased successfully for car ID: {} by {} units",
+                        logger.info("✅ Stock decreased successfully for car ID: {} by {} units",
                                 item.getCarId(), item.getQuantity());
                     }
                 }
             } else {
-                logger.info("Stock will be decreased after successful payment for order {}", orderId);
+                logger.info("📌 Stock will be decreased after successful payment for order {}", orderId);
             }
 
             // Create transaction record
             int transactionId = transactionDAO.createTransaction(orderId, paymentAmount, paymentType, paymentStatus);
 
             if (transactionId == -1) {
-                logger.warn("Failed to create transaction for order: {}", orderId);
+                logger.warn("❌ Failed to create transaction for order: {}", orderId);
             } else {
-                logger.info("Transaction created successfully with ID: {} for order {}. Type: {}, Amount: {}, Status: {}",
+                logger.info("✅ Transaction created successfully with ID: {} for order {}. Type: {}, Amount: {}, Status: {}",
                         transactionId, orderId, paymentType, paymentAmount, paymentStatus);
             }
 
@@ -303,24 +303,23 @@ public class CheckoutServlet extends HttpServlet {
                         orderId);
                 session.setAttribute("success", successMessage);
 
-                logger.info("Order {} created with SHOWROOM payment. Redirecting to order detail.",
-                        orderId);
+                logger.info("✅ Order {} created with SHOWROOM payment. Redirecting to order detail.", orderId);
                 response.sendRedirect(request.getContextPath() + "/order-detail?id=" + orderId);
 
             } else {
                 // FULL or DEPOSIT - Redirect to payment gateway
-                logger.info("Order {} created with {} payment. Redirecting to payment gateway.",
+                logger.info("💳 Order {} created with {} payment. Redirecting to payment gateway.",
                         orderId, paymentType);
                 response.sendRedirect(request.getContextPath() + "/payment?orderId=" + orderId);
             }
 
         } catch (DatabaseException e) {
-            logger.error("Database error in CheckoutServlet POST", e);
+            logger.error("❌ Database error in CheckoutServlet POST", e);
             session.setAttribute("error", "Không thể xử lý đơn hàng. Vui lòng thử lại!");
             response.sendRedirect(request.getContextPath() + "/checkout");
 
         } catch (Exception e) {
-            logger.error("Unexpected error in CheckoutServlet POST", e);
+            logger.error("❌ Unexpected error in CheckoutServlet POST", e);
             session.setAttribute("error", "Đã xảy ra lỗi không mong muốn!");
             response.sendRedirect(request.getContextPath() + "/checkout");
         }

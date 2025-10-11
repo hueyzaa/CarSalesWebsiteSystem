@@ -10,6 +10,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class VNPayConfig {
 
+    // ✅ CẬP NHẬT URL này khi deploy hoặc dùng ngrok
     public static final String VNP_PAY_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     public static final String VNP_RETURN_URL = "http://localhost:8080/CarSalesWebsiteSystem/payment-callback";
     public static final String VNP_TMN_CODE = "NUB9I46D";
@@ -20,10 +21,15 @@ public class VNPayConfig {
     public static final String VNP_ORDER_TYPE = "other";
 
     /**
-     * Build payment URL - Follow VNPay's sample code exactly
+     * Build payment URL for VNPay
      */
     public static String buildPaymentUrl(Map<String, String> params) {
         try {
+            // Remove any existing hash
+            params.remove("vnp_SecureHash");
+            params.remove("vnp_SecureHashType");
+
+            // Sort parameters alphabetically
             List<String> fieldNames = new ArrayList<>(params.keySet());
             Collections.sort(fieldNames);
 
@@ -36,12 +42,12 @@ public class VNPayConfig {
                 String fieldValue = params.get(fieldName);
 
                 if (fieldValue != null && fieldValue.length() > 0) {
-                    // ✅ Build hash data - ENCODE giống VNPay sample
+                    // Build hash data - ENCODE theo chuẩn VNPay
                     hashData.append(fieldName);
                     hashData.append('=');
                     hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
 
-                    // Build query - ENCODE
+                    // Build query string - ENCODE
                     query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII.toString()));
                     query.append('=');
                     query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII.toString()));
@@ -56,8 +62,9 @@ public class VNPayConfig {
             String queryUrl = query.toString();
             String vnpSecureHash = hmacSHA512(VNP_HASH_SECRET, hashData.toString());
 
-            // Debug
+            // Debug logging
             System.out.println("=== VNPay Payment URL Debug ===");
+            System.out.println("TMN Code: " + VNP_TMN_CODE);
             System.out.println("Hash Data: " + hashData.toString());
             System.out.println("Secure Hash: " + vnpSecureHash);
             System.out.println("================================");
@@ -75,12 +82,38 @@ public class VNPayConfig {
     /**
      * Verify payment callback from VNPay
      */
-    public static boolean verifyPaymentCallback(Map<String, String> params) {
+    /**
+     * Verify payment callback from VNPay
+     * ✅ FIXED VERSION - Raw URL parameters
+     */
+    public static boolean verifyPaymentCallback(HttpServletRequest request) {
         try {
+            // Get raw query string (không decode)
+            String queryString = request.getQueryString();
+
+            if (queryString == null || queryString.isEmpty()) {
+                System.out.println("Empty query string");
+                return false;
+            }
+
+            // Parse parameters manually từ query string
+            Map<String, String> params = new HashMap<>();
+            String[] paramPairs = queryString.split("&");
+
+            for (String pair : paramPairs) {
+                String[] keyValue = pair.split("=", 2);
+                if (keyValue.length == 2) {
+                    params.put(keyValue[0], keyValue[1]);
+                }
+            }
+
             String vnpSecureHash = params.get("vnp_SecureHash");
+
+            // Remove hash parameters
             params.remove("vnp_SecureHash");
             params.remove("vnp_SecureHashType");
 
+            // Sort parameters
             List<String> fieldNames = new ArrayList<>(params.keySet());
             Collections.sort(fieldNames);
 
@@ -92,9 +125,12 @@ public class VNPayConfig {
                 String fieldValue = params.get(fieldName);
 
                 if (fieldValue != null && fieldValue.length() > 0) {
+                    // ✅ Decode URL encoded value
+                    String decodedValue = java.net.URLDecoder.decode(fieldValue, StandardCharsets.UTF_8.toString());
+
                     hashData.append(fieldName);
                     hashData.append('=');
-                    hashData.append(fieldValue);
+                    hashData.append(decodedValue); // Sử dụng decoded value
 
                     if (itr.hasNext()) {
                         hashData.append('&');
@@ -104,11 +140,12 @@ public class VNPayConfig {
 
             String signValue = hmacSHA512(VNP_HASH_SECRET, hashData.toString());
 
-            // Debug
+            // Debug logging
             System.out.println("=== VNPay Callback Verification ===");
+            System.out.println("Raw Query: " + queryString);
             System.out.println("Hash Data: " + hashData.toString());
-            System.out.println("Expected: " + signValue);
-            System.out.println("Received: " + vnpSecureHash);
+            System.out.println("Expected Hash: " + signValue);
+            System.out.println("Received Hash: " + vnpSecureHash);
             System.out.println("Valid: " + signValue.equals(vnpSecureHash));
             System.out.println("====================================");
 
@@ -126,7 +163,7 @@ public class VNPayConfig {
     public static String hmacSHA512(String key, String data) {
         try {
             if (key == null || data == null) {
-                throw new NullPointerException();
+                throw new NullPointerException("Key or data is null");
             }
 
             Mac hmac512 = Mac.getInstance("HmacSHA512");
@@ -177,8 +214,17 @@ public class VNPayConfig {
     public static String getIpAddress(HttpServletRequest request) {
         String ipAddress = request.getHeader("X-FORWARDED-FOR");
         if (ipAddress == null || ipAddress.isEmpty()) {
+            ipAddress = request.getHeader("X-Real-IP");
+        }
+        if (ipAddress == null || ipAddress.isEmpty()) {
             ipAddress = request.getRemoteAddr();
         }
+
+        // Handle IPv6 localhost
+        if ("0:0:0:0:0:0:0:1".equals(ipAddress)) {
+            ipAddress = "127.0.0.1";
+        }
+
         return ipAddress;
     }
 }
