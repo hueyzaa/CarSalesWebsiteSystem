@@ -4,6 +4,7 @@ import dao.TransactionDAO;
 import dao.OrdersDAO;
 import dao.OrderDetailDAO;
 import dao.CarDAO;
+import model.Order;
 import service.VNPayService;
 import service.VNPayService.PaymentResult;
 import jakarta.servlet.ServletException;
@@ -75,6 +76,14 @@ public class PaymentCallbackServlet extends HttpServlet {
                 int orderId = result.getOrderId();
                 logger.info("✅ Processing successful payment for order {}", orderId);
 
+                // Get order information
+                Order order = ordersDAO.getOrderById(orderId);
+                if (order == null) {
+                    logger.error("❌ Order not found: {}", orderId);
+                    response.sendRedirect(request.getContextPath() + "/payment-result?success=false");
+                    return;
+                }
+
                 // Get transaction for this order
                 var transactions = transactionDAO.getTransactionsByOrderId(orderId);
 
@@ -94,6 +103,9 @@ public class PaymentCallbackServlet extends HttpServlet {
                             // Update order status to APPROVED
                             ordersDAO.approveOrder(orderId);
                             logger.info("✅ Approved order {}", orderId);
+
+                            // ✅ UPDATE ORDER NOTES after successful payment
+                            updateOrderNotes(orderId, order, result.getAmount());
 
                             // Decrease stock
                             var orderDetails = orderDetailDAO.getOrderDetailsByOrderId(orderId);
@@ -164,6 +176,65 @@ public class PaymentCallbackServlet extends HttpServlet {
             }
 
             response.sendRedirect(request.getContextPath() + "/payment-result?success=false");
+        }
+    }
+
+    /**
+     * Update order notes after successful payment
+     */
+    private void updateOrderNotes(int orderId, Order order, long paidAmount) {
+        try {
+            String updatedNotes;
+            String paymentType = order.getPaymentType();
+
+            if ("FULL".equals(paymentType)) {
+                // Full payment completed
+                updatedNotes = String.format(
+                        "Đã thanh toán toàn bộ %,d₫ qua VNPay thành công. Đơn hàng đang được xử lý.",
+                        paidAmount
+                );
+                logger.info("📝 Setting FULL payment notes for order {}", orderId);
+
+            } else if ("DEPOSIT".equals(paymentType)) {
+                // Check if this is final payment (remaining = 0) or deposit
+                // Reload order to get updated remainingAmount from trigger
+                Order updatedOrder = ordersDAO.getOrderById(orderId);
+
+                if (updatedOrder != null && updatedOrder.getRemainingAmount() != null
+                        && updatedOrder.getRemainingAmount() <= 0) {
+                    // Final payment - fully paid
+                    updatedNotes = String.format(
+                            "Đã thanh toán toàn bộ đơn hàng qua VNPay thành công. " +
+                                    "Đơn hàng đã hoàn tất thanh toán."
+                    );
+                    logger.info("📝 Setting DEPOSIT final payment notes for order {}", orderId);
+                } else {
+                    // First deposit payment
+                    updatedNotes = String.format(
+                            "Đã thanh toán đặt cọc %,d₫ qua VNPay thành công. " +
+                                    "Vui lòng thanh toán phần còn lại khi nhận xe.",
+                            paidAmount
+                    );
+                    logger.info("📝 Setting DEPOSIT initial payment notes for order {}", orderId);
+                }
+
+            } else {
+                // Default message
+                updatedNotes = "Đã thanh toán thành công qua VNPay.";
+                logger.info("📝 Setting default payment notes for order {}", orderId);
+            }
+
+            // Update notes in database
+            boolean notesUpdated = ordersDAO.updateOrderNotes(orderId, updatedNotes);
+
+            if (notesUpdated) {
+                logger.info("✅ Updated order notes for order {}: {}", orderId, updatedNotes);
+            } else {
+                logger.warn("⚠️ Failed to update order notes for order {}", orderId);
+            }
+
+        } catch (Exception e) {
+            logger.error("❌ Error updating order notes for order {}", orderId, e);
         }
     }
 }
