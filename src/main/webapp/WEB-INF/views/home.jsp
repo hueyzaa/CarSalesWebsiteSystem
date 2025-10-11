@@ -222,10 +222,32 @@
                                     <p class="card-text text-primary fw-bold fs-5">
                                         <fmt:formatNumber value="${car.price}" type="currency" currencySymbol="₫"/>
                                     </p>
-                                    <a href="${pageContext.request.contextPath}/car-detail?id=${car.id}"
-                                       class="btn btn-primary w-100">
-                                        <i class="fas fa-eye"></i> Xem Chi Tiết
-                                    </a>
+
+                                    <!-- Nếu là admin -->
+                                    <c:if test="${sessionScope.userRole == 'ADMIN'}">
+                                        <div class="d-flex justify-content-between">
+                                            <a href="${pageContext.request.contextPath}/admin/update-car?id=${car.id}"
+                                               class="btn btn-warning w-50 me-2">
+                                                <i class="fas fa-edit"></i> Cập Nhật
+                                            </a>
+                                            <form action="${pageContext.request.contextPath}/admin/delete-car" method="post" class="w-50">
+                                                <input type="hidden" name="id" value="${car.id}">
+                                                <button type="submit" class="btn btn-danger w-100"
+                                                        onclick="return confirm('Bạn có chắc muốn xóa xe này không?');">
+                                                    <i class="fas fa-trash"></i> Xóa
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </c:if>
+
+                                    <!-- Nếu là khách hàng -->
+                                    <c:if test="${sessionScope.userRole != 'ADMIN'}">
+                                        <a href="${pageContext.request.contextPath}/car-detail?id=${car.id}"
+                                           class="btn btn-primary w-100">
+                                            <i class="fas fa-eye"></i> Xem Chi Tiết
+                                        </a>
+                                    </c:if>
+
                                 </div>
                             </div>
                         </div>
