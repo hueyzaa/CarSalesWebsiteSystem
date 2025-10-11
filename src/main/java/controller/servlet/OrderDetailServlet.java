@@ -65,7 +65,7 @@ public class OrderDetailServlet extends HttpServlet {
                 return;
             }
 
-            // Check permission: user can only view their own orders (unless admin)
+            // Check permission
             if (!user.isAdmin() && order.getUserId() != user.getId()) {
                 logger.warn("User {} attempted to access order {} belonging to user {}",
                         user.getId(), orderId, order.getUserId());
@@ -78,13 +78,24 @@ public class OrderDetailServlet extends HttpServlet {
             order.setOrderDetails(orderDetailDAO.getOrderDetailsByOrderId(orderId));
             order.setTransactions(transactionDAO.getTransactionsByOrderId(orderId));
 
-            // Calculate totals
+            // Calculate totals for display
             double total = orderDetailDAO.calculateOrderTotal(orderId);
             double paid = transactionDAO.getTotalPaidAmount(orderId);
 
+            // Set amounts for display
             order.setTotalAmount(total);
             order.setPaidAmount(paid);
-            order.setRemainingAmount(total - paid);
+
+            // ✅ remainingAmount is already calculated by trigger in database
+            // No need to recalculate or override!
+
+            logger.info("Order {} details (with trigger-calculated remaining):", orderId);
+            logger.info("  - Payment Type: {}", order.getPaymentType());
+            logger.info("  - Total: {}", total);
+            logger.info("  - Paid: {}", paid);
+            logger.info("  - Remaining (from trigger): {}", order.getRemainingAmount());
+            logger.info("  - Status: {}", order.getStatus());
+            logger.info("  - Fully Paid: {}", order.isFullyPaid());
 
             // Set attributes
             request.setAttribute("order", order);
