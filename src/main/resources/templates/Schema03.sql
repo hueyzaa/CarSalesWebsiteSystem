@@ -171,7 +171,7 @@ CREATE TABLE Blog (
 GO
 
 -- =============================================
--- CAR IMAGE TABLE
+-- CAR IMAGE TABLE:wq:wq
 -- =============================================
 CREATE TABLE CarImage (
                           image_id INT IDENTITY(1,1) PRIMARY KEY,
