@@ -72,14 +72,14 @@ public class PaymentCallbackServlet extends HttpServlet {
             logger.info("  - Message: {}", result.getMessage());
 
             if (result.isSuccess()) {
-                // ✅ PAYMENT SUCCESSFUL
+                // PAYMENT SUCCESSFUL
                 int orderId = result.getOrderId();
-                logger.info("✅ Processing successful payment for order {}", orderId);
+                logger.info("Processing successful payment for order {}", orderId);
 
                 // Get order information
                 Order order = ordersDAO.getOrderById(orderId);
                 if (order == null) {
-                    logger.error("❌ Order not found: {}", orderId);
+                    logger.error("Order not found: {}", orderId);
                     response.sendRedirect(request.getContextPath() + "/payment-result?success=false");
                     return;
                 }
@@ -92,19 +92,19 @@ public class PaymentCallbackServlet extends HttpServlet {
 
                     // Check if already processed
                     if ("PAID".equals(transactions.get(0).getPaymentStatus())) {
-                        logger.info("⚠️ Transaction {} already marked as PAID, skipping update", transactionId);
+                        logger.info("Transaction {} already marked as PAID, skipping update", transactionId);
                     } else {
                         // Update transaction status to PAID
                         boolean updated = transactionDAO.markAsPaid(transactionId);
 
                         if (updated) {
-                            logger.info("✅ Updated transaction {} to PAID for order {}", transactionId, orderId);
+                            logger.info("Updated transaction {} to PAID for order {}", transactionId, orderId);
 
                             // Update order status to APPROVED
                             ordersDAO.approveOrder(orderId);
-                            logger.info("✅ Approved order {}", orderId);
+                            logger.info("Approved order {}", orderId);
 
-                            // ✅ UPDATE ORDER NOTES after successful payment
+                            // UPDATE ORDER NOTES after successful payment
                             updateOrderNotes(orderId, order, result.getAmount());
 
                             // Decrease stock
@@ -116,23 +116,23 @@ public class PaymentCallbackServlet extends HttpServlet {
                                 for (var detail : orderDetails) {
                                     boolean stockUpdated = carDAO.decreaseStock(detail.getCarId(), detail.getQuantity());
                                     if (stockUpdated) {
-                                        logger.info("✅ Decreased stock for car ID: {} by {} units",
+                                        logger.info("Decreased stock for car ID: {} by {} units",
                                                 detail.getCarId(), detail.getQuantity());
                                     } else {
-                                        logger.error("❌ CRITICAL: Failed to decrease stock for car ID: {}. " +
+                                        logger.error("CRITICAL: Failed to decrease stock for car ID: {}. " +
                                                         "Order: {}, Quantity: {}. Manual stock adjustment required!",
                                                 detail.getCarId(), orderId, detail.getQuantity());
                                     }
                                 }
                             } else {
-                                logger.error("❌ No order details found for order {}", orderId);
+                                logger.error("No order details found for order {}", orderId);
                             }
                         } else {
-                            logger.error("❌ Failed to update transaction status for order {}", orderId);
+                            logger.error("Failed to update transaction status for order {}", orderId);
                         }
                     }
                 } else {
-                    logger.error("❌ No transaction found for order {}", orderId);
+                    logger.error("No transaction found for order {}", orderId);
                 }
 
                 // Set success message in session
@@ -144,13 +144,13 @@ public class PaymentCallbackServlet extends HttpServlet {
                     session.setAttribute("paymentTransactionNo", result.getTransactionNo());
                 }
 
-                logger.info("✅ Redirecting to payment result page: success=true");
+                logger.info("Redirecting to payment result page: success=true");
                 logger.info("========================================");
                 response.sendRedirect(request.getContextPath() + "/payment-result?success=true&orderId=" + orderId);
 
             } else {
-                // ❌ PAYMENT FAILED
-                logger.warn("❌ Payment failed:");
+                // PAYMENT FAILED
+                logger.warn("Payment failed:");
                 logger.warn("  - Response Code: {}", result.getResponseCode());
                 logger.warn("  - Message: {}", result.getMessage());
 
@@ -167,7 +167,7 @@ public class PaymentCallbackServlet extends HttpServlet {
 
         } catch (Exception e) {
             logger.error("========================================");
-            logger.error("❌ CRITICAL ERROR processing payment callback", e);
+            logger.error("CRITICAL ERROR processing payment callback", e);
             logger.error("========================================");
             e.printStackTrace();
 
@@ -193,7 +193,7 @@ public class PaymentCallbackServlet extends HttpServlet {
                         "Đã thanh toán toàn bộ %,d₫ qua VNPay thành công. Đơn hàng đang được xử lý.",
                         paidAmount
                 );
-                logger.info("📝 Setting FULL payment notes for order {}", orderId);
+                logger.info("Setting FULL payment notes for order {}", orderId);
 
             } else if ("DEPOSIT".equals(paymentType)) {
                 // Check if this is final payment (remaining = 0) or deposit
@@ -207,7 +207,7 @@ public class PaymentCallbackServlet extends HttpServlet {
                             "Đã thanh toán toàn bộ đơn hàng qua VNPay thành công. " +
                                     "Đơn hàng đã hoàn tất thanh toán."
                     );
-                    logger.info("📝 Setting DEPOSIT final payment notes for order {}", orderId);
+                    logger.info("Setting DEPOSIT final payment notes for order {}", orderId);
                 } else {
                     // First deposit payment
                     updatedNotes = String.format(
@@ -215,26 +215,26 @@ public class PaymentCallbackServlet extends HttpServlet {
                                     "Vui lòng thanh toán phần còn lại khi nhận xe.",
                             paidAmount
                     );
-                    logger.info("📝 Setting DEPOSIT initial payment notes for order {}", orderId);
+                    logger.info("Setting DEPOSIT initial payment notes for order {}", orderId);
                 }
 
             } else {
                 // Default message
                 updatedNotes = "Đã thanh toán thành công qua VNPay.";
-                logger.info("📝 Setting default payment notes for order {}", orderId);
+                logger.info("Setting default payment notes for order {}", orderId);
             }
 
             // Update notes in database
             boolean notesUpdated = ordersDAO.updateOrderNotes(orderId, updatedNotes);
 
             if (notesUpdated) {
-                logger.info("✅ Updated order notes for order {}: {}", orderId, updatedNotes);
+                logger.info("Updated order notes for order {}: {}", orderId, updatedNotes);
             } else {
-                logger.warn("⚠️ Failed to update order notes for order {}", orderId);
+                logger.warn("Failed to update order notes for order {}", orderId);
             }
 
         } catch (Exception e) {
-            logger.error("❌ Error updating order notes for order {}", orderId, e);
+            logger.error("Error updating order notes for order {}", orderId, e);
         }
     }
 }

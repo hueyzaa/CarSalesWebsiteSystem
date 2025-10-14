@@ -170,13 +170,28 @@
             background: #1a1a1a;
             border: 1px solid #333;
             color: #fff;
-            padding: 8px;
+            padding: 0;
             border-radius: 8px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .quantity-input:focus {
             outline: none;
             border-color: #ffd700;
+        }
+
+        /* Remove spin buttons for number input */
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .quantity-input[type=number] {
+            -moz-appearance: textfield;
         }
 
         .btn-quantity {
@@ -392,14 +407,14 @@
                                     <input type="hidden" name="action" value="update">
                                     <input type="hidden" name="cartItemId" value="${item.id}">
                                     <button type="button" class="btn-quantity" onclick="decreaseQuantity(this)">
-                                        <i class="fas fa-minus"></i>
+                                        <i class="fas fa-minus">-</i>
                                     </button>
                                     <input type="number" name="quantity" value="${item.quantity}" min="1" max="10" class="quantity-input" readonly>
                                     <button type="button" class="btn-quantity" onclick="increaseQuantity(this)">
-                                        <i class="fas fa-plus"></i>
+                                        <i class="fas fa-plus">+</i>
                                     </button>
                                     <button type="submit" class="btn btn-quantity" style="width: auto; padding: 0 15px;">
-                                        <i class="fas fa-check"></i>
+                                        <i class="fas fa-check"></i> Cập Nhật
                                     </button>
                                 </form>
                             </div>

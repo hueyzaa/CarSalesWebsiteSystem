@@ -259,6 +259,22 @@
             color: #f8f9fa;
             font-size: 1.1rem;
             font-weight: 600;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Remove spin buttons for number input */
+        .quantity-value::-webkit-outer-spin-button,
+        .quantity-value::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .quantity-value[type=number] {
+            -moz-appearance: textfield;
         }
 
         .btn-add-cart {
@@ -487,7 +503,7 @@
                             <label for="quantity">Số Lượng:</label>
                             <div class="quantity-input">
                                 <button type="button" class="quantity-btn" onclick="decreaseQuantity()">
-                                    <i class="fas fa-minus"></i>
+                                    <i class="fas fa-minus">-</i>
                                 </button>
                                 <input type="number"
                                        id="quantity"
@@ -498,7 +514,7 @@
                                        class="quantity-value"
                                        readonly>
                                 <button type="button" class="quantity-btn" onclick="increaseQuantity()">
-                                    <i class="fas fa-plus"></i>
+                                    <i class="fas fa-plus">+</i>
                                 </button>
                             </div>
                         </div>

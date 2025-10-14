@@ -85,7 +85,7 @@ public class PaymentServlet extends HttpServlet {
                 return;
             }
 
-            // ✅ Calculate total paid amount để xác định lần thanh toán
+            // Calculate total paid amount để xác định lần thanh toán
             double totalPaid = transactionDAO.getTotalPaidAmount(orderId);
 
             logger.info("Order {} payment status:", orderId);
@@ -98,7 +98,7 @@ public class PaymentServlet extends HttpServlet {
             String orderInfo;
 
             if ("FULL".equals(order.getPaymentType())) {
-                // ✅ FULL payment
+                // FULL payment
                 if (totalPaid > 0) {
                     logger.warn("Order {} already paid", orderId);
                     session.setAttribute("error", "Đơn hàng đã được thanh toán!");
@@ -114,10 +114,10 @@ public class PaymentServlet extends HttpServlet {
                 logger.info("FULL payment: {} VND", paymentAmount);
 
             } else if ("DEPOSIT".equals(order.getPaymentType())) {
-                // ✅ DEPOSIT payment - Check if first payment or remaining
+                // DEPOSIT payment - Check if first payment or remaining
 
                 if (totalPaid == 0) {
-                    // 🎯 FIRST PAYMENT - Deposit amount
+                    // FIRST PAYMENT - Deposit amount
                     if (order.getDepositAmount() == null || order.getDepositAmount() <= 0) {
                         logger.error("Deposit amount not found for order {}", orderId);
                         session.setAttribute("error", "Không tìm thấy số tiền đặt cọc!");
@@ -128,10 +128,10 @@ public class PaymentServlet extends HttpServlet {
                     paymentAmount = order.getDepositAmount().longValue();
                     orderInfo = String.format("Dat coc don hang so %d", orderId);
 
-                    logger.info("🎯 DEPOSIT - First payment (deposit): {} VND", paymentAmount);
+                    logger.info("DEPOSIT - First payment (deposit): {} VND", paymentAmount);
 
                 } else {
-                    // 🎯 SECOND PAYMENT - Remaining amount
+                    // SECOND PAYMENT - Remaining amount
                     Double remainingAmount = order.getRemainingAmount();
 
                     if (remainingAmount == null || remainingAmount <= 0) {
@@ -144,7 +144,7 @@ public class PaymentServlet extends HttpServlet {
                     paymentAmount = remainingAmount.longValue();
                     orderInfo = String.format("Thanh toan phan con lai don hang so %d", orderId);
 
-                    logger.info("🎯 DEPOSIT - Remaining payment: {} VND", paymentAmount);
+                    logger.info("DEPOSIT - Remaining payment: {} VND", paymentAmount);
                 }
 
             } else {
@@ -154,7 +154,7 @@ public class PaymentServlet extends HttpServlet {
                 return;
             }
 
-            logger.info("✅ Final payment amount for order {}: {} VND", orderId, paymentAmount);
+            logger.info("Final payment amount for order {}: {} VND", orderId, paymentAmount);
             logger.info("Order info: {}", orderInfo);
 
             // Get user IP address
@@ -175,7 +175,7 @@ public class PaymentServlet extends HttpServlet {
                 return;
             }
 
-            logger.info("✅ Redirecting to VNPay payment page for order: {}", orderId);
+            logger.info("Redirecting to VNPay payment page for order: {}", orderId);
             logger.info("Payment URL created with amount: {} VND", paymentAmount);
 
             // Store order ID in session
@@ -192,7 +192,7 @@ public class PaymentServlet extends HttpServlet {
         } catch (Exception e) {
             logger.error("Error processing payment", e);
             session.setAttribute("error", "Đã xảy ra lỗi khi xử lý thanh toán!");
-            response.sendRedirect(request.getContextPath() + "/checkout");
+            response.sendRedirect(request.getContextPath() + "/checko ut");
         }
     }
 }
