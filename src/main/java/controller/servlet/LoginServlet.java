@@ -32,14 +32,16 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check if already logged in
         HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("user") != null) {
-            response.sendRedirect(request.getContextPath() + "/home");
+
+        // Nếu đã đăng nhập -> chuyển hướng theo vai trò
+        if (session != null && session.getAttribute("userRole") != null) {
+            String role = (String) session.getAttribute("userRole");
+            redirectByRole(role, request, response);
             return;
         }
 
-        // Generate CSRF token
+        // Tạo CSRF token
         String csrfToken = UUID.randomUUID().toString();
         request.getSession().setAttribute("csrfToken", csrfToken);
         request.setAttribute("csrfToken", csrfToken);
@@ -55,10 +57,10 @@ public class LoginServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         try {
-            // Verify CSRF token
+            // Kiểm tra CSRF token
             validateCsrfToken(request);
 
-            // Validate input
+            // Lấy dữ liệu form
             String email = ValidationUtil.validateEmail(request.getParameter("email"));
             String password = request.getParameter("password");
 
@@ -66,56 +68,72 @@ public class LoginServlet extends HttpServlet {
                 throw new ValidationException("password", "Mật khẩu không được để trống");
             }
 
-            // Attempt login
+            // Kiểm tra đăng nhập
             User user = userDAO.login(email, password);
 
             if (user != null) {
-                // Success - reset rate limit
+                // Reset giới hạn
                 RateLimitFilter.resetAttempts(email);
 
-                // Create session
-                HttpSession session = request.getSession();
+                // Tạo session
+                HttpSession session = request.getSession(true);
                 session.setAttribute("user", user);
                 session.setAttribute("userId", user.getUserId());
                 session.setAttribute("userName", user.getName());
-                session.setAttribute("userRole", user.getRole());
+                session.setAttribute("userRole", user.getRole() != null ? user.getRole().toUpperCase() : "GUEST");
+                session.setMaxInactiveInterval(30 * 60); // 30 phút
 
-                // Set session timeout (30 minutes)
-                session.setMaxInactiveInterval(30 * 60);
+                request.changeSessionId(); // chống session fixation
 
-                // Prevent session fixation
-                request.changeSessionId();
-
-                logger.info("User logged in successfully: {}", email);
-                response.sendRedirect(request.getContextPath() + "/home");
+                logger.info("User '{}' logged in successfully with role '{}'", email, user.getRole());
+                redirectByRole(user.getRole(), request, response);
 
             } else {
-                // Failed login - record attempt
+                // Đăng nhập thất bại
                 RateLimitFilter.recordFailedAttempt(email);
-                logger.warn("Failed login attempt for email: {}", email);
-
                 throw new ValidationException("Thông tin đăng nhập không chính xác");
             }
 
         } catch (ValidationException e) {
-            logger.debug("Validation error in login: {}", e.getMessage());
+            logger.warn("Validation error in login: {}", e.getMessage());
             handleError(request, response, e.getMessage());
 
         } catch (Exception e) {
             logger.error("Unexpected error in login", e);
-            handleError(request, response, "Đã xảy ra lỗi. Vui lòng thử lại.");
+            handleError(request, response, "Đã xảy ra lỗi không xác định.");
         }
     }
 
     /**
-     * Validate CSRF token
+     * Điều hướng theo vai trò
+     */
+    private void redirectByRole(String role, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (role == null) {
+            response.sendRedirect(request.getContextPath() + "/home");
+            return;
+        }
+
+        switch (role.toUpperCase()) {
+            case "ADMIN":
+                response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
+                break;
+            case "STAFF":
+                response.sendRedirect(request.getContextPath() + "/Staff/dashboard");
+                break;
+            case "CUSTOMER":
+            case "GUEST":
+            default:
+                response.sendRedirect(request.getContextPath() + "/home");
+                break;
+        }
+    }
+
+    /**
+     *  Kiểm tra CSRF token
      */
     private void validateCsrfToken(HttpServletRequest request) throws ValidationException {
         HttpSession session = request.getSession(false);
-
-        if (session == null) {
-            throw new ValidationException("Phiên làm việc đã hết hạn");
-        }
+        if (session == null) throw new ValidationException("Phiên làm việc đã hết hạn");
 
         String sessionToken = (String) session.getAttribute("csrfToken");
         String requestToken = request.getParameter("csrfToken");
@@ -127,16 +145,14 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
-     * Handle error and show login form again
+     *  Hiển thị lại form khi lỗi
      */
     private void handleError(HttpServletRequest request, HttpServletResponse response, String errorMessage)
             throws ServletException, IOException {
-        request.setAttribute("error", errorMessage);
 
-        // Preserve email
+        request.setAttribute("error", errorMessage);
         request.setAttribute("email", request.getParameter("email"));
 
-        // Generate new CSRF token
         String csrfToken = UUID.randomUUID().toString();
         request.getSession().setAttribute("csrfToken", csrfToken);
         request.setAttribute("csrfToken", csrfToken);

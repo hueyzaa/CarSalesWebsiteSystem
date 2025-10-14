@@ -188,7 +188,6 @@
             </h2>
             <p>Khám phá những mẫu xe được yêu thích nhất</p>
         </div>
-
         <div class="row g-4">
             <c:choose>
                 <c:when test="${not empty cars}">

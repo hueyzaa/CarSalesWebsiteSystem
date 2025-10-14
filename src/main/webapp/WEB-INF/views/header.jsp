@@ -201,17 +201,63 @@
                                     <i class="fas fa-user"></i> ${sessionScope.user.name}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">
-                                        <i class="fas fa-user-circle"></i> Hồ Sơ
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/orders">
-                                        <i class="fas fa-receipt"></i> Đơn Hàng
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
-                                        <i class="fas fa-sign-out-alt"></i> Đăng Xuất
-                                    </a></li>
+
+                                    <!-- Nếu là ADMIN -->
+                                    <c:if test="${sessionScope.user.role == 'ADMIN'}">
+
+                                        <!-- Quản lý hệ thống -->
+                                        <li><h6 class="dropdown-header">Quản lý hệ thống</h6></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/cars">
+                                            <i class="fas fa-car"></i> Quản lý xe
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/brands">
+                                            <i class="fas fa-warehouse"></i> Quản lý hãng xe
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/users">
+                                            <i class="fas fa-users"></i> Quản lý người dùng
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/staff">
+                                            <i class="fas fa-user-tie"></i> Quản lý nhân viên
+                                        </a></li>
+
+                                        <li><hr class="dropdown-divider"></li>
+
+                                        <!-- Kinh doanh -->
+                                        <li><h6 class="dropdown-header">Kinh doanh</h6></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/orders">
+                                            <i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/promotions">
+                                            <i class="fas fa-percent"></i> Quản lý khuyến mãi
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/statistics">
+                                            <i class="fas fa-chart-line"></i> Thống kê doanh thu
+                                        </a></li>
+
+                                        <li><hr class="dropdown-divider"></li>
+
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
+                                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                        </a></li>
+
+                                    </c:if>
+
+                                    <!-- Nếu là USER bình thường -->
+                                    <c:if test="${sessionScope.user.role != 'ADMIN'}">
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/orders">
+                                            <i class="fas fa-receipt"></i> Đơn hàng
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">
+                                            <i class="fas fa-user-circle"></i> Thông tin cá nhân
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
+                                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                        </a></li>
+                                    </c:if>
+
                                 </ul>
+
                             </li>
                         </c:when>
                         <c:otherwise>
