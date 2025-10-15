@@ -3,6 +3,7 @@ package controller.servlet.admin;
 import dao.BrandDAO;
 import dao.CarDAO;
 import model.Car;
+import model.Brand;
 import util.ValidationUtil;
 import exception.ValidationException;
 import exception.DatabaseException;
@@ -34,14 +35,12 @@ public class AddCarServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Get brand list for dropdown
-            List<model.Brand> brandList = brandDAO.getAllBrands();
+            List<Brand> brandList = brandDAO.getAllBrands();
             request.setAttribute("brandList", brandList);
-            request.getRequestDispatcher("/WEB-INF/views/admin/add-car.jsp").forward(request, response);
-
+            request.getRequestDispatcher("/WEB-INF/views/Admin/add-car.jsp").forward(request, response);
         } catch (DatabaseException e) {
             logger.error("Error loading add car page", e);
-            request.setAttribute("error", "Không thể tải trang. Vui lòng thử lại sau.");
+            request.setAttribute("error", "Không thể tải danh sách hãng xe. Vui lòng thử lại sau.");
             request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
         }
     }
@@ -51,42 +50,26 @@ public class AddCarServlet extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-            // Validate and extract parameters
+
             int brandId = ValidationUtil.validatePositiveInt(request.getParameter("brandId"), "Hãng xe");
             String model = ValidationUtil.validateString(request.getParameter("model"), "Tên mẫu xe", 100);
-            double price = ValidationUtil.validatePrice(request.getParameter("price")).doubleValue();  // ✅ Convert to double
+            double price = ValidationUtil.validatePrice(request.getParameter("price")).doubleValue();
             String status = ValidationUtil.validateStatus(request.getParameter("status"));
             String description = request.getParameter("description");
-
-            // Validate optional fields
-            Integer year = null;
-            String yearParam = request.getParameter("year");
-            if (yearParam != null && !yearParam.trim().isEmpty()) {
-                year = ValidationUtil.validatePositiveInt(yearParam, "Năm sản xuất");
+            if (description != null && !description.isBlank()) {
+                description = ValidationUtil.validateString(description, "Mô tả", 1000);
             }
 
+
+            Integer year = parseOptionalInt(request.getParameter("year"), "Năm sản xuất");
+            Integer stock = parseOptionalInt(request.getParameter("stock"), "Số lượng tồn kho");
             String color = request.getParameter("color");
             if (color != null && !color.trim().isEmpty()) {
                 color = ValidationUtil.validateString(color, "Màu sắc", 50);
             }
 
-            Integer stock = null;
-            String stockParam = request.getParameter("stock");
-            if (stockParam != null && !stockParam.trim().isEmpty()) {
-                stock = ValidationUtil.validatePositiveInt(stockParam, "Số lượng tồn kho");
-            }
 
-            // Validate description
-            if (description != null && !description.trim().isEmpty()) {
-                description = ValidationUtil.validateString(description, "Mô tả", 1000);
-            } else {
-                description = null;
-            }
-
-            // Validate image URLs
             String[] imageUrls = request.getParameterValues("imageUrls");
-            String primaryImageIndex = request.getParameter("primaryImage");
-
             List<String> validImageUrls = new ArrayList<>();
             if (imageUrls != null) {
                 for (String url : imageUrls) {
@@ -99,65 +82,50 @@ public class AddCarServlet extends HttpServlet {
                 }
             }
 
-            // Create car object
+
             Car car = new Car();
             car.setBrandId(brandId);
-            car.setName(model);  // Use setName() instead of setModel()
+            car.setName(model);
             car.setPrice(price);
             car.setStatus(status);
             car.setDescription(description);
+            car.setYear(year != null ? year : 0);
+            car.setColor(color);
+            car.setStock(stock != null ? stock : 0);
 
-            // Set optional fields
-            if (year != null) {
-                car.setYear(year);
-            }
-            if (color != null) {
-                car.setColor(color);
-            }
-            if (stock != null) {
-                car.setStock(stock);
-            } else {
-                car.setStock(0);  // Default stock
-            }
-
-            // Add car to database
+            // === Ghi vào DB ===
             int carId = carDAO.addCar(car);
+            if (carId <= 0) throw new DatabaseException("Không thể thêm xe vào cơ sở dữ liệu");
 
-            if (carId == -1) {
-                throw new DatabaseException("Không thể thêm xe vào cơ sở dữ liệu");
-            }
 
-            // Add images if available
             if (!validImageUrls.isEmpty()) {
                 int primaryIndex = 0;
-                if (primaryImageIndex != null) {
-                    try {
-                        primaryIndex = Integer.parseInt(primaryImageIndex);
-                        if (primaryIndex < 0 || primaryIndex >= validImageUrls.size()) {
-                            primaryIndex = 0;
+                try {
+                    String primaryParam = request.getParameter("primaryImage");
+                    if (primaryParam != null) {
+                        int index = Integer.parseInt(primaryParam);
+                        if (index >= 0 && index < validImageUrls.size()) {
+                            primaryIndex = index;
                         }
-                    } catch (NumberFormatException e) {
-                        logger.warn("Invalid primary image index, using default", e);
                     }
+                } catch (NumberFormatException e) {
+                    logger.warn("Invalid primary image index, defaulting to 0");
                 }
-
-                boolean imageSuccess = carDAO.addCarImages(carId, validImageUrls, primaryIndex);
-                if (!imageSuccess) {
-                    logger.warn("Failed to add images for car ID: {}", carId);
-                }
+                boolean imageAdded = carDAO.addCarImages(carId, validImageUrls, primaryIndex);
+                if (!imageAdded) logger.warn("Ảnh xe không được lưu thành công cho carId = {}", carId);
             }
 
-            // Success
-            logger.info("Car added successfully with ID: {}", carId);
+
+            logger.info("Xe mới được thêm thành công: ID = {}", carId);
             request.getSession().setAttribute("success", "Thêm xe thành công!");
-            response.sendRedirect(request.getContextPath() + "/admin/cars");
+            response.sendRedirect(request.getContextPath() + "/Admin/car-list");
 
         } catch (ValidationException e) {
-            logger.warn("Validation error in add car: {}", e.getMessage());
+            logger.warn("Validation failed: {}", e.getMessage());
             handleError(request, response, e.getMessage());
 
         } catch (DatabaseException e) {
-            logger.error("Database error in add car", e);
+            logger.error("Database error when adding car", e);
             handleError(request, response, "Lỗi cơ sở dữ liệu. Vui lòng thử lại.");
 
         } catch (Exception e) {
@@ -166,31 +134,33 @@ public class AddCarServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Handle error and forward back to form
-     */
+    private Integer parseOptionalInt(String param, String fieldName) throws ValidationException {
+        if (param == null || param.trim().isEmpty()) return null;
+        return ValidationUtil.validatePositiveInt(param, fieldName);
+    }
+
     private void handleError(HttpServletRequest request, HttpServletResponse response, String errorMessage)
             throws ServletException, IOException {
+
         request.setAttribute("error", errorMessage);
 
-        // Preserve form data
+
+        request.setAttribute("brandId", request.getParameter("brandId"));
         request.setAttribute("model", request.getParameter("model"));
         request.setAttribute("price", request.getParameter("price"));
         request.setAttribute("status", request.getParameter("status"));
         request.setAttribute("description", request.getParameter("description"));
-        request.setAttribute("brandId", request.getParameter("brandId"));
         request.setAttribute("year", request.getParameter("year"));
         request.setAttribute("color", request.getParameter("color"));
         request.setAttribute("stock", request.getParameter("stock"));
 
-        // Reload brand list
         try {
-            List<model.Brand> brandList = brandDAO.getAllBrands();
+            List<Brand> brandList = brandDAO.getAllBrands();
             request.setAttribute("brandList", brandList);
         } catch (DatabaseException e) {
-            logger.error("Error loading brands for error page", e);
+            logger.error("Failed to reload brand list after error", e);
         }
 
-        request.getRequestDispatcher("/WEB-INF/views/admin/add-car.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/Admin/add-car.jsp").forward(request, response);
     }
 }

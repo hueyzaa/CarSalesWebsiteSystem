@@ -207,35 +207,11 @@
 
                                         <!-- Quản lý hệ thống -->
                                         <li><h6 class="dropdown-header">Quản lý hệ thống</h6></li>
-                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/cars">
-                                            <i class="fas fa-car"></i> Quản lý xe
+                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Admin/dashboard">
+                                            <i class="fas fa-car"></i> Bảng điều khiển
                                         </a></li>
-                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/brands">
-                                            <i class="fas fa-warehouse"></i> Quản lý hãng xe
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/users">
-                                            <i class="fas fa-users"></i> Quản lý người dùng
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/staff">
-                                            <i class="fas fa-user-tie"></i> Quản lý nhân viên
-                                        </a></li>
-
                                         <li><hr class="dropdown-divider"></li>
-
-                                        <!-- Kinh doanh -->
-                                        <li><h6 class="dropdown-header">Kinh doanh</h6></li>
-                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/orders">
-                                            <i class="fas fa-file-invoice-dollar"></i> Quản lý đơn hàng
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/promotions">
-                                            <i class="fas fa-percent"></i> Quản lý khuyến mãi
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/admin/statistics">
-                                            <i class="fas fa-chart-line"></i> Thống kê doanh thu
-                                        </a></li>
-
                                         <li><hr class="dropdown-divider"></li>
-
                                         <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
                                             <i class="fas fa-sign-out-alt"></i> Đăng xuất
                                         </a></li>
