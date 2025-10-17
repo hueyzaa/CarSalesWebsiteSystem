@@ -307,24 +307,6 @@
             gap: 10px;
         }
 
-        .btn-payment {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border: none;
-            color: #1a1a1a;
-            font-weight: 700;
-            padding: 15px 30px;
-            border-radius: 10px;
-            transition: all 0.3s;
-            width: 100%;
-        }
-
-        .btn-payment:hover {
-            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
-            color: #000;
-        }
-
         .btn-cancel-order {
             background: transparent;
             border: 2px solid #e74c3c;
@@ -411,18 +393,18 @@
 
 <div class="container mb-5">
     <c:if test="${not empty sessionScope.success}">
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle"></i> ${sessionScope.success}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> ${sessionScope.success}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
         <c:remove var="success" scope="session"/>
     </c:if>
 
     <c:if test="${not empty sessionScope.error}">
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle"></i> ${sessionScope.error}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle"></i> ${sessionScope.error}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
         <c:remove var="error" scope="session"/>
     </c:if>
 
@@ -458,11 +440,8 @@
                 <div class="info-label"><i class="fas fa-wallet"></i> Hình thức thanh toán</div>
                 <div class="info-value">
                     <c:choose>
-                        <c:when test="${order.paymentType == 'FULL'}">
-                            <span style="color: #2196f3;">Thanh toán toàn bộ</span>
-                        </c:when>
                         <c:when test="${order.paymentType == 'DEPOSIT'}">
-                            <span style="color: #ff9800;">Đặt cọc</span>
+                            <span style="color: #ff9800;">Đặt cọc 10%</span>
                         </c:when>
                         <c:when test="${order.paymentType == 'SHOWROOM'}">
                             <span style="color: #9c27b0;">Thanh toán tại showroom</span>
@@ -483,12 +462,12 @@
                         </c:when>
                         <c:when test="${order.paidAmount > 0}">
                             <span class="payment-badge warning">
-                                <i class="fas fa-check-circle"></i> Đã thanh toán một phần
+                                <i class="fas fa-check-circle"></i> Đã đặt cọc
                             </span>
                             <c:if test="${order.remainingAmount != null && order.remainingAmount > 0}">
                                 <br>
                                 <small style="color: #888; font-size: 0.85rem;">
-                                    Còn nợ: <strong style="color: #ff9800;">
+                                    Còn lại: <strong style="color: #ff9800;">
                                     <fmt:formatNumber value="${order.remainingAmount}" type="currency" currencySymbol="₫"/>
                                 </strong>
                                 </small>
@@ -572,8 +551,7 @@
                                     </c:choose>
                                     <span class="transaction-type">
                                         <c:choose>
-                                            <c:when test="${transaction.type == 'FULL'}">Thanh toán toàn bộ</c:when>
-                                            <c:when test="${transaction.type == 'DEPOSIT'}">Đặt cọc</c:when>
+                                            <c:when test="${transaction.type == 'DEPOSIT'}">Đặt cọc 10%</c:when>
                                             <c:when test="${transaction.type == 'SHOWROOM'}">Thanh toán showroom</c:when>
                                             <c:otherwise>${transaction.type}</c:otherwise>
                                         </c:choose>
@@ -619,7 +597,7 @@
                     <h3 class="section-title">
                         <i class="fas fa-sticky-note"></i> Ghi Chú
                     </h3>
-                    <div style="padding: 15px; background: #0f0f0f; border-radius: 10px; color: #e0e0e0;">
+                    <div style="padding: 15px; background: #0f0f0f; border-radius: 10px; color: #e0e0e0; white-space: pre-line;">
                             ${order.notes}
                     </div>
                 </div>
@@ -643,37 +621,36 @@
                 </div>
 
                 <c:if test="${order.paymentType == 'DEPOSIT' && order.depositAmount != null && order.depositAmount > 0}">
-                <div class="summary-row">
-                    <span class="summary-label">Số tiền đặt cọc:</span>
-                    <span class="summary-value" style="color: #2196f3;">
+                    <div class="summary-row">
+                        <span class="summary-label">Số tiền đặt cọc (10%):</span>
+                        <span class="summary-value" style="color: #2196f3;">
                             <fmt:formatNumber value="${order.depositAmount}" type="currency" currencySymbol="₫"/>
                         </span>
-                </div>
+                    </div>
                 </c:if>
 
                 <c:if test="${order.paidAmount > 0}">
-                <div class="summary-row">
-                    <span class="summary-label">Đã thanh toán:</span>
-                    <span class="summary-value paid">
+                    <div class="summary-row">
+                        <span class="summary-label">Đã thanh toán:</span>
+                        <span class="summary-value paid">
                             -<fmt:formatNumber value="${order.paidAmount}" type="currency" currencySymbol="₫"/>
                         </span>
-                </div>
+                    </div>
                 </c:if>
 
-                <%-- ✅ TIN TƯỞNG TRIGGER - Hiển thị remainingAmount từ DB --%>
                 <c:if test="${!order.fullyPaid && order.remainingAmount != null && order.remainingAmount > 0}">
-                <div class="summary-row">
+                    <div class="summary-row">
                         <span class="summary-label">
                             <c:choose>
-                                <c:when test="${order.paymentType == 'DEPOSIT'}">Còn nợ:</c:when>
+                                <c:when test="${order.paymentType == 'DEPOSIT'}">Còn phải trả tại showroom:</c:when>
                                 <c:when test="${order.paymentType == 'SHOWROOM'}">Thanh toán tại showroom:</c:when>
                                 <c:otherwise>Còn lại:</c:otherwise>
                             </c:choose>
                         </span>
-                    <span class="summary-value remaining">
+                        <span class="summary-value remaining">
                             <fmt:formatNumber value="${order.remainingAmount}" type="currency" currencySymbol="₫"/>
                         </span>
-                </div>
+                    </div>
                 </c:if>
 
                 <div class="summary-row" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #444;">
@@ -683,7 +660,7 @@
                                 <i class="fas fa-check-circle" style="color: #4caf50;"></i> Đã thanh toán:
                             </c:when>
                             <c:when test="${order.paidAmount > 0}">
-                                <i class="fas fa-exclamation-circle" style="color: #ff9800;"></i> Còn phải trả:
+                                <i class="fas fa-store" style="color: #ff9800;"></i> Trả tại showroom:
                             </c:when>
                             <c:otherwise>
                                 <i class="fas fa-clock" style="color: #ff9800;"></i> Cần thanh toán:
@@ -705,70 +682,60 @@
                     </span>
                 </div>
 
-                <c:if test="${!order.fullyPaid && !order.cancelled}">
-                <div class="alert alert-info mt-3" style="background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); color: #2196f3;">
-                    <i class="fas fa-info-circle"></i>
-                    <c:choose>
-                        <c:when test="${order.paymentType == 'DEPOSIT' && order.paidAmount > 0}">
-                            Vui lòng thanh toán số tiền còn lại khi nhận xe.
-                        </c:when>
-                        <c:when test="${order.paymentType == 'SHOWROOM'}">
-                            Vui lòng đến showroom để thanh toán và nhận xe.
-                        </c:when>
-                        <c:otherwise>
-                            Vui lòng hoàn tất thanh toán để xử lý đơn hàng.
-                        </c:otherwise>
-                    </c:choose>
-                </div>
-                </c:if>
-
-                <c:if test="${order.fullyPaid}">
-                <div class="alert alert-success mt-3" style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); color: #4caf50;">
-                    <i class="fas fa-check-circle"></i>
-                    Đơn hàng đã được thanh toán đầy đủ. Cảm ơn bạn đã mua hàng!
-                </div>
-                </c:if>
+                <!-- Notification based on payment status -->
+                <c:choose>
+                    <c:when test="${order.fullyPaid}">
+                        <div class="alert alert-success mt-3" style="background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); color: #4caf50;">
+                            <i class="fas fa-check-circle"></i>
+                            Đơn hàng đã được thanh toán đầy đủ. Cảm ơn bạn đã mua hàng!
+                        </div>
+                    </c:when>
+                    <c:when test="${order.paymentType == 'DEPOSIT' && order.paidAmount > 0}">
+                        <div class="alert alert-info mt-3" style="background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); color: #2196f3;">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Đã đặt cọc thành công!</strong><br>
+                            Vui lòng mang theo CMND/CCCD và thanh toán số tiền còn lại
+                            <strong style="color: #ff9800;">
+                                (<fmt:formatNumber value="${order.remainingAmount}" type="currency" currencySymbol="₫"/>)
+                            </strong>
+                            khi đến showroom nhận xe.
+                        </div>
+                    </c:when>
+                    <c:when test="${order.paymentType == 'SHOWROOM' && order.paidAmount == 0}">
+                        <div class="alert alert-info mt-3" style="background: rgba(156, 39, 176, 0.1); border: 1px solid rgba(156, 39, 176, 0.3); color: #9c27b0;">
+                            <i class="fas fa-store"></i>
+                            Vui lòng đến showroom để thanh toán
+                            <strong style="color: #ff9800;">
+                                <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
+                            </strong>
+                            và nhận xe. Chúng tôi sẽ liên hệ với bạn sớm!
+                        </div>
+                    </c:when>
+                </c:choose>
 
                 <div class="action-buttons mt-4">
-                    <%-- ✅ PAYMENT BUTTON - Chỉ hiển thị khi còn tiền chưa thanh toán --%>
-                    <c:if test="${!order.fullyPaid && !order.cancelled && order.paymentType != 'SHOWROOM'}">
-                    <c:if test="${order.remainingAmount != null && order.remainingAmount > 0}">
-                    <form method="post" action="${pageContext.request.contextPath}/payment">
-                        <input type="hidden" name="orderId" value="${order.orderId}">
-                        <button type="submit" class="btn btn-payment">
-                            <i class="fas fa-credit-card"></i>
-                            <c:choose>
-                                <c:when test="${order.paidAmount > 0}">
-                                    Thanh toán phần còn lại
-                                    (<fmt:formatNumber value="${order.remainingAmount}" type="currency" currencySymbol="₫"/>)
-                                </c:when>
-                                <c:otherwise>
-                                    Thanh toán ngay
-                                    (<fmt:formatNumber value="${order.remainingAmount}" type="currency" currencySymbol="₫"/>)
-                                </c:otherwise>
-                            </c:choose>
-                        </button>
-                    </form>
-                    </c:if>
+                    <!-- Only allow cancel if order is PENDING and not yet paid -->
+                    <c:if test="${order.canBeCancelled()}">
+                        <form method="post" action="${pageContext.request.contextPath}/order-cancel">
+                            <input type="hidden" name="orderId" value="${order.orderId}">
+                            <button type="submit" class="btn btn-cancel-order"
+                                    onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
+                                <i class="fas fa-times"></i> Hủy Đơn Hàng
+                            </button>
+                        </form>
                     </c:if>
 
-                    <c:if test="${order.canBeCancelled()}">
-                    <form method="post" action="${pageContext.request.contextPath}/order-cancel">
-                        <input type="hidden" name="orderId" value="${order.orderId}">
-                        <button type="submit" class="btn btn-cancel-order"
-                                onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
-                            <i class="fas fa-times"></i> Hủy Đơn Hàng
-                        </button>
-                    </form>
-                    </c:if><a href="${pageContext.request.contextPath}/orders" class="btn btn-back">
+                    <a href="${pageContext.request.contextPath}/orders" class="btn btn-back">
                         <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
-                        </a>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <jsp:include page="footer.jsp" />
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Auto dismiss alerts after 5 seconds

@@ -173,34 +173,25 @@
             font-weight: 600;
         }
 
-        .deposit-input-group {
+        .payment-amount-box {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 15px;
             margin-top: 15px;
-            padding-left: 35px;
-            display: none;
+            margin-left: 35px;
         }
 
-        .deposit-input-group.show {
-            display: block;
-        }
-
-        .deposit-input-group input {
-            background: #0f0f0f;
-            border: 1px solid #333;
-            color: #e0e0e0;
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .deposit-input-group input:focus {
-            border-color: #ffd700;
-            outline: none;
-            box-shadow: 0 0 0 0.2rem rgba(255, 215, 0, 0.25);
-        }
-
-        .deposit-hint {
+        .payment-amount-label {
             color: #888;
-            font-size: 0.85rem;
-            margin-top: 5px;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .payment-amount-value {
+            color: #ffd700;
+            font-size: 1.5rem;
+            font-weight: 700;
         }
 
         .order-summary {
@@ -224,21 +215,6 @@
             padding-top: 20px;
             margin-top: 15px;
             border-top: 2px solid #444;
-        }
-
-        .summary-row.highlight {
-            background: rgba(255, 215, 0, 0.1);
-            border-radius: 8px;
-            padding: 15px 12px !important;
-            margin: 10px -12px;
-        }
-
-        .summary-row.highlight .summary-label {
-            color: #ffd700;
-        }
-
-        .summary-row.highlight .summary-value {
-            color: #ffd700;
         }
 
         .summary-label {
@@ -382,6 +358,32 @@
                         <i class="fas fa-credit-card"></i> Hình Thức Thanh Toán
                     </h3>
                     <div class="payment-method">
+                        <!-- Option 1: Deposit 10% -->
+                        <div class="payment-option" onclick="selectPayment('DEPOSIT', this)">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentType" id="depositPayment" value="DEPOSIT" required checked>
+                                <label for="depositPayment">
+                                    <i class="fas fa-hand-holding-usd"></i> Đặt Cọc 10% - Thanh Toán Online
+                                </label>
+                            </div>
+                            <div class="payment-description">
+                                Đặt cọc <strong class="payment-highlight">${depositPercentage}%</strong> giá trị đơn hàng qua VNPay để giữ chỗ xe.
+                                <br><span class="payment-highlight">✓ Xe được giữ chỗ ưu tiên</span>
+                                <br><span class="payment-highlight">✓ Thanh toán phần còn lại tại showroom khi nhận xe</span>
+                                <br><span class="payment-highlight">✓ Thanh toán an toàn qua VNPay</span>
+                            </div>
+                            <div class="payment-amount-box">
+                                <div class="payment-amount-label">Số tiền cần đặt cọc:</div>
+                                <div class="payment-amount-value">
+                                    <fmt:formatNumber value="${depositAmount}" type="currency" currencySymbol="₫"/>
+                                </div>
+                                <div style="color: #888; font-size: 0.85rem; margin-top: 10px;">
+                                    Còn lại: <strong style="color: #ff9800;"><fmt:formatNumber value="${total - depositAmount}" type="currency" currencySymbol="₫"/></strong> thanh toán tại showroom
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Option 2: Showroom Payment -->
                         <div class="payment-option" onclick="selectPayment('SHOWROOM', this)">
                             <div class="d-flex align-items-center">
                                 <input type="radio" name="paymentType" id="showroomPayment" value="SHOWROOM" required>
@@ -390,51 +392,16 @@
                                 </label>
                             </div>
                             <div class="payment-description">
-                                Đặt xe ngay, thanh toán sau khi đến showroom.
+                                Đặt xe ngay, thanh toán toàn bộ khi đến showroom.
                                 <br><span class="payment-highlight">✓ Không cần thanh toán trước</span>
                                 <br><span class="payment-highlight">✓ Kiểm tra xe trực tiếp trước khi thanh toán</span>
+                                <br><span class="payment-highlight">✓ Nhận tư vấn trực tiếp từ chuyên viên</span>
                                 <br>Chúng tôi sẽ liên hệ để xác nhận và hẹn lịch đến showroom.
                             </div>
-                        </div>
-
-                        <div class="payment-option" onclick="selectPayment('FULL', this)">
-                            <div class="d-flex align-items-center">
-                                <input type="radio" name="paymentType" id="fullPayment" value="FULL" required>
-                                <label for="fullPayment">
-                                    <i class="fas fa-money-bill-wave"></i> Thanh Toán Toàn Bộ
-                                </label>
-                            </div>
-                            <div class="payment-description">
-                                Thanh toán 100% giá trị đơn hàng ngay.
-                                <br><span class="payment-highlight">✓ Đơn hàng được xử lý ưu tiên</span>
-                                <br><span class="payment-highlight">✓ Giao xe nhanh chóng</span>
-                            </div>
-                        </div>
-
-                        <div class="payment-option" onclick="selectPayment('DEPOSIT', this)">
-                            <div class="d-flex align-items-center">
-                                <input type="radio" name="paymentType" id="depositPayment" value="DEPOSIT" required>
-                                <label for="depositPayment">
-                                    <i class="fas fa-hand-holding-usd"></i> Đặt Cọc
-                                </label>
-                            </div>
-                            <div class="payment-description">
-                                Đặt cọc tối thiểu 20% giá trị đơn hàng. Phần còn lại thanh toán khi nhận xe.
-                                <br><span class="payment-highlight">✓ Giữ chỗ xe ưa thích</span>
-                                <br><span class="payment-highlight">✓ Linh hoạt thanh toán</span>
-                            </div>
-                            <div class="deposit-input-group" id="depositInputGroup">
-                                <label class="form-label">Số tiền đặt cọc:</label>
-                                <input type="number"
-                                       class="form-control"
-                                       name="depositAmount"
-                                       id="depositAmount"
-                                       placeholder="Nhập số tiền đặt cọc"
-                                       min="${total * 0.2}"
-                                       max="${total}"
-                                       step="1000000">
-                                <div class="deposit-hint">
-                                    Tối thiểu: <fmt:formatNumber value="${total * 0.2}" type="currency" currencySymbol="₫"/>
+                            <div class="payment-amount-box">
+                                <div class="payment-amount-label">Tổng số tiền thanh toán tại showroom:</div>
+                                <div class="payment-amount-value">
+                                    <fmt:formatNumber value="${total}" type="currency" currencySymbol="₫"/>
                                 </div>
                             </div>
                         </div>
@@ -460,21 +427,30 @@
                     </div>
 
                     <div class="summary-row">
-                        <span class="summary-label">Tổng giá trị xe:</span>
+                        <span class="summary-label">Tổng giá trị:</span>
                         <span class="summary-value">
                             <fmt:formatNumber value="${total}" type="currency" currencySymbol="₫"/>
                         </span>
                     </div>
 
-                    <div class="summary-row" id="mainSummaryRow">
-                        <span class="summary-label" id="summaryLabel" style="font-size: 1.2rem;">Tổng cộng:</span>
-                        <span class="summary-value total" id="summaryTotal">
-                            <fmt:formatNumber value="${total}" type="currency" currencySymbol="₫"/>
+                    <div class="summary-row" id="paymentAmountRow">
+                        <span class="summary-label" id="paymentLabel">Số tiền cần thanh toán ngay:</span>
+                        <span class="summary-value total" id="paymentAmount">
+                            <fmt:formatNumber value="${depositAmount}" type="currency" currencySymbol="₫"/>
                         </span>
                     </div>
 
+                    <div id="remainingAmountInfo" style="background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.3); border-radius: 8px; padding: 12px; margin-top: 15px;">
+                        <div style="color: #ff9800; font-size: 0.9rem; margin-bottom: 5px;">
+                            <i class="fas fa-info-circle"></i> Thanh toán tại showroom:
+                        </div>
+                        <div style="color: #ff9800; font-size: 1.2rem; font-weight: 700;">
+                            <fmt:formatNumber value="${total - depositAmount}" type="currency" currencySymbol="₫"/>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-place-order" id="placeOrderBtn">
-                        <i class="fas fa-check-circle"></i> Đặt Hàng
+                        <i class="fas fa-check-circle"></i> Đặt Cọc Ngay
                     </button>
 
                     <a href="${pageContext.request.contextPath}/cart" class="btn btn-back">
@@ -482,7 +458,7 @@
                     </a>
 
                     <div class="mt-3 text-center" style="color: #888; font-size: 0.85rem;">
-                        <i class="fas fa-shield-alt"></i> Giao dịch được bảo mật
+                        <i class="fas fa-shield-alt"></i> Giao dịch được bảo mật bởi VNPay
                     </div>
                 </div>
             </div>
@@ -495,6 +471,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     const totalAmount = ${total};
+    const depositAmount = ${depositAmount};
+
+    // Pre-select DEPOSIT option on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        const depositOption = document.querySelector('.payment-option');
+        if (depositOption) {
+            depositOption.classList.add('selected');
+        }
+    });
 
     function selectPayment(type, element) {
         // Remove selected class from all options
@@ -505,67 +490,33 @@
         // Add selected class to clicked option
         element.classList.add('selected');
 
-        // Handle radio buttons and deposit input
-        if (type === 'SHOWROOM') {
-            document.getElementById('showroomPayment').checked = true;
-            document.getElementById('depositInputGroup').classList.remove('show');
-            document.getElementById('depositAmount').removeAttribute('required');
-            updateSummary(totalAmount, 'SHOWROOM');
-
-        } else if (type === 'FULL') {
-            document.getElementById('fullPayment').checked = true;
-            document.getElementById('depositInputGroup').classList.remove('show');
-            document.getElementById('depositAmount').removeAttribute('required');
-            updateSummary(totalAmount, 'FULL');
-
-        } else if (type === 'DEPOSIT') {
-            document.getElementById('depositPayment').checked = true;
-            document.getElementById('depositInputGroup').classList.add('show');
-            document.getElementById('depositAmount').setAttribute('required', 'required');
-
-            // Get deposit amount if entered
-            const depositInput = document.getElementById('depositAmount');
-            const depositAmount = parseFloat(depositInput.value) || (totalAmount * 0.2);
-            updateSummary(depositAmount, 'DEPOSIT');
-        }
-    }
-
-    // Update deposit amount when user types
-    document.getElementById('depositAmount').addEventListener('input', function() {
-        const depositAmount = parseFloat(this.value) || 0;
-        if (depositAmount > 0) {
-            updateSummary(depositAmount, 'DEPOSIT');
-        }
-    });
-
-    // Update summary display
-    function updateSummary(amount, paymentType) {
-        const summaryTotal = document.getElementById('summaryTotal');
-        const summaryLabel = document.getElementById('summaryLabel');
-        const summaryRow = document.getElementById('mainSummaryRow');
+        const paymentLabel = document.getElementById('paymentLabel');
+        const paymentAmountEl = document.getElementById('paymentAmount');
+        const remainingInfo = document.getElementById('remainingAmountInfo');
         const buttonText = document.getElementById('placeOrderBtn');
 
-        // Format currency
-        const formattedAmount = new Intl.NumberFormat('vi-VN').format(amount) + '₫';
+        if (type === 'DEPOSIT') {
+            document.getElementById('depositPayment').checked = true;
 
-        // Update total amount display
-        summaryTotal.textContent = formattedAmount;
+            // Update summary
+            paymentLabel.textContent = 'Số tiền cần thanh toán ngay:';
+            paymentAmountEl.textContent = new Intl.NumberFormat('vi-VN').format(depositAmount) + '₫';
+            remainingInfo.style.display = 'block';
 
-        // Update label and highlight based on payment type
-        if (paymentType === 'SHOWROOM') {
-            summaryLabel.textContent = 'Tổng cộng:';
-            summaryRow.classList.remove('highlight');
-            buttonText.innerHTML = '<i class="fas fa-check-circle"></i> Đặt Hàng (Thanh toán tại showroom)';
+            // Update button
+            buttonText.innerHTML = '<i class="fas fa-check-circle"></i> Đặt Cọc ' +
+                new Intl.NumberFormat('vi-VN').format(depositAmount) + '₫';
 
-        } else if (paymentType === 'FULL') {
-            summaryLabel.textContent = 'Tổng cộng:';
-            summaryRow.classList.remove('highlight');
-            buttonText.innerHTML = '<i class="fas fa-check-circle"></i> Đặt Hàng (Thanh toán 100%)';
+        } else if (type === 'SHOWROOM') {
+            document.getElementById('showroomPayment').checked = true;
 
-        } else if (paymentType === 'DEPOSIT') {
-            summaryLabel.textContent = 'Số tiền đặt cọc:';
-            summaryRow.classList.add('highlight');
-            buttonText.innerHTML = '<i class="fas fa-check-circle"></i> Đặt Cọc (' + formattedAmount + ')';
+            // Update summary
+            paymentLabel.textContent = 'Thanh toán tại showroom:';
+            paymentAmountEl.textContent = new Intl.NumberFormat('vi-VN').format(totalAmount) + '₫';
+            remainingInfo.style.display = 'none';
+
+            // Update button
+            buttonText.innerHTML = '<i class="fas fa-check-circle"></i> Xác Nhận Đặt Xe';
         }
     }
 
@@ -579,33 +530,17 @@
             return false;
         }
 
-        if (paymentType.value === 'DEPOSIT') {
-            const depositAmount = parseFloat(document.getElementById('depositAmount').value);
-            const minDeposit = totalAmount * 0.2;
-            const maxDeposit = totalAmount;
-
-            if (isNaN(depositAmount) || depositAmount < minDeposit) {
-                e.preventDefault();
-                alert('Số tiền đặt cọc phải ít nhất ' + new Intl.NumberFormat('vi-VN').format(minDeposit) + '₫ (20% giá trị đơn hàng)');
-                return false;
-            }
-
-            if (depositAmount > maxDeposit) {
-                e.preventDefault();
-                alert('Số tiền đặt cọc không được vượt quá tổng giá trị đơn hàng!');
-                return false;
-            }
-        }
-
-        // Confirmation message based on payment type
         let confirmMessage = '';
         if (paymentType.value === 'SHOWROOM') {
-            confirmMessage = 'Xác nhận đặt xe? Bạn sẽ thanh toán khi đến showroom.';
-        } else if (paymentType.value === 'FULL') {
-            confirmMessage = 'Xác nhận thanh toán toàn bộ ' + new Intl.NumberFormat('vi-VN').format(totalAmount) + '₫?';
-        } else {
-            const depositAmount = parseFloat(document.getElementById('depositAmount').value);
-            confirmMessage = 'Xác nhận đặt cọc ' + new Intl.NumberFormat('vi-VN').format(depositAmount) + '₫?\n\nCòn lại: ' + new Intl.NumberFormat('vi-VN').format(totalAmount - depositAmount) + '₫ thanh toán khi nhận xe.';
+            confirmMessage = 'Xác nhận đặt xe?\n\n' +
+                'Tổng giá trị: ' + new Intl.NumberFormat('vi-VN').format(totalAmount) + '₫\n' +
+                'Bạn sẽ thanh toán toàn bộ khi đến showroom.\n\n' +
+                'Chúng tôi sẽ liên hệ để xác nhận và hẹn lịch.';
+        } else if (paymentType.value === 'DEPOSIT') {
+            confirmMessage = 'Xác nhận đặt cọc?\n\n' +
+                'Đặt cọc: ' + new Intl.NumberFormat('vi-VN').format(depositAmount) + '₫ (10%)\n' +
+                'Còn lại: ' + new Intl.NumberFormat('vi-VN').format(totalAmount - depositAmount) + '₫\n\n' +
+                'Bạn sẽ thanh toán phần còn lại tại showroom khi nhận xe.';
         }
 
         return confirm(confirmMessage);

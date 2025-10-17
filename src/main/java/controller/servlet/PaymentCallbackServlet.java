@@ -72,14 +72,21 @@ public class PaymentCallbackServlet extends HttpServlet {
             logger.info("  - Message: {}", result.getMessage());
 
             if (result.isSuccess()) {
-                // PAYMENT SUCCESSFUL
+                // PAYMENT SUCCESSFUL - DEPOSIT 10% PAID
                 int orderId = result.getOrderId();
-                logger.info("Processing successful payment for order {}", orderId);
+                logger.info("Processing successful DEPOSIT payment for order {}", orderId);
 
                 // Get order information
                 Order order = ordersDAO.getOrderById(orderId);
                 if (order == null) {
                     logger.error("Order not found: {}", orderId);
+                    response.sendRedirect(request.getContextPath() + "/payment-result?success=false");
+                    return;
+                }
+
+                // Verify this is a DEPOSIT order
+                if (!"DEPOSIT".equals(order.getPaymentType())) {
+                    logger.error("Order {} is not a DEPOSIT type order", orderId);
                     response.sendRedirect(request.getContextPath() + "/payment-result?success=false");
                     return;
                 }
@@ -100,14 +107,7 @@ public class PaymentCallbackServlet extends HttpServlet {
                         if (updated) {
                             logger.info("Updated transaction {} to PAID for order {}", transactionId, orderId);
 
-                            // Update order status to APPROVED
-                            ordersDAO.approveOrder(orderId);
-                            logger.info("Approved order {}", orderId);
-
-                            // UPDATE ORDER NOTES after successful payment
-                            updateOrderNotes(orderId, order, result.getAmount());
-
-                            // Decrease stock
+                            // DECREASE STOCK after successful deposit payment
                             var orderDetails = orderDetailDAO.getOrderDetailsByOrderId(orderId);
 
                             if (orderDetails != null && !orderDetails.isEmpty()) {
@@ -127,6 +127,14 @@ public class PaymentCallbackServlet extends HttpServlet {
                             } else {
                                 logger.error("No order details found for order {}", orderId);
                             }
+
+                            // Update order status to APPROVED (deposit paid, waiting for final payment at showroom)
+                            ordersDAO.approveOrder(orderId);
+                            logger.info("Approved order {} - Deposit paid, waiting for showroom payment", orderId);
+
+                            // Update order notes
+                            updateOrderNotesForDeposit(orderId, order, result.getAmount());
+
                         } else {
                             logger.error("Failed to update transaction status for order {}", orderId);
                         }
@@ -138,7 +146,7 @@ public class PaymentCallbackServlet extends HttpServlet {
                 // Set success message in session
                 if (session != null) {
                     session.setAttribute("paymentSuccess", true);
-                    session.setAttribute("paymentMessage", result.getMessage());
+                    session.setAttribute("paymentMessage", "Đặt cọc thành công! Vui lòng đến showroom để thanh toán phần còn lại và nhận xe.");
                     session.setAttribute("paymentOrderId", orderId);
                     session.setAttribute("paymentAmount", result.getAmount());
                     session.setAttribute("paymentTransactionNo", result.getTransactionNo());
@@ -180,57 +188,29 @@ public class PaymentCallbackServlet extends HttpServlet {
     }
 
     /**
-     * Update order notes after successful payment
+     * Update order notes after successful deposit payment
      */
-    private void updateOrderNotes(int orderId, Order order, long paidAmount) {
+    private void updateOrderNotesForDeposit(int orderId, Order order, long paidAmount) {
         try {
-            String updatedNotes;
-            String paymentType = order.getPaymentType();
+            // Calculate remaining amount
+            Order updatedOrder = ordersDAO.getOrderById(orderId);
 
-            if ("FULL".equals(paymentType)) {
-                // Full payment completed
-                updatedNotes = String.format(
-                        "Đã thanh toán toàn bộ %,d₫ qua VNPay thành công. Đơn hàng đang được xử lý.",
-                        paidAmount
+            if (updatedOrder != null && updatedOrder.getRemainingAmount() != null) {
+                String updatedNotes = String.format(
+                                "Đã thanh toán đặt cọc %,d₫ (10%%) qua VNPay thành công.\n" +
+                                "Khách hàng cần thanh toán %,d₫ tại showroom khi nhận xe.\n" +
+                                "Vui lòng liên hệ khách hàng để xác nhận và hẹn lịch đến showroom.",
+                        paidAmount,
+                        updatedOrder.getRemainingAmount().longValue()
                 );
-                logger.info("Setting FULL payment notes for order {}", orderId);
 
-            } else if ("DEPOSIT".equals(paymentType)) {
-                // Check if this is final payment (remaining = 0) or deposit
-                // Reload order to get updated remainingAmount from trigger
-                Order updatedOrder = ordersDAO.getOrderById(orderId);
+                boolean notesUpdated = ordersDAO.updateOrderNotes(orderId, updatedNotes);
 
-                if (updatedOrder != null && updatedOrder.getRemainingAmount() != null
-                        && updatedOrder.getRemainingAmount() <= 0) {
-                    // Final payment - fully paid
-                    updatedNotes = String.format(
-                            "Đã thanh toán toàn bộ đơn hàng qua VNPay thành công. " +
-                                    "Đơn hàng đã hoàn tất thanh toán."
-                    );
-                    logger.info("Setting DEPOSIT final payment notes for order {}", orderId);
+                if (notesUpdated) {
+                    logger.info("Updated order notes for order {}", orderId);
                 } else {
-                    // First deposit payment
-                    updatedNotes = String.format(
-                            "Đã thanh toán đặt cọc %,d₫ qua VNPay thành công. " +
-                                    "Vui lòng thanh toán phần còn lại khi nhận xe.",
-                            paidAmount
-                    );
-                    logger.info("Setting DEPOSIT initial payment notes for order {}", orderId);
+                    logger.warn("Failed to update order notes for order {}", orderId);
                 }
-
-            } else {
-                // Default message
-                updatedNotes = "Đã thanh toán thành công qua VNPay.";
-                logger.info("Setting default payment notes for order {}", orderId);
-            }
-
-            // Update notes in database
-            boolean notesUpdated = ordersDAO.updateOrderNotes(orderId, updatedNotes);
-
-            if (notesUpdated) {
-                logger.info("Updated order notes for order {}: {}", orderId, updatedNotes);
-            } else {
-                logger.warn("Failed to update order notes for order {}", orderId);
             }
 
         } catch (Exception e) {

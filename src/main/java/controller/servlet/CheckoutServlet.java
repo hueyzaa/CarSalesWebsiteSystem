@@ -27,6 +27,9 @@ public class CheckoutServlet extends HttpServlet {
     private CarDAO carDAO;
     private TransactionDAO transactionDAO;
 
+    // Deposit percentage - 10% as per business requirement
+    private static final double DEPOSIT_PERCENTAGE = 0.10;
+
     @Override
     public void init() throws ServletException {
         cartDAO = new CartDAO();
@@ -98,15 +101,19 @@ public class CheckoutServlet extends HttpServlet {
                 total += item.getSubtotal();
             }
 
-            logger.info("Checkout total calculated: {}", total);
+            // Calculate deposit amount (10%)
+            double depositAmount = total * DEPOSIT_PERCENTAGE;
+
+            logger.info("Checkout total calculated: {}, Deposit (10%): {}", total, depositAmount);
 
             // Set attributes
             request.setAttribute("cartItems", cartItems);
             request.setAttribute("total", total);
+            request.setAttribute("depositAmount", depositAmount);
+            request.setAttribute("depositPercentage", DEPOSIT_PERCENTAGE * 100);
             request.setAttribute("user", user);
 
             logger.info("Forwarding to checkout.jsp");
-            // Forward to checkout page
             request.getRequestDispatcher("/WEB-INF/views/checkout.jsp").forward(request, response);
 
         } catch (DatabaseException e) {
@@ -139,11 +146,18 @@ public class CheckoutServlet extends HttpServlet {
 
             // Get payment type
             String paymentType = request.getParameter("paymentType");
-            String depositAmountStr = request.getParameter("depositAmount");
 
             if (paymentType == null || paymentType.trim().isEmpty()) {
                 logger.warn("Payment type not selected by user {}", userId);
                 session.setAttribute("error", "Vui lòng chọn hình thức thanh toán!");
+                response.sendRedirect(request.getContextPath() + "/checkout");
+                return;
+            }
+
+            // Only allow DEPOSIT or SHOWROOM
+            if (!paymentType.equals("DEPOSIT") && !paymentType.equals("SHOWROOM")) {
+                logger.error("Invalid payment type: {} for user {}", paymentType, userId);
+                session.setAttribute("error", "Hình thức thanh toán không hợp lệ!");
                 response.sendRedirect(request.getContextPath() + "/checkout");
                 return;
             }
@@ -186,59 +200,32 @@ public class CheckoutServlet extends HttpServlet {
             double paymentAmount = 0;
             Double depositAmount = null;
             String notes = null;
-            String paymentStatus = "PENDING";  // All start as PENDING
+            String paymentStatus = "PENDING";
 
             switch (paymentType) {
                 case "SHOWROOM":
-                    // Showroom payment - no upfront payment
+                    // Showroom payment - no upfront payment, no stock decrease yet
                     paymentAmount = 0;
                     paymentStatus = "PENDING";
-                    notes = "Khách hàng sẽ thanh toán tại showroom. " +
-                            "Vui lòng liên hệ để xác nhận và hẹn lịch.";
+                    notes = String.format(
+                            "Khách hàng sẽ thanh toán toàn bộ %,.0f₫ tại showroom. " +
+                                    "Vui lòng liên hệ khách hàng để xác nhận và hẹn lịch đến showroom.",
+                            orderTotal
+                    );
                     logger.info("Showroom payment selected for order. User: {}", userId);
                     break;
 
-                case "FULL":
-                    // Full payment - Wait for VNPay payment
-                    paymentAmount = orderTotal;
-                    paymentStatus = "PENDING";  // Chờ thanh toán qua VNPay
-                    notes = "Chờ thanh toán toàn bộ đơn hàng qua VNPay.";
-                    logger.info("Full payment selected: {} for user {}", paymentAmount, userId);
-                    break;
-
                 case "DEPOSIT":
-                    // Deposit payment - Wait for VNPay payment
-                    try {
-                        depositAmount = Double.parseDouble(depositAmountStr);
-
-                        // Validate deposit amount (at least 20% of total)
-                        double minDeposit = orderTotal * 0.2;
-                        if (depositAmount < minDeposit) {
-                            logger.warn("Deposit amount {} is less than minimum {} for user {}",
-                                    depositAmount, minDeposit, userId);
-                            session.setAttribute("error", "Số tiền đặt cọc tối thiểu là 20% tổng giá trị đơn hàng!");
-                            response.sendRedirect(request.getContextPath() + "/checkout");
-                            return;
-                        }
-
-                        if (depositAmount > orderTotal) {
-                            logger.info("Deposit amount {} exceeds total {}, adjusting to total",
-                                    depositAmount, orderTotal);
-                            depositAmount = orderTotal;
-                        }
-
-                        paymentAmount = depositAmount;
-                        paymentStatus = "PENDING";  // Chờ thanh toán qua VNPay
-                        notes = String.format("Chờ thanh toán đặt cọc %,.0f₫. Còn lại %,.0f₫ thanh toán khi nhận xe.",
-                                depositAmount, orderTotal - depositAmount);
-                        logger.info("Deposit payment selected: {} for user {}", paymentAmount, userId);
-                    } catch (NumberFormatException e) {
-                        logger.error("Invalid deposit amount format: {} for user {}",
-                                depositAmountStr, userId);
-                        session.setAttribute("error", "Số tiền đặt cọc không hợp lệ!");
-                        response.sendRedirect(request.getContextPath() + "/checkout");
-                        return;
-                    }
+                    // Deposit payment - 10% of total
+                    depositAmount = orderTotal * DEPOSIT_PERCENTAGE;
+                    paymentAmount = depositAmount;
+                    paymentStatus = "PENDING";
+                    notes = String.format(
+                            "Chờ thanh toán đặt cọc %,.0f₫ (10%%). " +
+                                    "Sau khi đặt cọc thành công, khách hàng cần thanh toán %,.0f₫ tại showroom khi nhận xe.",
+                            depositAmount, orderTotal - depositAmount
+                    );
+                    logger.info("Deposit payment (10%) selected: {} for user {}", paymentAmount, userId);
                     break;
 
                 default:
@@ -260,22 +247,11 @@ public class CheckoutServlet extends HttpServlet {
 
             logger.info("Order created successfully with ID: {} for user {}", orderId, userId);
 
-            // CHỈ GIẢM STOCK CHO SHOWROOM PAYMENT (không cần thanh toán trước)
-            // FULL và DEPOSIT sẽ giảm stock sau khi thanh toán thành công trong PaymentCallbackServlet
-            if ("SHOWROOM".equals(paymentType)) {
-                for (CartItem item : cartItems) {
-                    boolean stockUpdated = carDAO.decreaseStock(item.getCarId(), item.getQuantity());
-                    if (!stockUpdated) {
-                        logger.warn("Failed to decrease stock for car ID: {} in order {}",
-                                item.getCarId(), orderId);
-                    } else {
-                        logger.info("Stock decreased successfully for car ID: {} by {} units",
-                                item.getCarId(), item.getQuantity());
-                    }
-                }
-            } else {
-                logger.info("Stock will be decreased after successful payment for order {}", orderId);
-            }
+            // ⚠️ KHÔNG GIẢM STOCK TẠI ĐÂY
+            // Stock sẽ chỉ giảm khi:
+            // - DEPOSIT: sau khi thanh toán đặt cọc thành công (PaymentCallbackServlet)
+            // - SHOWROOM: khi admin/staff xác nhận đã thanh toán đủ tại showroom
+            logger.info("Stock will be decreased after payment confirmation for order {}", orderId);
 
             // Create transaction record
             int transactionId = transactionDAO.createTransaction(orderId, paymentAmount, paymentType, paymentStatus);
@@ -299,17 +275,19 @@ public class CheckoutServlet extends HttpServlet {
                 // SHOWROOM - Go directly to order detail
                 String successMessage = String.format(
                         "Đặt hàng thành công! Mã đơn hàng: #%d. " +
-                                "Chúng tôi sẽ liên hệ với bạn để xác nhận và hẹn lịch đến showroom thanh toán.",
-                        orderId);
+                                "Chúng tôi sẽ liên hệ với bạn để xác nhận và hẹn lịch đến showroom. " +
+                                "Vui lòng mang theo CMND/CCCD và chuẩn bị thanh toán toàn bộ %,.0f₫ khi đến showroom.",
+                        orderId, orderTotal
+                );
                 session.setAttribute("success", successMessage);
 
                 logger.info("Order {} created with SHOWROOM payment. Redirecting to order detail.", orderId);
                 response.sendRedirect(request.getContextPath() + "/order-detail?id=" + orderId);
 
             } else {
-                // FULL or DEPOSIT - Redirect to payment gateway
-                logger.info("Order {} created with {} payment. Redirecting to payment gateway.",
-                        orderId, paymentType);
+                // DEPOSIT - Redirect to payment gateway for 10% deposit
+                logger.info("Order {} created with DEPOSIT payment. Redirecting to payment gateway for 10% deposit.",
+                        orderId);
                 response.sendRedirect(request.getContextPath() + "/payment?orderId=" + orderId);
             }
 
