@@ -144,37 +144,37 @@
 
         .price-section {
             background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
-            margin: 30px 0;
+            margin: 20px 0;
             border: 1px solid #333;
         }
 
         .price {
             color: #ffd700;
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: 700;
             margin: 0;
         }
 
         .price-label {
             color: #888;
-            font-size: 1rem;
-            margin-bottom: 10px;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
         }
 
         /* Specs */
         .specs-section {
             background: #0f0f0f;
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
-            margin: 30px 0;
+            margin: 20px 0;
             border: 1px solid #333;
         }
 
         .specs-title {
             color: #ffd700;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 700;
             margin-bottom: 20px;
             display: flex;
@@ -185,7 +185,7 @@
         .spec-item {
             display: flex;
             justify-content: space-between;
-            padding: 15px 0;
+            padding: 12px 0;
             border-bottom: 1px solid #333;
         }
 
@@ -196,6 +196,7 @@
         .spec-label {
             color: #888;
             font-weight: 600;
+            font-size: 0.95rem;
         }
 
         .spec-value {
@@ -206,23 +207,23 @@
         /* Add to Cart Form */
         .add-to-cart-section {
             background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
             border: 2px solid #ffd700;
-            margin: 30px 0;
+            margin: 20px 0;
         }
 
         .quantity-selector {
             display: flex;
             align-items: center;
             gap: 15px;
-            margin: 20px 0;
+            margin: 15px 0;
         }
 
         .quantity-selector label {
             color: #f8f9fa;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         .quantity-input {
@@ -259,14 +260,8 @@
             color: #f8f9fa;
             font-size: 1.1rem;
             font-weight: 600;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        /* Remove spin buttons for number input */
         .quantity-value::-webkit-outer-spin-button,
         .quantity-value::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -280,14 +275,14 @@
         .btn-add-cart {
             width: 100%;
             padding: 15px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 700;
             border: none;
             border-radius: 50px;
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             color: #1a1a1a;
             transition: all 0.3s;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .btn-add-cart:hover {
@@ -307,10 +302,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 15px;
+            padding: 12px;
             background: #0f0f0f;
             border-radius: 10px;
-            margin-top: 20px;
+            margin-top: 15px;
+            font-size: 0.95rem;
         }
 
         .stock-info i {
@@ -325,8 +321,54 @@
             color: #dc3545;
         }
 
+        /* Promotion Section */
+        .promotion-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border: 2px solid #ffd700;
+        }
+
+        .promotion-section h3 {
+            color: #ffd700;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .best-discount-badge {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .promotion-card {
+            background: #0f0f0f;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .promotion-card:hover {
+            border-color: #ffd700;
+            transform: translateX(5px);
+        }
+
         .description-section {
             margin: 30px 0;
+            background: #0f0f0f;
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #333;
         }
 
         .description-title {
@@ -359,6 +401,39 @@
         .alert-danger {
             background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
             color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 992px) {
+            .main-image {
+                height: 400px;
+            }
+
+            .car-title {
+                font-size: 2rem;
+            }
+
+            .price {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .car-detail-container {
+                padding: 20px;
+            }
+
+            .main-image {
+                height: 300px;
+            }
+
+            .car-title {
+                font-size: 1.5rem;
+            }
+
+            .price {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
@@ -398,7 +473,7 @@
     <div class="car-detail-container">
         <div class="row">
             <!-- Left Column - Images -->
-            <div class="col-lg-7">
+            <div class="col-lg-7 mb-4">
                 <!-- Main Image -->
                 <div class="main-image-container">
                     <c:choose>
@@ -443,6 +518,16 @@
                                 <img src="${img.imageURL}" alt="${car.name}">
                             </div>
                         </c:forEach>
+                    </div>
+                </c:if>
+
+                <!-- Description Section (Mobile: below images) -->
+                <c:if test="${not empty car.description}">
+                    <div class="description-section d-lg-none mt-4">
+                        <h3 class="description-title">
+                            <i class="fas fa-file-alt"></i> Mô Tả Chi Tiết
+                        </h3>
+                        <p class="description-text">${car.description}</p>
                     </div>
                 </c:if>
             </div>
@@ -502,9 +587,7 @@
                         <div class="quantity-selector">
                             <label for="quantity">Số Lượng:</label>
                             <div class="quantity-input">
-                                <button type="button" class="quantity-btn" onclick="decreaseQuantity()">
-                                    <i class="fas fa-minus">-</i>
-                                </button>
+                                <button type="button" class="quantity-btn" onclick="decreaseQuantity()">-</button>
                                 <input type="number"
                                        id="quantity"
                                        name="quantity"
@@ -513,9 +596,7 @@
                                        max="${car.stock > 0 ? car.stock : 1}"
                                        class="quantity-value"
                                        readonly>
-                                <button type="button" class="quantity-btn" onclick="increaseQuantity()">
-                                    <i class="fas fa-plus">+</i>
-                                </button>
+                                <button type="button" class="quantity-btn" onclick="increaseQuantity()">+</button>
                             </div>
                         </div>
 
@@ -559,12 +640,110 @@
                         </c:choose>
                     </form>
                 </div>
+
+                <!-- Promotion Section -->
+                <c:if test="${not empty activePromotions}">
+                    <div class="promotion-section">
+                        <h3>
+                            <i class="fas fa-gift"></i> Khuyến Mãi Đặc Biệt
+                        </h3>
+
+                        <!-- Best Discount Badge -->
+                        <c:if test="${not empty bestPromotion}">
+                            <div class="best-discount-badge">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+                                    <div>
+                                        <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">
+                                            🔥 Giảm giá tốt nhất
+                                        </div>
+                                        <div style="font-size: 1.8rem; font-weight: 700;">
+                                            <c:choose>
+                                                <c:when test="${bestDiscountPercentage > 0}">
+                                                    -${bestDiscountPercentage}%
+                                                </c:when>
+                                                <c:otherwise>
+                                                    -<fmt:formatNumber value="${bestDiscountAmount}" type="number" maxFractionDigits="0"/>₫
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                    </div>
+                                    <c:if test="${not empty discountedPrice}">
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 0.9rem; opacity: 0.9; margin-bottom: 5px;">
+                                                Giá sau giảm
+                                            </div>
+                                            <div style="font-size: 1.5rem; font-weight: 700;">
+                                                <fmt:formatNumber value="${discountedPrice}" type="number" maxFractionDigits="0"/>₫
+                                            </div>
+                                        </div>
+                                    </c:if>
+                                </div>
+                            </div>
+                        </c:if>
+
+                        <!-- Promotions List -->
+                        <div style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                            <c:forEach var="promo" items="${activePromotions}">
+                                <div class="promotion-card">
+                                    <h4 style="color: #ffd700; font-size: 1.1rem; font-weight: 600; margin-bottom: 10px;">
+                                            ${promo.title}
+                                    </h4>
+                                    <p style="color: #b0b0b0; margin-bottom: 12px; font-size: 0.9rem;">
+                                            ${promo.description}
+                                    </p>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                        <div style="color: #888; font-size: 0.85rem;">
+                                            <i class="far fa-calendar-alt" style="color: #ffd700;"></i>
+                                            <fmt:formatDate value="${promo.startDate}" pattern="dd/MM/yyyy"/> -
+                                            <fmt:formatDate value="${promo.endDate}" pattern="dd/MM/yyyy"/>
+                                        </div>
+                                        <c:choose>
+                                            <c:when test="${empty sessionScope.user}">
+                                                <a href="${pageContext.request.contextPath}/login?redirect=car-detail?id=${car.id}"
+                                                   style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                                                          color: white; padding: 8px 16px; border-radius: 20px;
+                                                          text-decoration: none; font-weight: 600; font-size: 0.85rem;">
+                                                    <i class="fas fa-sign-in-alt"></i> Đăng nhập
+                                                </a>
+                                            </c:when>
+                                            <c:when test="${promo.claimedByUser}">
+                                                <button disabled style="background: #6c757d; color: white; padding: 8px 16px;
+                                                               border-radius: 20px; border: none; font-size: 0.85rem; opacity: 0.7;">
+                                                    <i class="fas fa-check"></i> Đã nhận
+                                                </button>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <form action="${pageContext.request.contextPath}/promotions/claim" method="post" style="display: inline;">
+                                                    <input type="hidden" name="promotionId" value="${promo.promotionId}">
+                                                    <input type="hidden" name="redirectUrl" value="car-detail?id=${car.id}">
+                                                    <button type="submit" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+                                                                   color: white; padding: 8px 16px; border-radius: 20px;
+                                                                   border: none; font-size: 0.85rem; cursor: pointer;">
+                                                        <i class="fas fa-gift"></i> Nhận ngay
+                                                    </button>
+                                                </form>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </div>
+
+                        <!-- View All Link -->
+                        <div style="text-align: center; margin-top: 15px;">
+                            <a href="${pageContext.request.contextPath}/promotions"
+                               style="color: #ffd700; text-decoration: none; font-weight: 600; font-size: 0.95rem;">
+                                <i class="fas fa-arrow-right"></i> Xem tất cả khuyến mãi
+                            </a>
+                        </div>
+                    </div>
+                </c:if>
             </div>
         </div>
 
-        <!-- Description Section -->
+        <!-- Description Section (Desktop: full width below) -->
         <c:if test="${not empty car.description}">
-            <div class="row mt-5">
+            <div class="row mt-4 d-none d-lg-block">
                 <div class="col-12">
                     <div class="description-section">
                         <h3 class="description-title">
@@ -586,9 +765,9 @@
     // Change main image when clicking thumbnail
     function changeImage(imageUrl, thumbnail) {
         document.getElementById('mainImage').src = imageUrl;
-
-        // Update active thumbnail
-        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.thumbnail').forEach(function(t) {
+            t.classList.remove('active');
+        });
         thumbnail.classList.add('active');
     }
 
@@ -614,22 +793,25 @@
     }
 
     // Form validation
-    document.getElementById('addToCartForm')?.addEventListener('submit', function(e) {
-        const quantity = parseInt(document.getElementById('quantity').value);
-        const maxStock = parseInt(document.getElementById('quantity').max);
+    const form = document.getElementById('addToCartForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const maxStock = parseInt(document.getElementById('quantity').max);
 
-        if (quantity < 1) {
-            e.preventDefault();
-            alert('Số lượng phải lớn hơn 0!');
-            return false;
-        }
+            if (quantity < 1) {
+                e.preventDefault();
+                alert('Số lượng phải lớn hơn 0!');
+                return false;
+            }
 
-        if (quantity > maxStock) {
-            e.preventDefault();
-            alert('Số lượng vượt quá hàng có sẵn!');
-            return false;
-        }
-    });
+            if (quantity > maxStock) {
+                e.preventDefault();
+                alert('Số lượng vượt quá hàng có sẵn!');
+                return false;
+            }
+        });
+    }
 </script>
 </body>
 </html>

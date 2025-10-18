@@ -86,7 +86,7 @@ public class OrderDetailServlet extends HttpServlet {
             order.setTotalAmount(total);
             order.setPaidAmount(paid);
 
-            // ✅ remainingAmount is already calculated by trigger in database
+            // remainingAmount is already calculated by trigger in database
             // No need to recalculate or override!
 
             logger.info("Order {} details (with trigger-calculated remaining):", orderId);

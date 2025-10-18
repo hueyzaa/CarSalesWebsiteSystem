@@ -87,6 +87,23 @@ public class LoginServlet extends HttpServlet {
                 request.changeSessionId();
 
                 logger.info("User logged in successfully: {}", email);
+
+                // ==========================================
+                // NEW: Handle redirect after login
+                // ==========================================
+                String redirectUrl = (String) session.getAttribute("redirectAfterLogin");
+
+                if (redirectUrl != null && !redirectUrl.isEmpty()) {
+                    // Remove redirect attributes from session
+                    session.removeAttribute("redirectAfterLogin");
+                    session.removeAttribute("loginMessage");
+
+                    logger.info("Redirecting user {} to: {}", email, redirectUrl);
+                    response.sendRedirect(redirectUrl);
+                    return;
+                }
+
+                // Default redirect to home
                 response.sendRedirect(request.getContextPath() + "/home");
 
             } else {

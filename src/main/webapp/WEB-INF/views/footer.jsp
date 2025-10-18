@@ -140,8 +140,8 @@
                 <ul>
                     <li><a href="${pageContext.request.contextPath}/"><i class="fas fa-angle-right"></i> Trang Chủ</a></li>
                     <li><a href="${pageContext.request.contextPath}/cars"><i class="fas fa-angle-right"></i> Xem Xe</a></li>
-                    <li><a href="${pageContext.request.contextPath}/about"><i class="fas fa-angle-right"></i> Giới Thiệu</a></li>
-                    <li><a href="${pageContext.request.contextPath}/contact"><i class="fas fa-angle-right"></i> Liên Hệ</a></li>
+                    <li><a href="${pageContext.request.contextPath}/promotions"><i class="fas fa-angle-right"></i> Khuyến Mãi</a></li>
+                    <li><a href="${pageContext.request.contextPath}/blog"><i class="fas fa-angle-right"></i> Tin Tức</a></li>
                 </ul>
             </div>
 

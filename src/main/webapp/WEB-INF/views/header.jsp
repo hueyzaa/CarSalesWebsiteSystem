@@ -35,6 +35,7 @@
         width: 100%;
         background: #2a2a2a;
         color: #fff;
+        font-size: 0.9rem;
     }
 
     .search-navbar input::placeholder {
@@ -72,10 +73,15 @@
         color: #1a1a1a;
         border: none;
         border-radius: 25px;
-        padding: 8px 20px;
+        padding: 8px 16px;
         font-weight: 600;
+        font-size: 0.9rem;
         margin-left: 15px;
         transition: all 0.3s;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
     }
 
     .cart-btn-nav:hover {
@@ -106,6 +112,7 @@
         color: #e0e0e0 !important;
         margin: 0 10px;
         font-weight: 500;
+        font-size: 0.95rem;
         transition: all 0.3s;
     }
 
@@ -122,6 +129,7 @@
     .dropdown-item {
         color: #e0e0e0;
         transition: all 0.3s;
+        font-size: 0.9rem;
     }
 
     .dropdown-item:hover {
@@ -131,6 +139,16 @@
 
     .dropdown-divider {
         border-color: #444;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 991px) {
+        .cart-btn-nav {
+            width: 100%;
+            justify-content: center;
+            margin-left: 0;
+            margin-top: 10px;
+        }
     }
 </style>
 
@@ -145,13 +163,19 @@
         <!-- Menu items cạnh brand -->
         <ul class="navbar-nav me-auto mb-0 d-none d-lg-flex">
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/cars">Xem Xe</a>
+                <a class="nav-link" href="${pageContext.request.contextPath}/cars">
+                    <i class="fas fa-car"></i> Xem Xe
+                </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/about">Giới Thiệu</a>
+                <a class="nav-link" href="${pageContext.request.contextPath}/promotions">
+                    <i class="fas fa-gift"></i> Khuyến Mãi
+                </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/contact">Liên Hệ</a>
+                <a class="nav-link" href="${pageContext.request.contextPath}/blog">
+                    <i class="fas fa-newspaper"></i> Tin Tức
+                </a>
             </li>
         </ul>
 
@@ -163,13 +187,19 @@
             <!-- Mobile Menu -->
             <ul class="navbar-nav d-lg-none mb-3">
                 <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/cars">Xem Xe</a>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/cars">
+                        <i class="fas fa-car"></i> Xem Xe
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/about">Giới Thiệu</a>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/promotions">
+                        <i class="fas fa-gift"></i> Khuyến Mãi
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/contact">Liên Hệ</a>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/blog">
+                        <i class="fas fa-newspaper"></i> Tin Tức
+                    </a>
                 </li>
             </ul>
 
@@ -188,32 +218,44 @@
             <div class="d-flex align-items-center mt-3 mt-lg-0">
                 <!-- Cart Button -->
                 <a href="${pageContext.request.contextPath}/cart" class="cart-btn-nav">
-                    <i class="fas fa-shopping-cart"></i> Giỏ Hàng
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Giỏ Hàng</span>
                     <span class="cart-badge-nav" id="cartBadge">0</span>
                 </a>
 
                 <!-- User Menu - Sát bên phải -->
                 <ul class="navbar-nav ms-3 mb-0">
                     <c:choose>
-                        <c:when test="${not empty sessionScope.user}">
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-user"></i> ${sessionScope.user.name}
+                    <c:when test="${not empty sessionScope.user}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> ${sessionScope.user.name}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="${pageContext.request.contextPath}/profile">
+                                    <i class="fas fa-user-circle"></i> Hồ Sơ
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">
-                                        <i class="fas fa-user-circle"></i> Hồ Sơ
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/orders">
-                                        <i class="fas fa-receipt"></i> Đơn Hàng
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
-                                        <i class="fas fa-sign-out-alt"></i> Đăng Xuất
-                                    </a></li>
-                                </ul>
                             </li>
-                        </c:when>
+                            <li>
+                                <a class="dropdown-item" href="${pageContext.request.contextPath}/orders">
+                                    <i class="fas fa-receipt"></i> Đơn Hàng
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="${pageContext.request.contextPath}/my-promotions">
+                                    <i class="fas fa-gift"></i> Khuyến Mãi Của Tôi
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
+                                    <i class="fas fa-sign-out-alt"></i> Đăng Xuất
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    </c:when>
                         <c:otherwise>
                             <li class="nav-item">
                                 <a class="nav-link" href="${pageContext.request.contextPath}/login">
@@ -227,7 +269,6 @@
         </div>
     </div>
 </nav>
-
 <script>
     // Load cart count from session
     document.addEventListener('DOMContentLoaded', function() {

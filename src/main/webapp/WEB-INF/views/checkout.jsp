@@ -25,17 +25,13 @@
             border-bottom: 2px solid #ffd700;
         }
 
-        .page-header h1 {
-            color: #f8f9fa;
-            font-weight: 700;
-        }
-
         .checkout-container {
             background: #1a1a1a;
             border-radius: 15px;
             padding: 30px;
             border: 1px solid #333;
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
         }
 
         .section-title {
@@ -47,93 +43,16 @@
             border-bottom: 2px solid #333;
         }
 
-        .user-info-card {
-            background: #0f0f0f;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #333;
-        }
-
-        .info-row:last-child {
-            border-bottom: none;
-        }
-
-        .info-label {
-            color: #888;
-            font-weight: 600;
-        }
-
-        .info-value {
-            color: #f8f9fa;
-        }
-
-        .cart-item {
-            display: flex;
-            gap: 15px;
-            padding: 15px;
-            background: #0f0f0f;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
-        }
-
-        .item-image {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 2px solid #333;
-        }
-
-        .item-info {
-            flex: 1;
-        }
-
-        .item-brand {
-            color: #ffd700;
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .item-name {
-            color: #f8f9fa;
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .item-price {
-            color: #888;
-        }
-
-        .item-quantity {
-            color: #ffd700;
-            font-weight: 600;
-        }
-
-        .payment-method {
-            background: #0f0f0f;
-            padding: 25px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-        }
-
         .payment-option {
-            background: #1a1a1a;
+            background: #0f0f0f;
             border: 2px solid #333;
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 15px;
             cursor: pointer;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
         }
 
         .payment-option:hover {
@@ -148,88 +67,53 @@
         .payment-option input[type="radio"] {
             width: 20px;
             height: 20px;
-            margin-right: 15px;
             cursor: pointer;
+            margin: 0;
         }
 
         .payment-option label {
+            margin: 0 0 0 10px;
             cursor: pointer;
-            margin: 0;
-            font-weight: 600;
-            color: #f8f9fa;
-            font-size: 1.05rem;
+            flex: 1;
+            font-size: 1rem;
         }
 
-        .payment-description {
-            color: #888;
-            font-size: 0.9rem;
-            margin-top: 10px;
-            padding-left: 35px;
-            line-height: 1.5;
-        }
-
-        .payment-highlight {
-            color: #ffd700;
-            font-weight: 600;
-        }
-
-        .payment-amount-box {
-            background: rgba(255, 215, 0, 0.1);
-            border: 2px solid #ffd700;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-            margin-left: 35px;
-        }
-
-        .payment-amount-label {
-            color: #888;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-
-        .payment-amount-value {
-            color: #ffd700;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-
-        .order-summary {
+        .promotion-option-card {
             background: #0f0f0f;
-            padding: 25px;
-            border-radius: 10px;
-            position: sticky;
-            top: 20px;
-        }
-
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #333;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
             transition: all 0.3s;
+            display: flex;
+            align-items: start;
+            gap: 15px;
+            margin-bottom: 15px;
         }
 
-        .summary-row:last-child {
-            border-bottom: none;
-            padding-top: 20px;
-            margin-top: 15px;
-            border-top: 2px solid #444;
+        .promotion-option-card:hover {
+            border-color: #ffd700;
+            transform: translateX(5px);
         }
 
-        .summary-label {
-            color: #888;
-            font-weight: 600;
+        .promotion-option-card.selected {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
         }
 
-        .summary-value {
-            color: #f8f9fa;
-            font-weight: 600;
+        .promotion-option-card input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            margin-top: 3px;
+            flex-shrink: 0;
         }
 
-        .summary-value.total {
-            color: #ffd700;
-            font-size: 1.5rem;
+        .promotion-option-card label {
+            margin: 0;
+            cursor: pointer;
+            flex: 1;
         }
 
         .btn-place-order {
@@ -251,23 +135,6 @@
             box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
         }
 
-        .btn-back {
-            width: 100%;
-            background: #333;
-            border: 1px solid #555;
-            color: #e0e0e0;
-            font-weight: 600;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 10px;
-            transition: all 0.3s;
-        }
-
-        .btn-back:hover {
-            background: #444;
-            border-color: #666;
-        }
-
         footer {
             margin-top: auto;
         }
@@ -284,7 +151,7 @@
 
 <div class="container mb-5">
     <c:if test="${not empty sessionScope.error}">
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show">
             <i class="fas fa-exclamation-circle"></i> ${sessionScope.error}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -294,58 +161,41 @@
     <form action="${pageContext.request.contextPath}/checkout" method="post" id="checkoutForm">
         <div class="row">
             <div class="col-lg-8">
-                <div class="checkout-container mb-4">
-                    <h3 class="section-title">
-                        <i class="fas fa-user"></i> Thông Tin Người Mua
-                    </h3>
-                    <div class="user-info-card">
-                        <div class="info-row">
-                            <span class="info-label">Họ và tên:</span>
-                            <span class="info-value">${user.name}</span>
+                <!-- User Info -->
+                <div class="checkout-container">
+                    <h3 class="section-title"><i class="fas fa-user"></i> Thông Tin Người Mua</h3>
+                    <div style="background: #0f0f0f; padding: 20px; border-radius: 10px;">
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333;">
+                            <span style="color: #888;">Họ và tên:</span>
+                            <span style="color: #f8f9fa;">${user.name}</span>
                         </div>
-                        <div class="info-row">
-                            <span class="info-label">Email:</span>
-                            <span class="info-value">${user.email}</span>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                            <span style="color: #888;">Email:</span>
+                            <span style="color: #f8f9fa;">${user.email}</span>
                         </div>
-                        <c:if test="${not empty user.phone}">
-                            <div class="info-row">
-                                <span class="info-label">Số điện thoại:</span>
-                                <span class="info-value">${user.phone}</span>
-                            </div>
-                        </c:if>
-                        <c:if test="${not empty user.address}">
-                            <div class="info-row">
-                                <span class="info-label">Địa chỉ:</span>
-                                <span class="info-value">${user.address}</span>
-                            </div>
-                        </c:if>
                     </div>
                 </div>
 
-                <div class="checkout-container mb-4">
-                    <h3 class="section-title">
-                        <i class="fas fa-shopping-cart"></i> Sản Phẩm
-                    </h3>
+                <!-- Cart Items -->
+                <div class="checkout-container">
+                    <h3 class="section-title"><i class="fas fa-shopping-cart"></i> Sản Phẩm</h3>
                     <c:forEach var="item" items="${cartItems}">
-                        <div class="cart-item">
-                            <c:choose>
-                                <c:when test="${not empty item.car.imageUrl}">
-                                    <img src="${item.car.imageUrl}" alt="${item.car.name}" class="item-image">
-                                </c:when>
-                                <c:otherwise>
-                                    <img src="https://via.placeholder.com/100?text=No+Image" alt="${item.car.name}" class="item-image">
-                                </c:otherwise>
-                            </c:choose>
-
-                            <div class="item-info">
-                                <div class="item-brand">${item.car.brandName}</div>
-                                <div class="item-name">${item.car.name}</div>
-                                <div class="item-price">
+                        <div style="display: flex; gap: 15px; padding: 15px; background: #0f0f0f;
+                             border-radius: 10px; margin-bottom: 15px; border: 1px solid #333;">
+                            <img src="${item.car.imageUrl}" alt="${item.car.name}"
+                                 style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
+                            <div style="flex: 1;">
+                                <div style="color: #ffd700; font-size: 0.9rem; font-weight: 600;">
+                                        ${item.car.brandName}
+                                </div>
+                                <div style="color: #f8f9fa; font-size: 1.1rem; font-weight: 600;">
+                                        ${item.car.name}
+                                </div>
+                                <div style="color: #888;">
                                     <fmt:formatNumber value="${item.car.price}" type="currency" currencySymbol="₫"/>
-                                    × <span class="item-quantity">${item.quantity}</span>
+                                    × ${item.quantity}
                                 </div>
                             </div>
-
                             <div style="text-align: right; color: #ffd700; font-weight: 700; font-size: 1.1rem;">
                                 <fmt:formatNumber value="${item.subtotal}" type="currency" currencySymbol="₫"/>
                             </div>
@@ -353,113 +203,111 @@
                     </c:forEach>
                 </div>
 
-                <div class="checkout-container">
-                    <h3 class="section-title">
-                        <i class="fas fa-credit-card"></i> Hình Thức Thanh Toán
-                    </h3>
-                    <div class="payment-method">
-                        <!-- Option 1: Deposit 10% -->
-                        <div class="payment-option" onclick="selectPayment('DEPOSIT', this)">
-                            <div class="d-flex align-items-center">
-                                <input type="radio" name="paymentType" id="depositPayment" value="DEPOSIT" required checked>
-                                <label for="depositPayment">
-                                    <i class="fas fa-hand-holding-usd"></i> Đặt Cọc 10% - Thanh Toán Online
-                                </label>
-                            </div>
-                            <div class="payment-description">
-                                Đặt cọc <strong class="payment-highlight">${depositPercentage}%</strong> giá trị đơn hàng qua VNPay để giữ chỗ xe.
-                                <br><span class="payment-highlight">✓ Xe được giữ chỗ ưu tiên</span>
-                                <br><span class="payment-highlight">✓ Thanh toán phần còn lại tại showroom khi nhận xe</span>
-                                <br><span class="payment-highlight">✓ Thanh toán an toàn qua VNPay</span>
-                            </div>
-                            <div class="payment-amount-box">
-                                <div class="payment-amount-label">Số tiền cần đặt cọc:</div>
-                                <div class="payment-amount-value">
-                                    <fmt:formatNumber value="${depositAmount}" type="currency" currencySymbol="₫"/>
-                                </div>
-                                <div style="color: #888; font-size: 0.85rem; margin-top: 10px;">
-                                    Còn lại: <strong style="color: #ff9800;"><fmt:formatNumber value="${total - depositAmount}" type="currency" currencySymbol="₫"/></strong> thanh toán tại showroom
-                                </div>
+                <!-- Promotion Selection -->
+                <c:if test="${not empty availablePromotions}">
+                    <div class="checkout-container">
+                        <h3 class="section-title"><i class="fas fa-ticket-alt"></i> Áp Dụng Khuyến Mãi</h3>
+
+                        <div style="background: rgba(255, 215, 0, 0.1); border: 2px solid #ffd700;
+                             border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                            <div style="color: #ffd700; font-weight: 600;">
+                                <i class="fas fa-info-circle"></i>
+                                Bạn có ${availablePromotions.size()} khuyến mãi có thể sử dụng
                             </div>
                         </div>
 
-                        <!-- Option 2: Showroom Payment -->
-                        <div class="payment-option" onclick="selectPayment('SHOWROOM', this)">
-                            <div class="d-flex align-items-center">
-                                <input type="radio" name="paymentType" id="showroomPayment" value="SHOWROOM" required>
-                                <label for="showroomPayment">
-                                    <i class="fas fa-store"></i> Thanh Toán Tại Showroom
+                        <!-- No Promotion Option -->
+                        <div class="promotion-option-card selected" onclick="selectPromotion(null, this)">
+                            <input type="radio" name="promotionSelection" value="" id="promo-none" checked>
+                            <label for="promo-none">
+                                <div style="font-weight: 600; color: #f8f9fa;">
+                                    <i class="fas fa-times-circle"></i> Không sử dụng khuyến mãi
+                                </div>
+                                <div style="color: #888; font-size: 0.9rem;">Thanh toán với giá gốc</div>
+                            </label>
+                        </div>
+
+                        <!-- Available Promotions -->
+                        <c:forEach var="promo" items="${availablePromotions}" varStatus="status">
+                            <div class="promotion-option-card" onclick="selectPromotion(${promo.promotionId}, this)">
+                                <input type="radio" name="promotionSelection" value="${promo.promotionId}"
+                                       id="promo-${promo.promotionId}">
+                                <label for="promo-${promo.promotionId}">
+                                    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600; color: #ffd700; font-size: 1.1rem;">
+                                                    ${promo.title}
+                                            </div>
+                                            <div style="color: #b0b0b0; font-size: 0.9rem; margin: 8px 0;">
+                                                    ${promo.description}
+                                            </div>
+                                        </div>
+                                        <div style="background: linear-gradient(135deg, #dc3545, #c82333);
+                                             color: white; padding: 10px 18px; border-radius: 20px; font-weight: 700;
+                                             display: flex; align-items: center; justify-content: center;
+                                             min-width: 80px; text-align: center;">
+                                            <c:choose>
+                                                <c:when test="${promo.discountPercentage > 0}">
+                                                    -${promo.discountPercentage}%
+                                                </c:when>
+                                                <c:otherwise>
+                                                    -<fmt:formatNumber value="${promo.discountAmount}" type="number"/>₫
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                    </div>
                                 </label>
                             </div>
-                            <div class="payment-description">
-                                Đặt xe ngay, thanh toán toàn bộ khi đến showroom.
-                                <br><span class="payment-highlight">✓ Không cần thanh toán trước</span>
-                                <br><span class="payment-highlight">✓ Kiểm tra xe trực tiếp trước khi thanh toán</span>
-                                <br><span class="payment-highlight">✓ Nhận tư vấn trực tiếp từ chuyên viên</span>
-                                <br>Chúng tôi sẽ liên hệ để xác nhận và hẹn lịch đến showroom.
-                            </div>
-                            <div class="payment-amount-box">
-                                <div class="payment-amount-label">Tổng số tiền thanh toán tại showroom:</div>
-                                <div class="payment-amount-value">
-                                    <fmt:formatNumber value="${total}" type="currency" currencySymbol="₫"/>
-                                </div>
-                            </div>
-                        </div>
+                        </c:forEach>
+                    </div>
+                </c:if>
+
+                <!-- Payment Method -->
+                <div class="checkout-container">
+                    <h3 class="section-title"><i class="fas fa-credit-card"></i> Hình Thức Thanh Toán</h3>
+
+                    <div class="payment-option selected" onclick="selectPayment('DEPOSIT', this)">
+                        <input type="radio" name="paymentType" value="DEPOSIT" id="payment-deposit" required checked>
+                        <label for="payment-deposit">
+                            <i class="fas fa-hand-holding-usd"></i> Đặt Cọc 10% - Thanh Toán Online
+                        </label>
+                    </div>
+
+                    <div class="payment-option" onclick="selectPayment('SHOWROOM', this)">
+                        <input type="radio" name="paymentType" value="SHOWROOM" id="payment-showroom" required>
+                        <label for="payment-showroom">
+                            <i class="fas fa-store"></i> Thanh Toán Tại Showroom
+                        </label>
                     </div>
                 </div>
             </div>
 
+            <!-- Order Summary -->
             <div class="col-lg-4">
-                <div class="order-summary">
-                    <h3 class="section-title">
-                        <i class="fas fa-receipt"></i> Tóm Tắt Đơn Hàng
-                    </h3>
+                <div style="background: #0f0f0f; padding: 25px; border-radius: 10px; position: sticky; top: 20px;">
+                    <h3 class="section-title"><i class="fas fa-receipt"></i> Tóm Tắt Đơn Hàng</h3>
 
-                    <div class="summary-row">
-                        <span class="summary-label">Tổng số lượng:</span>
-                        <span class="summary-value">
-                            <c:set var="totalItems" value="0"/>
-                            <c:forEach var="item" items="${cartItems}">
-                                <c:set var="totalItems" value="${totalItems + item.quantity}"/>
-                            </c:forEach>
-                            ${totalItems} xe
-                        </span>
-                    </div>
-
-                    <div class="summary-row">
-                        <span class="summary-label">Tổng giá trị:</span>
-                        <span class="summary-value">
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #333;">
+                        <span style="color: #888;">Tổng giá trị:</span>
+                        <span style="color: #f8f9fa; font-weight: 600;">
                             <fmt:formatNumber value="${total}" type="currency" currencySymbol="₫"/>
                         </span>
                     </div>
 
-                    <div class="summary-row" id="paymentAmountRow">
-                        <span class="summary-label" id="paymentLabel">Số tiền cần thanh toán ngay:</span>
-                        <span class="summary-value total" id="paymentAmount">
-                            <fmt:formatNumber value="${depositAmount}" type="currency" currencySymbol="₫"/>
+                    <div id="discountRow" style="display: none; color: #28a745; padding: 12px 0;
+                         border-bottom: 1px solid #333;"></div>
+
+                    <div style="display: flex; justify-content: space-between; padding: 20px 0;
+                         border-top: 2px solid #444; margin-top: 15px;">
+                        <span style="color: #888; font-weight: 600;">Tổng thanh toán:</span>
+                        <span class="summary-value total" style="color: #ffd700; font-size: 1.5rem; font-weight: 700;">
+                            <fmt:formatNumber value="${total}" type="currency" currencySymbol="₫"/>
                         </span>
                     </div>
 
-                    <div id="remainingAmountInfo" style="background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.3); border-radius: 8px; padding: 12px; margin-top: 15px;">
-                        <div style="color: #ff9800; font-size: 0.9rem; margin-bottom: 5px;">
-                            <i class="fas fa-info-circle"></i> Thanh toán tại showroom:
-                        </div>
-                        <div style="color: #ff9800; font-size: 1.2rem; font-weight: 700;">
-                            <fmt:formatNumber value="${total - depositAmount}" type="currency" currencySymbol="₫"/>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-place-order" id="placeOrderBtn">
+                    <button type="submit" class="btn-place-order" id="placeOrderBtn">
                         <i class="fas fa-check-circle"></i> Đặt Cọc Ngay
                     </button>
-
-                    <a href="${pageContext.request.contextPath}/cart" class="btn btn-back">
-                        <i class="fas fa-arrow-left"></i> Quay Lại Giỏ Hàng
-                    </a>
-
-                    <div class="mt-3 text-center" style="color: #888; font-size: 0.85rem;">
-                        <i class="fas fa-shield-alt"></i> Giao dịch được bảo mật bởi VNPay
-                    </div>
                 </div>
             </div>
         </div>
@@ -470,19 +318,52 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const totalAmount = ${total};
-    const depositAmount = ${depositAmount};
+    const originalTotal = ${total};
+    const depositPercentage = ${depositPercentage} / 100;
+    let selectedPromotionId = null;
 
-    // Pre-select DEPOSIT option on page load
-    window.addEventListener('DOMContentLoaded', function() {
-        const depositOption = document.querySelector('.payment-option');
-        if (depositOption) {
-            depositOption.classList.add('selected');
+    const promotionDiscounts = {
+    <c:forEach var="promo" items="${availablePromotions}" varStatus="status">
+    ${promo.promotionId}: {
+        percentage: ${promo.discountPercentage},
+        amount: ${promo.discountAmount}
+    }${!status.last ? ',' : ''}
+    </c:forEach>
+    };
+
+    function selectPromotion(promotionId, element) {
+        selectedPromotionId = promotionId;
+
+        // Remove selected class from all cards
+        document.querySelectorAll('.promotion-option-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+
+        // Add selected class to clicked card
+        element.classList.add('selected');
+
+        // Check the radio button
+        const radio = element.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = true;
         }
-    });
+
+        // Update or create hidden input for form submission
+        let hiddenInput = document.getElementById('selectedPromotionInput');
+        if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = 'selectedPromotionInput';
+            hiddenInput.name = 'promotionId';
+            document.getElementById('checkoutForm').appendChild(hiddenInput);
+        }
+        hiddenInput.value = promotionId || '';
+
+        updateTotals();
+    }
 
     function selectPayment(type, element) {
-        // Remove selected class from all options
+        // Remove selected class from all payment options
         document.querySelectorAll('.payment-option').forEach(opt => {
             opt.classList.remove('selected');
         });
@@ -490,60 +371,79 @@
         // Add selected class to clicked option
         element.classList.add('selected');
 
-        const paymentLabel = document.getElementById('paymentLabel');
-        const paymentAmountEl = document.getElementById('paymentAmount');
-        const remainingInfo = document.getElementById('remainingAmountInfo');
-        const buttonText = document.getElementById('placeOrderBtn');
+        // Check the radio button
+        const radio = element.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = true;
+        }
 
-        if (type === 'DEPOSIT') {
-            document.getElementById('depositPayment').checked = true;
+        updateTotals();
+    }
 
-            // Update summary
-            paymentLabel.textContent = 'Số tiền cần thanh toán ngay:';
-            paymentAmountEl.textContent = new Intl.NumberFormat('vi-VN').format(depositAmount) + '₫';
-            remainingInfo.style.display = 'block';
+    function updateTotals() {
+        let discount = 0;
 
-            // Update button
-            buttonText.innerHTML = '<i class="fas fa-check-circle"></i> Đặt Cọc ' +
-                new Intl.NumberFormat('vi-VN').format(depositAmount) + '₫';
+        if (selectedPromotionId && promotionDiscounts[selectedPromotionId]) {
+            const promo = promotionDiscounts[selectedPromotionId];
+            if (promo.percentage > 0) {
+                discount = originalTotal * (promo.percentage / 100);
+            } else if (promo.amount > 0) {
+                discount = promo.amount;
+            }
+        }
 
-        } else if (type === 'SHOWROOM') {
-            document.getElementById('showroomPayment').checked = true;
+        const finalTotal = originalTotal - discount;
 
-            // Update summary
-            paymentLabel.textContent = 'Thanh toán tại showroom:';
-            paymentAmountEl.textContent = new Intl.NumberFormat('vi-VN').format(totalAmount) + '₫';
-            remainingInfo.style.display = 'none';
+        // Update discount row
+        let discountRow = document.getElementById('discountRow');
+        if (discount > 0) {
+            discountRow.innerHTML =
+                '<span>Giảm giá:</span>' +
+                '<span>-' + new Intl.NumberFormat('vi-VN').format(discount) + '₫</span>';
+            discountRow.style.display = 'flex';
+            discountRow.style.justifyContent = 'space-between';
+        } else {
+            discountRow.style.display = 'none';
+        }
 
-            // Update button
-            buttonText.innerHTML = '<i class="fas fa-check-circle"></i> Xác Nhận Đặt Xe';
+        // Update total
+        document.querySelector('.summary-value.total').textContent =
+            new Intl.NumberFormat('vi-VN').format(finalTotal) + '₫';
+
+        // Update button text based on payment type
+        const paymentType = document.querySelector('input[name="paymentType"]:checked');
+        if (paymentType) {
+            if (paymentType.value === 'DEPOSIT') {
+                const depositAmount = finalTotal * depositPercentage;
+                document.getElementById('placeOrderBtn').innerHTML =
+                    '<i class="fas fa-check-circle"></i> Đặt Cọc ' +
+                    new Intl.NumberFormat('vi-VN').format(depositAmount) + '₫';
+            } else {
+                document.getElementById('placeOrderBtn').innerHTML =
+                    '<i class="fas fa-check-circle"></i> Xác Nhận Đặt Xe';
+            }
         }
     }
 
-    // Form validation
-    document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-        const paymentType = document.querySelector('input[name="paymentType"]:checked');
+    // Add event listeners to radio buttons for accessibility
+    document.querySelectorAll('input[name="paymentType"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const parent = this.closest('.payment-option');
+            selectPayment(this.value, parent);
+        });
+    });
 
-        if (!paymentType) {
-            e.preventDefault();
-            alert('Vui lòng chọn hình thức thanh toán!');
-            return false;
-        }
+    document.querySelectorAll('input[name="promotionSelection"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const parent = this.closest('.promotion-option-card');
+            const promoId = this.value === '' ? null : parseInt(this.value);
+            selectPromotion(promoId, parent);
+        });
+    });
 
-        let confirmMessage = '';
-        if (paymentType.value === 'SHOWROOM') {
-            confirmMessage = 'Xác nhận đặt xe?\n\n' +
-                'Tổng giá trị: ' + new Intl.NumberFormat('vi-VN').format(totalAmount) + '₫\n' +
-                'Bạn sẽ thanh toán toàn bộ khi đến showroom.\n\n' +
-                'Chúng tôi sẽ liên hệ để xác nhận và hẹn lịch.';
-        } else if (paymentType.value === 'DEPOSIT') {
-            confirmMessage = 'Xác nhận đặt cọc?\n\n' +
-                'Đặt cọc: ' + new Intl.NumberFormat('vi-VN').format(depositAmount) + '₫ (10%)\n' +
-                'Còn lại: ' + new Intl.NumberFormat('vi-VN').format(totalAmount - depositAmount) + '₫\n\n' +
-                'Bạn sẽ thanh toán phần còn lại tại showroom khi nhận xe.';
-        }
-
-        return confirm(confirmMessage);
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTotals();
     });
 </script>
 </body>

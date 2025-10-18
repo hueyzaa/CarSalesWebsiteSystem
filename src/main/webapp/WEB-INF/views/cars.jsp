@@ -148,10 +148,14 @@
             border: none;
             color: #1a1a1a;
             font-weight: 600;
-            padding: 0.7rem;
+            padding: 0.65rem;
+            font-size: 0.9rem;
             border-radius: 6px;
             transition: all 0.3s;
-            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .btn-filter:hover {
@@ -378,11 +382,15 @@
             border: none;
             color: #1a1a1a;
             font-weight: 600;
-            padding: 0.7rem;
+            padding: 0.65rem;
+            font-size: 0.9rem;
             border-radius: 6px;
             transition: all 0.3s;
-            font-size: 0.9rem;
             margin-top: auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .car-card .btn-view:hover {

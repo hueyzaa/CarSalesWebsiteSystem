@@ -378,13 +378,19 @@
         <!-- Menu items cạnh brand -->
         <ul class="navbar-nav me-auto mb-0 d-none d-lg-flex">
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/cars">Xem Xe</a>
+                <a class="nav-link" href="${pageContext.request.contextPath}/cars">
+                    <i class="fas fa-car"></i> Xem Xe
+                </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/about">Giới Thiệu</a>
+                <a class="nav-link" href="${pageContext.request.contextPath}/promotions">
+                    <i class="fas fa-gift"></i> Khuyến Mãi
+                </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/contact">Liên Hệ</a>
+                <a class="nav-link" href="${pageContext.request.contextPath}/blog">
+                    <i class="fas fa-newspaper"></i> Tin Tức
+                </a>
             </li>
         </ul>
 
@@ -396,13 +402,19 @@
             <!-- Mobile Menu -->
             <ul class="navbar-nav d-lg-none mb-3">
                 <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/cars">Xem Xe</a>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/cars">
+                        <i class="fas fa-car"></i> Xem Xe
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/about">Giới Thiệu</a>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/promotions">
+                        <i class="fas fa-gift"></i> Khuyến Mãi
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/contact">Liên Hệ</a>
+                    <a class="nav-link" href="${pageContext.request.contextPath}/blog">
+                        <i class="fas fa-newspaper"></i> Tin Tức
+                    </a>
                 </li>
             </ul>
 
@@ -498,8 +510,8 @@
             <a href="${pageContext.request.contextPath}/cars" class="btn btn-hero-primary">
                 <i class="fas fa-search"></i> Khám Phá Ngay
             </a>
-            <a href="${pageContext.request.contextPath}/contact" class="btn btn-hero-outline">
-                <i class="fas fa-phone"></i> Liên Hệ
+            <a href="${pageContext.request.contextPath}/promotions" class="btn btn-hero-outline">
+                <i class="fas fa-gift"></i> Khuyến Mãi
             </a>
         </div>
     </div>

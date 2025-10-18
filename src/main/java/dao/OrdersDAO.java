@@ -2,6 +2,7 @@ package dao;
 
 import model.Order;
 import model.CartItem;
+import model.Promotion;
 import util.DBContext;
 import exception.DatabaseException;
 import org.slf4j.Logger;
@@ -173,6 +174,220 @@ public class OrdersDAO {
         return createOrder(userId, cartItems, "FULL", null, null);
     }
 
+    // =============================================
+    // NEW: CREATE ORDER WITH PROMOTION SUPPORT
+    // =============================================
+
+    /**
+     * Create order with promotion support
+     * @param userId User ID
+     * @param cartItems Cart items
+     * @param paymentType Payment type (DEPOSIT, SHOWROOM, FULL)
+     * @param depositAmount Deposit amount if applicable
+     * @param notes Order notes
+     * @param promotionId Promotion ID to apply (null if no promotion)
+     * @return Order ID if successful, -1 if failed
+     */
+    public int createOrderWithPromotion(int userId, List<CartItem> cartItems, String paymentType,
+                                        Double depositAmount, String notes, Integer promotionId) {
+        if (cartItems == null || cartItems.isEmpty()) {
+            throw new IllegalArgumentException("Cart items cannot be null or empty");
+        }
+
+        // Calculate total and remaining amount
+        double totalAmount = cartItems.stream()
+                .mapToDouble(CartItem::getSubtotal)
+                .sum();
+
+        Double remainingAmount = null;
+        if ("DEPOSIT".equals(paymentType) && depositAmount != null) {
+            remainingAmount = totalAmount - depositAmount;
+        } else if ("SHOWROOM".equals(paymentType)) {
+            remainingAmount = totalAmount;
+        }
+
+        String sqlOrder = "INSERT INTO Orders (user_id, status, payment_type, deposit_amount, remaining_amount, notes, promotion_id) " +
+                "VALUES (?, 'PENDING', ?, ?, ?, ?, ?)";
+        String sqlOrderDetail = "INSERT INTO OrderDetail (order_id, car_id, price, quantity) " +
+                "VALUES (?, ?, ?, ?)";
+        String sqlMarkPromotion = "UPDATE UserPromotion SET is_used = 1, used_at = GETDATE(), order_id = ? " +
+                "WHERE user_id = ? AND promotion_id = ? AND is_used = 0";
+
+        Connection conn = null;
+
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
+
+            // Create order with promotion_id
+            int orderId;
+            try (PreparedStatement stmt = conn.prepareStatement(sqlOrder, Statement.RETURN_GENERATED_KEYS)) {
+                stmt.setInt(1, userId);
+                stmt.setString(2, paymentType);
+
+                if (depositAmount != null) {
+                    stmt.setDouble(3, depositAmount);
+                } else {
+                    stmt.setNull(3, Types.DECIMAL);
+                }
+
+                if (remainingAmount != null) {
+                    stmt.setDouble(4, remainingAmount);
+                } else {
+                    stmt.setNull(4, Types.DECIMAL);
+                }
+
+                stmt.setString(5, notes);
+
+                if (promotionId != null) {
+                    stmt.setInt(6, promotionId);
+                    logger.info("Creating order with promotion: {}", promotionId);
+                } else {
+                    stmt.setNull(6, Types.INTEGER);
+                }
+
+                stmt.executeUpdate();
+
+                ResultSet rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    orderId = rs.getInt(1);
+                    logger.info("Created order: {}", orderId);
+                } else {
+                    throw new SQLException("Failed to get generated order ID");
+                }
+            }
+
+            // Add order details (batch)
+            try (PreparedStatement stmt = conn.prepareStatement(sqlOrderDetail)) {
+                for (CartItem item : cartItems) {
+                    if (item.getCar() == null) {
+                        throw new IllegalStateException("CartItem must have Car object populated");
+                    }
+
+                    stmt.setInt(1, orderId);
+                    stmt.setInt(2, item.getCarId());
+                    stmt.setDouble(3, item.getCar().getPrice());
+                    stmt.setInt(4, item.getQuantity());
+                    stmt.addBatch();
+                }
+                stmt.executeBatch();
+                logger.info("Added {} order details", cartItems.size());
+            }
+
+            // Mark promotion as used if applicable
+            if (promotionId != null) {
+                try (PreparedStatement stmt = conn.prepareStatement(sqlMarkPromotion)) {
+                    stmt.setInt(1, orderId);
+                    stmt.setInt(2, userId);
+                    stmt.setInt(3, promotionId);
+
+                    int markedRows = stmt.executeUpdate();
+                    if (markedRows > 0) {
+                        logger.info("Marked promotion {} as used for order {}", promotionId, orderId);
+                    } else {
+                        logger.warn("Failed to mark promotion {} as used", promotionId);
+                    }
+                }
+            }
+
+            conn.commit();
+            logger.info("Order {} created successfully with {} items and promotion {}",
+                    orderId, cartItems.size(), promotionId);
+            return orderId;
+
+        } catch (SQLException e) {
+            rollback(conn);
+            logger.error("Error creating order with promotion for userId: {}", userId, e);
+            throw new DatabaseException("Failed to create order", e);
+
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
+    /**
+     * Get promotion details for an order
+     */
+    public Promotion getOrderPromotion(int orderId) {
+        String sql = "SELECT p.promotion_id, p.title, p.description, p.start_date, p.end_date, " +
+                "p.discount_percentage, p.discount_amount " +
+                "FROM Promotion p " +
+                "INNER JOIN Orders o ON p.promotion_id = o.promotion_id " +
+                "WHERE o.order_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, orderId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Promotion promotion = new Promotion();
+                    promotion.setPromotionId(rs.getInt("promotion_id"));
+                    promotion.setTitle(rs.getString("title"));
+                    promotion.setDescription(rs.getString("description"));
+                    promotion.setStartDate(rs.getDate("start_date"));
+                    promotion.setEndDate(rs.getDate("end_date"));
+                    promotion.setDiscountPercentage(rs.getDouble("discount_percentage"));
+                    promotion.setDiscountAmount(rs.getDouble("discount_amount"));
+
+                    logger.info("Retrieved promotion for order: {}", orderId);
+                    return promotion;
+                }
+            }
+
+            logger.debug("No promotion found for order: {}", orderId);
+            return null;
+
+        } catch (SQLException e) {
+            logger.error("Error getting order promotion for order {}", orderId, e);
+            throw new DatabaseException("Failed to retrieve order promotion", e);
+        }
+    }
+
+    /**
+     * Calculate total discount applied to an order
+     */
+    public double getOrderPromotionDiscount(int orderId) {
+        String sql = "SELECT " +
+                "CASE " +
+                "    WHEN p.discount_percentage > 0 THEN " +
+                "        SUM(od.price * od.quantity) * (p.discount_percentage / 100) " +
+                "    WHEN p.discount_amount > 0 THEN " +
+                "        p.discount_amount " +
+                "    ELSE 0 " +
+                "END as total_discount " +
+                "FROM Orders o " +
+                "INNER JOIN Promotion p ON o.promotion_id = p.promotion_id " +
+                "INNER JOIN OrderDetail od ON o.order_id = od.order_id " +
+                "WHERE o.order_id = ? " +
+                "GROUP BY p.discount_percentage, p.discount_amount";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, orderId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    double discount = rs.getDouble("total_discount");
+                    logger.info("Order {} has promotion discount: {}₫", orderId, discount);
+                    return discount;
+                }
+            }
+
+            return 0;
+
+        } catch (SQLException e) {
+            logger.error("Error calculating order promotion discount for order {}", orderId, e);
+            throw new DatabaseException("Failed to calculate promotion discount", e);
+        }
+    }
+
+    // =============================================
+    // EXISTING METHODS (KHÔNG THAY ĐỔI)
+    // =============================================
+
     /**
      * Update order status
      */
@@ -237,6 +452,7 @@ public class OrdersDAO {
             throw new DatabaseException("Failed to update order payment info", e);
         }
     }
+
     /**
      * Update order notes after successful payment
      */
