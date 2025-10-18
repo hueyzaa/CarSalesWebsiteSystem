@@ -18,7 +18,7 @@ import util.ValidationUtil;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/admin/update-car")
+@WebServlet("/Admin/update-car")
 public class UpdateCarServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(UpdateCarServlet.class);
     private CarDAO carDAO;
@@ -30,9 +30,7 @@ public class UpdateCarServlet extends HttpServlet {
         brandDAO = new BrandDAO();
     }
 
-    /**
-     * Hiển thị form cập nhật xe (GET)
-     */
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -57,9 +55,7 @@ public class UpdateCarServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Xử lý cập nhật xe (POST)
-     */
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -74,7 +70,7 @@ public class UpdateCarServlet extends HttpServlet {
             Integer stock = null;
             String color = request.getParameter("color");
 
-            // optional
+
             if (request.getParameter("year") != null && !request.getParameter("year").isEmpty()) {
                 year = ValidationUtil.validatePositiveInt(request.getParameter("year"), "Năm sản xuất");
             }
@@ -82,7 +78,7 @@ public class UpdateCarServlet extends HttpServlet {
                 stock = ValidationUtil.validatePositiveInt(request.getParameter("stock"), "Tồn kho");
             }
 
-            // Tạo đối tượng xe mới
+
             Car car = new Car();
             car.setId(id);
             car.setName(name);
@@ -102,7 +98,7 @@ public class UpdateCarServlet extends HttpServlet {
 
 
             request.getSession().setAttribute("success", "Cập nhật xe thành công!");
-            response.sendRedirect(request.getContextPath() + "/Admin/car-list");
+            response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
 
         } catch (ValidationException e) {
             logger.warn("Lỗi xác thực dữ liệu: {}", e.getMessage());

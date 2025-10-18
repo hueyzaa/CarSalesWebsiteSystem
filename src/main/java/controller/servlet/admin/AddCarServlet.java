@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@WebServlet("/admin/add-car")
+@WebServlet("/Admin/add-car")
 public class AddCarServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(AddCarServlet.class);
     private CarDAO carDAO;
@@ -50,7 +50,7 @@ public class AddCarServlet extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-
+            // === Validate dữ liệu ===
             int brandId = ValidationUtil.validatePositiveInt(request.getParameter("brandId"), "Hãng xe");
             String model = ValidationUtil.validateString(request.getParameter("model"), "Tên mẫu xe", 100);
             double price = ValidationUtil.validatePrice(request.getParameter("price")).doubleValue();
@@ -60,14 +60,12 @@ public class AddCarServlet extends HttpServlet {
                 description = ValidationUtil.validateString(description, "Mô tả", 1000);
             }
 
-
             Integer year = parseOptionalInt(request.getParameter("year"), "Năm sản xuất");
             Integer stock = parseOptionalInt(request.getParameter("stock"), "Số lượng tồn kho");
             String color = request.getParameter("color");
             if (color != null && !color.trim().isEmpty()) {
                 color = ValidationUtil.validateString(color, "Màu sắc", 50);
             }
-
 
             String[] imageUrls = request.getParameterValues("imageUrls");
             List<String> validImageUrls = new ArrayList<>();
@@ -93,9 +91,9 @@ public class AddCarServlet extends HttpServlet {
             car.setColor(color);
             car.setStock(stock != null ? stock : 0);
 
-            // === Ghi vào DB ===
             int carId = carDAO.addCar(car);
-            if (carId <= 0) throw new DatabaseException("Không thể thêm xe vào cơ sở dữ liệu");
+            if (carId <= 0)
+                throw new DatabaseException("Không thể thêm xe vào cơ sở dữ liệu");
 
 
             if (!validImageUrls.isEmpty()) {
@@ -112,22 +110,21 @@ public class AddCarServlet extends HttpServlet {
                     logger.warn("Invalid primary image index, defaulting to 0");
                 }
                 boolean imageAdded = carDAO.addCarImages(carId, validImageUrls, primaryIndex);
-                if (!imageAdded) logger.warn("Ảnh xe không được lưu thành công cho carId = {}", carId);
+                if (!imageAdded)
+                    logger.warn("Ảnh xe không được lưu thành công cho carId = {}", carId);
             }
 
-
             logger.info("Xe mới được thêm thành công: ID = {}", carId);
-            request.getSession().setAttribute("success", "Thêm xe thành công!");
-            response.sendRedirect(request.getContextPath() + "/Admin/car-list");
+
+
+            response.sendRedirect(request.getContextPath() + "/Admin/dashboard?section=cars");
 
         } catch (ValidationException e) {
             logger.warn("Validation failed: {}", e.getMessage());
             handleError(request, response, e.getMessage());
-
         } catch (DatabaseException e) {
             logger.error("Database error when adding car", e);
             handleError(request, response, "Lỗi cơ sở dữ liệu. Vui lòng thử lại.");
-
         } catch (Exception e) {
             logger.error("Unexpected error in add car", e);
             handleError(request, response, "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
@@ -143,8 +140,6 @@ public class AddCarServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.setAttribute("error", errorMessage);
-
-
         request.setAttribute("brandId", request.getParameter("brandId"));
         request.setAttribute("model", request.getParameter("model"));
         request.setAttribute("price", request.getParameter("price"));
@@ -160,6 +155,7 @@ public class AddCarServlet extends HttpServlet {
         } catch (DatabaseException e) {
             logger.error("Failed to reload brand list after error", e);
         }
+
 
         request.getRequestDispatcher("/WEB-INF/views/Admin/add-car.jsp").forward(request, response);
     }

@@ -75,7 +75,7 @@
 <div class="admin-table-container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4><i class="fas fa-car"></i> Danh sách xe</h4>
-        <a href="${pageContext.request.contextPath}/admin/add-car" class="btn btn-add-car">
+        <a href="${pageContext.request.contextPath}/Admin/add-car" class="btn btn-add-car">
             <i class="fas fa-plus-circle"></i> Thêm xe mới
         </a>
     </div>
@@ -108,11 +108,11 @@
                     </span>
                 </td>
                 <td class="action-buttons">
-                    <a href="${pageContext.request.contextPath}/admin/update-car?id=${car.id}"
+                    <a href="${pageContext.request.contextPath}/Admin/update-car?id=${car.id}"
                        class="btn btn-warning btn-sm">
                         <i class="fas fa-edit"></i> Cập nhật
                     </a>
-                    <form action="${pageContext.request.contextPath}/admin/delete-car"
+                    <form action="${pageContext.request.contextPath}/Admin/delete-car"
                           method="post" style="display:inline;">
                         <input type="hidden" name="id" value="${car.id}">
                         <button type="submit" class="btn btn-danger btn-sm"

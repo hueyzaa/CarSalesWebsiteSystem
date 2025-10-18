@@ -99,7 +99,7 @@
         <div class="alert alert-danger">${error}</div>
     </c:if>
 
-    <form method="post" action="${pageContext.request.contextPath}/admin/add-car">
+    <form method="post" action="${pageContext.request.contextPath}/Admin/add-car">
         <div class="row mb-3">
             <div class="col-md-6">
                 <label class="form-label">Tên xe</label>
@@ -167,16 +167,12 @@
         </div>
 
         <div class="text-center">
-            <button type="submit" class="btn btn-primary px-4">
+            <button type="submit" id="btnBackToDashboard" class="btn btn-primary px-4">
                 <i class="fas fa-save"></i> Thêm xe
             </button>
-            <a href="${pageContext.request.contextPath}/admin/load-cars" class="btn btn-secondary px-4 ms-2">
-                <i class="fas fa-arrow-left"></i> Hủy / Quay lại
-            </a>
         </div>
     </form>
 </div>
-
 <script>
 
     document.getElementById("addImageBtn").addEventListener("click", function () {
@@ -190,7 +186,16 @@
         `;
         container.appendChild(div);
     });
-</script>
 
+    document.getElementById("btnBackToDashboard").addEventListener("click",function () {
+       if(window.parent && window.parent.document.getElementById("adminDynamicContent")) {
+           const overview = window.parent.document.getElementById("overviewSection");
+           dynamicContent.style.display = "none";
+           overview.style.display = "block";
+       } else {
+           window.location.href = "${pageContext.request.contextPath}/Admin/dashboard";
+       }
+    });
+</script>
 </body>
 </html>

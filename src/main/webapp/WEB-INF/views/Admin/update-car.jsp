@@ -1,3 +1,11 @@
+<%--
+  Created by IntelliJ IDEA.
+  User: HungNB
+  Date: 10/15/2025
+  Time: 10:55 PM
+  To change this template use File | Settings | File Templates.
+--%>
+
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
@@ -29,7 +37,7 @@
             margin-bottom: 25px;
         }
 
-        /* Toàn bộ chữ mặc định trắng */
+
         label, .form-label, .form-control, .form-select, textarea {
             color: #fff;
         }
@@ -45,10 +53,10 @@
             box-shadow: 0 0 6px #ffd700;
         }
 
-        /* Nút vàng (btn-primary) với chữ trắng */
+
         .btn-primary {
             background-color: #ffd700;
-            color: #000; /* Giữ vàng + chữ đen cho nút này */
+            color: #000;
             font-weight: bold;
             border: none;
         }
@@ -58,7 +66,6 @@
             color: #000;
         }
 
-        /* Nút phụ (btn-secondary) giữ chữ trắng */
         .btn-secondary {
             background-color: #444;
             border: none;
@@ -84,7 +91,7 @@
         <div class="alert alert-danger text-center">${error}</div>
     </c:if>
 
-    <form method="post" action="${pageContext.request.contextPath}/admin/update-car">
+    <form method="post" action="${pageContext.request.contextPath}/Admin/update-car">
         <input type="hidden" name="id" value="${car.id}"/>
 
         <div class="row mb-3">
@@ -135,17 +142,47 @@
             <label class="form-label">Mô tả</label>
             <textarea name="description" rows="3" class="form-control">${car.description}</textarea>
         </div>
-
+        <div class="mb-4">
+            <label class="form-label">Hình ảnh xe (URL)</label>
+            <div id="imageContainer">
+                <div class="image-input-row">
+                    <input type="text" name="imageUrls" class="form-control" placeholder="Nhập link ảnh...">
+                    <label><input type="radio" name="primaryImage" value="0" checked> Ảnh chính</label>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm mt-2" id="addImageBtn">
+                <i class="fas fa-plus"></i> Thêm ảnh
+            </button>
+        </div>
         <div class="text-center mt-4">
-            <button type="submit" class="btn btn-primary px-4">
+            <button type="submit" id="btnBackToDashboard" class="btn btn-primary px-4">
                 <i class="fas fa-save"></i> Lưu thay đổi
             </button>
-            <a href="${pageContext.request.contextPath}/admin/load-cars" class="btn btn-secondary px-4 ms-2">
-                <i class="fas fa-arrow-left"></i> Quay lại
-            </a>
         </div>
     </form>
 </div>
+<script>
 
+    document.getElementById("addImageBtn").addEventListener("click", function () {
+        const container = document.getElementById("imageContainer");
+        const index = container.querySelectorAll(".image-input-row").length;
+        const div = document.createElement("div");
+        div.className = "image-input-row";
+        div.innerHTML = `
+            <input type="text" name="imageUrls" class="form-control" placeholder="Nhập link ảnh...">
+            <label><input type="radio" name="primaryImage" value="${index}"> Ảnh chính</label>
+        `;
+        container.appendChild(div);
+    });
+    document.getElementById("btnBackToDashboard").addEventListener("click",function () {
+        if(window.parent && window.parent.document.getElementById("adminDynamicContent")) {
+            const overview = window.parent.document.getElementById("overviewSection");
+            dynamicContent.style.display = "none";
+            overview.style.display = "block";
+        } else {
+            window.location.href = "${pageContext.request.contextPath}/Admin/dashboard";
+        }
+    });
+</script>
 </body>
 </html>

@@ -2,9 +2,11 @@
   Created by IntelliJ IDEA.
   User: HungNB
   Date: 10/15/2025
-  Time: 10:55 PM
+  Time: 8:55 PM
   To change this template use File | Settings | File Templates.
 --%>
+
+
 
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -16,6 +18,7 @@
     <title>Bảng điều khiển Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
     <style>
         body {
             background-color: #0f0f0f;
@@ -168,18 +171,18 @@
 
     <div class="menu-section">
         <h6>Quản lý hệ thống</h6>
-        <a href="dashboard" class="menu-item" id="btnDashboard"><i class="fas fa-chart-pie"></i>Bảng điều khiển</a>
+        <a href="#" class="menu-item" id="btnDashboard"><i class="fas fa-chart-pie"></i> Bảng điều khiển</a>
         <a href="#" class="menu-item" id="btnManageCars"><i class="fas fa-car"></i> Quản lý xe</a>
-        <a href="manage-brands" class="menu-item" id="btnManageBrands"><i class="fas fa-tags"></i> Quản lý hãng xe</a>
-        <a href="manage-users" class="menu-item" id="btnManageUsers"><i class="fas fa-users"></i> Quản lý người dùng</a>
-        <a href="manage-staff" class="menu-item" id="btnManageStaff"><i class="fas fa-user-tie"></i> Quản lý nhân viên</a>
+        <a href="#" class="menu-item" id="btnManageBrands"><i class="fas fa-tags"></i> Quản lý hãng xe</a>
+        <a href="#" class="menu-item" id="btnManageUsers"><i class="fas fa-users"></i> Quản lý người dùng</a>
+        <a href="#" class="menu-item" id="btnManageStaff"><i class="fas fa-user-tie"></i> Quản lý nhân viên</a>
     </div>
 
     <div class="menu-section">
         <h6>Kinh doanh</h6>
-        <a href="manage-orders" class="menu-item" id="btnManageOrders"><i class="fas fa-shopping-cart"></i> Quản lý đơn hàng</a>
-        <a href="manage-promotions" class="menu-item" id="btnManagePromotion"><i class="fas fa-bullhorn"></i> Quản lý khuyến mãi</a>
-        <a href="revenue" class="menu-item" id="btnRevenue"><i class="fas fa-chart-line"></i> Thống kê doanh thu</a>
+        <a href="#" class="menu-item" id="btnManageOrders"><i class="fas fa-shopping-cart"></i> Quản lý đơn hàng</a>
+        <a href="#" class="menu-item" id="btnManagePromotion"><i class="fas fa-bullhorn"></i> Quản lý khuyến mãi</a>
+        <a href="#" class="menu-item" id="btnRevenue"><i class="fas fa-chart-line"></i> Thống kê doanh thu</a>
     </div>
 
     <div class="menu-section">
@@ -196,7 +199,7 @@
         </a>
     </div>
 
-    <!-- Tổng quan hệ thống -->
+
     <div id="overviewSection">
         <div class="container-fluid">
             <h5 class="mb-4">Tổng quan hệ thống</h5>
@@ -206,81 +209,95 @@
                     <div class="card-dashboard">
                         <h3><c:out value="${carCount}" default="0"/></h3>
                         <p>Tổng số Xe</p>
-                        <a href="${pageContext.request.contextPath}/amin/manage-cars" class="btn btn-primary btn-stat">Xem danh sách Xe</a>
+                        <button class="btn btn-primary btn-stat" id="viewCarsBtn">Xem danh sách Xe</button>
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6">
                     <div class="card-dashboard">
                         <h3><c:out value="${brandCount}" default="0"/></h3>
                         <p>Tổng số Hãng xe</p>
-                        <a href="${pageContext.request.contextPath}/admin/manage-brands" class="btn btn-danger btn-stat">Xem hãng xe</a>
+                        <button class="btn btn-danger btn-stat" id="viewBrandsBtn">Xem hãng xe</button>
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6">
                     <div class="card-dashboard">
                         <h3><c:out value="${staffCount}" default="0"/></h3>
                         <p>Tổng số nhân viên</p>
-                        <a href="${pageContext.request.contextPath}/admin/manage-staff" class="btn btn-success btn-stat">Xem danh sách nhân viên</a>
+                        <button class="btn btn-success btn-stat" id="viewStaffBtn">Xem danh sách nhân viên</button>
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6">
                     <div class="card-dashboard">
                         <h3><c:out value="${orderCount}" default="0"/></h3>
                         <p>Tổng số Đơn hàng</p>
-                        <a href="${pageContext.request.contextPath}/admin/manage-orders" class="btn btn-info btn-stat">Xem Đơn hàng</a>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="card-dashboard">
-                        <h3><c:out value="${userCount}" default="0"/></h3>
-                        <p>Tổng số Người dùng</p>
-                        <a href="${pageContext.request.contextPath}/admin/manage-users" class="btn btn-success btn-stat">Xem Người dùng</a>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <div class="card-dashboard">
-                        <h3><c:out value="${promotionCount}" default="0"/></h3>
-                        <p>Tổng số khuyến mãi</p>
-                        <a href="${pageContext.request.contextPath}/admin/manage-promotion" class="btn btn-success btn-stat">Xem khuyến mãi</a>
+                        <button class="btn btn-info btn-stat" id="viewOrdersBtn">Xem Đơn hàng</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Dynamic content -->
+
     <div id="adminDynamicContent"></div>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const btnManageCars = document.getElementById("btnManageCars");
-        const btnManageCars2 = document.getElementById("btnManageCars2");
-        const btnDashboard = document.getElementById("btnDashboard");
-        const overviewSection = document.getElementById("overviewSection");
         const dynamicContent = document.getElementById("adminDynamicContent");
+        const overviewSection = document.getElementById("overviewSection");
 
-        function loadCars() {
+        function loadSection(url) {
             overviewSection.style.display = "none";
-            fetch("${pageContext.request.contextPath}/admin/load-cars")
-                .then(response => response.text())
+            dynamicContent.style.display = "block";
+            dynamicContent.innerHTML = "<div class='text-center text-light py-4'><i class='fas fa-spinner fa-spin'></i> Đang tải...</div>";
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error("Không thể tải nội dung.");
+                    return response.text();
+                })
                 .then(html => {
                     dynamicContent.innerHTML = html;
-                    dynamicContent.style.display = "block";
                 })
                 .catch(err => {
-                    dynamicContent.innerHTML = `<div class='alert alert-danger'>${err.message}</div>`;
+                    dynamicContent.innerHTML = `<div class='alert alert-danger text-center'>${err.message}</div>`;
                 });
         }
 
-        btnManageCars.addEventListener("click", loadCars);
-        btnManageCars2.addEventListener("click", loadCars);
 
-        btnDashboard.addEventListener("click", function(e) {
+        document.getElementById("btnDashboard").addEventListener("click", function(e) {
             e.preventDefault();
             dynamicContent.style.display = "none";
             overviewSection.style.display = "block";
         });
+
+        document.getElementById("btnManageCars").addEventListener("click", function(e) {
+            e.preventDefault();
+            loadSection("${pageContext.request.contextPath}/Admin/car-list");
+        });
+
+        document.getElementById("btnManageStaff").addEventListener("click", function(e) {
+            e.preventDefault();
+            loadSection("${pageContext.request.contextPath}/Admin/staff-list");
+        });
+
+
+        document.getElementById("viewCarsBtn").addEventListener("click", function() {
+            loadSection("${pageContext.request.contextPath}/Admin/car-list");
+        });
+
+        document.getElementById("viewStaffBtn").addEventListener("click", function() {
+            loadSection("${pageContext.request.contextPath}/Admin/staff-list");
+        });
+
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("section") === "staff") {
+            loadSection("${pageContext.request.contextPath}/Admin/staff-list");
+        }
+        else if(params.get("section") === "cars"){
+            loadSection("${pageContext.request.contextPath}/Admin/car-list");
+        }
     });
 </script>
 
