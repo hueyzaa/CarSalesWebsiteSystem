@@ -364,7 +364,7 @@
         }
 
         .description-section {
-            margin: 30px 0;
+            margin: 30px 0 0 0;
             background: #0f0f0f;
             padding: 30px;
             border-radius: 15px;
@@ -376,6 +376,9 @@
             font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .description-text {
@@ -472,7 +475,7 @@
     <!-- Car Detail Container -->
     <div class="car-detail-container">
         <div class="row">
-            <!-- Left Column - Images -->
+            <!-- Left Column - Images & Description -->
             <div class="col-lg-7 mb-4">
                 <!-- Main Image -->
                 <div class="main-image-container">
@@ -521,9 +524,9 @@
                     </div>
                 </c:if>
 
-                <!-- Description Section (Mobile: below images) -->
+                <!-- Description Section - Right below images -->
                 <c:if test="${not empty car.description}">
-                    <div class="description-section d-lg-none mt-4">
+                    <div class="description-section">
                         <h3 class="description-title">
                             <i class="fas fa-file-alt"></i> Mô Tả Chi Tiết
                         </h3>
@@ -740,20 +743,6 @@
                 </c:if>
             </div>
         </div>
-
-        <!-- Description Section (Desktop: full width below) -->
-        <c:if test="${not empty car.description}">
-            <div class="row mt-4 d-none d-lg-block">
-                <div class="col-12">
-                    <div class="description-section">
-                        <h3 class="description-title">
-                            <i class="fas fa-file-alt"></i> Mô Tả Chi Tiết
-                        </h3>
-                        <p class="description-text">${car.description}</p>
-                    </div>
-                </div>
-            </div>
-        </c:if>
     </div>
 </div>
 
