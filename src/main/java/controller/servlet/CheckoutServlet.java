@@ -170,6 +170,14 @@ public class CheckoutServlet extends HttpServlet {
                 try {
                     selectedPromotionId = Integer.parseInt(promotionIdParam);
                     logger.info("User selected promotion: {}", selectedPromotionId);
+
+                    // VALIDATION: Promotions only allowed for DEPOSIT payment type
+                    if ("SHOWROOM".equals(paymentType)) {
+                        logger.warn("User {} attempted to use promotion with SHOWROOM payment", userId);
+                        session.setAttribute("error", "Khuyến mãi chỉ áp dụng cho hình thức Đặt Cọc Online!");
+                        response.sendRedirect(request.getContextPath() + "/checkout");
+                        return;
+                    }
                 } catch (NumberFormatException e) {
                     logger.error("Invalid promotion ID format: {}", promotionIdParam);
                 }
@@ -201,9 +209,9 @@ public class CheckoutServlet extends HttpServlet {
                 orderTotal += item.getSubtotal();
             }
 
-            // Validate and calculate promotion discount
+            // Validate and calculate promotion discount (only for DEPOSIT)
             double promotionDiscount = 0;
-            if (selectedPromotionId != null) {
+            if (selectedPromotionId != null && "DEPOSIT".equals(paymentType)) {
                 String validationError = promotionService.validatePromotionForCart(
                         userId, selectedPromotionId, cartItems);
 
@@ -219,6 +227,10 @@ public class CheckoutServlet extends HttpServlet {
                         selectedPromotionId, cartItems);
 
                 logger.info("Promotion discount calculated: {}₫", promotionDiscount);
+            } else if (selectedPromotionId != null && "SHOWROOM".equals(paymentType)) {
+                // Double check - this should have been caught earlier
+                logger.error("Promotion selected with SHOWROOM payment - this should not happen!");
+                selectedPromotionId = null;
             }
 
             // Calculate final total after discount
@@ -243,9 +255,8 @@ public class CheckoutServlet extends HttpServlet {
                     paymentStatus = "PENDING";
                     notes = String.format(
                             "Khách hàng sẽ thanh toán toàn bộ %,.0f₫ tại showroom. " +
-                                    (promotionDiscount > 0 ? "Đã áp dụng khuyến mãi giảm %,.0f₫. " : "") +
                                     "Vui lòng liên hệ khách hàng để xác nhận và hẹn lịch đến showroom.",
-                            finalTotal, promotionDiscount
+                            finalTotal
                     );
                     break;
 
@@ -268,7 +279,7 @@ public class CheckoutServlet extends HttpServlet {
                     return;
             }
 
-            // Create order with promotion
+            // Create order with promotion (only if DEPOSIT)
             orderId = ordersDAO.createOrderWithPromotion(
                     userId, cartItems, paymentType, depositAmount, notes, selectedPromotionId);
 
@@ -296,14 +307,18 @@ public class CheckoutServlet extends HttpServlet {
             // Redirect based on payment type
             if ("SHOWROOM".equals(paymentType)) {
                 String successMessage = String.format(
-                        "Đặt hàng thành công! Mã đơn hàng: #%d. " +
-                                (promotionDiscount > 0 ? "Bạn đã tiết kiệm %,.0f₫! " : "") +
-                                "Chúng tôi sẽ liên hệ với bạn để xác nhận.",
-                        orderId, promotionDiscount
+                        "Đặt hàng thành công! Mã đơn hàng: #%d. Chúng tôi sẽ liên hệ với bạn để xác nhận.",
+                        orderId
                 );
                 session.setAttribute("success", successMessage);
                 response.sendRedirect(request.getContextPath() + "/order-detail?id=" + orderId);
             } else {
+                String successMessage = promotionDiscount > 0
+                        ? String.format("Bạn đã tiết kiệm %,.0f₫!", promotionDiscount)
+                        : null;
+                if (successMessage != null) {
+                    session.setAttribute("success", successMessage);
+                }
                 response.sendRedirect(request.getContextPath() + "/payment?orderId=" + orderId);
             }
 

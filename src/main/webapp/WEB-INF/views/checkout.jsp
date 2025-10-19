@@ -203,9 +203,28 @@
                     </c:forEach>
                 </div>
 
+                <!-- Payment Method -->
+                <div class="checkout-container">
+                    <h3 class="section-title"><i class="fas fa-credit-card"></i> Hình Thức Thanh Toán</h3>
+
+                    <div class="payment-option selected" onclick="selectPayment('DEPOSIT', this)">
+                        <input type="radio" name="paymentType" value="DEPOSIT" id="payment-deposit" required checked>
+                        <label for="payment-deposit">
+                            <i class="fas fa-hand-holding-usd"></i> Đặt Cọc 10% - Thanh Toán Online
+                        </label>
+                    </div>
+
+                    <div class="payment-option" onclick="selectPayment('SHOWROOM', this)">
+                        <input type="radio" name="paymentType" value="SHOWROOM" id="payment-showroom" required>
+                        <label for="payment-showroom">
+                            <i class="fas fa-store"></i> Thanh Toán Tại Showroom
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Promotion Selection -->
                 <c:if test="${not empty availablePromotions}">
-                    <div class="checkout-container">
+                    <div class="checkout-container" id="promotionContainer">
                         <h3 class="section-title"><i class="fas fa-ticket-alt"></i> Áp Dụng Khuyến Mãi</h3>
 
                         <div style="background: rgba(255, 215, 0, 0.1); border: 2px solid #ffd700;
@@ -261,25 +280,6 @@
                         </c:forEach>
                     </div>
                 </c:if>
-
-                <!-- Payment Method -->
-                <div class="checkout-container">
-                    <h3 class="section-title"><i class="fas fa-credit-card"></i> Hình Thức Thanh Toán</h3>
-
-                    <div class="payment-option selected" onclick="selectPayment('DEPOSIT', this)">
-                        <input type="radio" name="paymentType" value="DEPOSIT" id="payment-deposit" required checked>
-                        <label for="payment-deposit">
-                            <i class="fas fa-hand-holding-usd"></i> Đặt Cọc 10% - Thanh Toán Online
-                        </label>
-                    </div>
-
-                    <div class="payment-option" onclick="selectPayment('SHOWROOM', this)">
-                        <input type="radio" name="paymentType" value="SHOWROOM" id="payment-showroom" required>
-                        <label for="payment-showroom">
-                            <i class="fas fa-store"></i> Thanh Toán Tại Showroom
-                        </label>
-                    </div>
-                </div>
             </div>
 
             <!-- Order Summary -->
@@ -377,13 +377,53 @@
             radio.checked = true;
         }
 
+        // Handle promotion availability based on payment type
+        const promotionContainer = document.getElementById('promotionContainer');
+        if (promotionContainer) {
+            if (type === 'SHOWROOM') {
+                // Disable promotions for showroom payment
+                promotionContainer.style.opacity = '0.5';
+                promotionContainer.style.pointerEvents = 'none';
+
+                // Select "no promotion" option
+                const noPromoRadio = document.getElementById('promo-none');
+                if (noPromoRadio) {
+                    noPromoRadio.checked = true;
+                    const noPromoCard = noPromoRadio.closest('.promotion-option-card');
+                    selectPromotion(null, noPromoCard);
+                }
+
+                // Add info message if not exists
+                let infoMsg = document.getElementById('showroom-promo-info');
+                if (!infoMsg) {
+                    infoMsg = document.createElement('div');
+                    infoMsg.id = 'showroom-promo-info';
+                    infoMsg.style.cssText = 'background: rgba(220, 53, 69, 0.1); border: 2px solid #dc3545; border-radius: 12px; padding: 15px; margin-bottom: 20px;';
+                    infoMsg.innerHTML = '<div style="color: #dc3545; font-weight: 600;"><i class="fas fa-exclamation-triangle"></i> Khuyến mãi chỉ áp dụng cho hình thức Đặt Cọc Online</div>';
+                    promotionContainer.querySelector('.section-title').after(infoMsg);
+                }
+            } else {
+                // Enable promotions for deposit payment
+                promotionContainer.style.opacity = '1';
+                promotionContainer.style.pointerEvents = 'auto';
+
+                // Remove info message if exists
+                const infoMsg = document.getElementById('showroom-promo-info');
+                if (infoMsg) {
+                    infoMsg.remove();
+                }
+            }
+        }
+
         updateTotals();
     }
 
     function updateTotals() {
         let discount = 0;
+        const paymentType = document.querySelector('input[name="paymentType"]:checked');
 
-        if (selectedPromotionId && promotionDiscounts[selectedPromotionId]) {
+        // Only apply promotion if payment type is DEPOSIT
+        if (paymentType && paymentType.value === 'DEPOSIT' && selectedPromotionId && promotionDiscounts[selectedPromotionId]) {
             const promo = promotionDiscounts[selectedPromotionId];
             if (promo.percentage > 0) {
                 discount = originalTotal * (promo.percentage / 100);
@@ -411,7 +451,6 @@
             new Intl.NumberFormat('vi-VN').format(finalTotal) + '₫';
 
         // Update button text based on payment type
-        const paymentType = document.querySelector('input[name="paymentType"]:checked');
         if (paymentType) {
             if (paymentType.value === 'DEPOSIT') {
                 const depositAmount = finalTotal * depositPercentage;
