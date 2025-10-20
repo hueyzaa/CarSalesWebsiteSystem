@@ -1,4 +1,4 @@
-package controller.servlet;
+package controller.customer;
 
 import dao.CarDAO;
 import model.Car;
@@ -8,12 +8,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet({"/", "/index"})
-public class IndexServlet extends HttpServlet {
+@WebServlet("/home")
+public class HomeServlet extends HttpServlet {
     private CarDAO carDAO;
 
     @Override
@@ -27,16 +26,15 @@ public class IndexServlet extends HttpServlet {
 
         HttpSession session = request.getSession(false);
 
-        // Load available cars for display
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
+        // Load featured cars for home page
         List<Car> cars = carDAO.getAvailableCars();
         request.setAttribute("cars", cars);
 
-        // If logged in, forward to home page
-        if (session != null && session.getAttribute("user") != null) {
-            request.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(request, response);
-        } else {
-            // If not logged in, show index page
-            request.getRequestDispatcher("/WEB-INF/views/index.jsp").forward(request, response);
-        }
+        request.getRequestDispatcher("/WEB-INF/views/home.jsp").forward(request, response);
     }
 }

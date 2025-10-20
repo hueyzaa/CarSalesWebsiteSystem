@@ -1,4 +1,4 @@
-package controller.servlet;
+package controller.customer;
 
 import dao.OrdersDAO;
 import dao.OrderDetailDAO;

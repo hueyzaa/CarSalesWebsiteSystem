@@ -1,8 +1,8 @@
-package controller.servlet;
+package controller.customer;
 
 import dao.UserDAO;
 import model.User;
-import util.RateLimitFilter;
+import filter.RateLimitFilter;
 import util.ValidationUtil;
 import exception.ValidationException;
 import jakarta.servlet.ServletException;
