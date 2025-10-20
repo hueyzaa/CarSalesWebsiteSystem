@@ -165,14 +165,71 @@
                 <div class="checkout-container">
                     <h3 class="section-title"><i class="fas fa-user"></i> Thông Tin Người Mua</h3>
                     <div style="background: #0f0f0f; padding: 20px; border-radius: 10px;">
-                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #333;">
-                            <span style="color: #888;">Họ và tên:</span>
-                            <span style="color: #f8f9fa;">${user.name}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #333;">
+            <span style="color: #888; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-user" style="width: 16px;"></i> Họ và tên:
+            </span>
+                            <span style="color: #f8f9fa; font-weight: 600;">${user.name}</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                            <span style="color: #888;">Email:</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #333;">
+            <span style="color: #888; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-envelope" style="width: 16px;"></i> Email:
+            </span>
                             <span style="color: #f8f9fa;">${user.email}</span>
                         </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #333;">
+            <span style="color: #888; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-phone" style="width: 16px;"></i> Số điện thoại:
+            </span>
+                            <span style="font-weight: 600;">
+                <c:choose>
+                    <c:when test="${not empty user.phone}">
+                        <span style="color: #f8f9fa;">${user.phone}</span>
+                    </c:when>
+                    <c:otherwise>
+                        <span style="color: #dc3545; font-size: 0.9rem;">
+                            <i class="fas fa-exclamation-circle"></i> Chưa cập nhật
+                        </span>
+                    </c:otherwise>
+                </c:choose>
+            </span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0;">
+            <span style="color: #888; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-map-marker-alt" style="width: 16px;"></i> Địa chỉ:
+            </span>
+                            <span style="text-align: right; max-width: 65%; line-height: 1.5;">
+                <c:choose>
+                    <c:when test="${not empty user.address}">
+                        <span style="color: #f8f9fa;">${user.address}</span>
+                    </c:when>
+                    <c:otherwise>
+                        <span style="color: #dc3545; font-size: 0.9rem;">
+                            <i class="fas fa-exclamation-circle"></i> Chưa cập nhật
+                        </span>
+                    </c:otherwise>
+                </c:choose>
+            </span>
+                        </div>
+
+                        <!-- Thông báo nếu thiếu thông tin -->
+                        <c:if test="${empty user.phone or empty user.address}">
+                            <div style="margin-top: 15px; padding: 15px; background: rgba(220, 53, 69, 0.1);
+                        border-left: 4px solid #dc3545; border-radius: 8px;">
+                                <div style="color: #dc3545; font-size: 0.95rem; margin-bottom: 8px;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Thông tin liên hệ chưa đầy đủ</strong>
+                                </div>
+                                <div style="color: #b0b0b0; font-size: 0.85rem; margin-bottom: 10px;">
+                                    Vui lòng cập nhật số điện thoại và địa chỉ để chúng tôi có thể liên hệ xác nhận đơn hàng.
+                                </div>
+                                <a href="${pageContext.request.contextPath}/profile"
+                                   style="color: #ffd700; text-decoration: none; font-weight: 600;
+                          display: inline-flex; align-items: center; gap: 5px;">
+                                    <i class="fas fa-edit"></i> Cập nhật ngay
+                                </a>
+                            </div>
+                        </c:if>
                     </div>
                 </div>
 
