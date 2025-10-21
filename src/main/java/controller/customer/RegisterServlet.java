@@ -3,8 +3,6 @@ package controller.customer;
 import dao.UserDAO;
 import model.User;
 import util.ValidationUtil;
-import exception.ValidationException;
-import exception.DatabaseException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -85,13 +83,12 @@ public class RegisterServlet extends HttpServlet {
 
             // Check password match
             if (!password.equals(confirmPassword)) {
-                throw new ValidationException("confirmPassword",
-                        "Mật khẩu xác nhận không khớp");
+                throw new IllegalArgumentException("Mật khẩu xác nhận không khớp");
             }
 
             // Check email exists
             if (userDAO.emailExists(email)) {
-                throw new ValidationException("email", "Email đã được sử dụng");
+                throw new IllegalArgumentException("Email đã được sử dụng");
             }
 
             // Register user with phone and address
@@ -113,31 +110,38 @@ public class RegisterServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/login");
                 }
             } else {
-                throw new DatabaseException("Đăng ký thất bại. Vui lòng thử lại.");
+                throw new RuntimeException("Đăng ký thất bại. Vui lòng thử lại.");
             }
 
-        } catch (ValidationException e) {
+        } catch (IllegalArgumentException e) {
+            // Validation errors (name, email, phone, password mismatch, email exists)
             logger.debug("Validation error in register: {}", e.getMessage());
-            handleError(request, response, e.getMessage(), e.getFieldName());
+            handleError(request, response, e.getMessage());
 
-        } catch (DatabaseException e) {
-            logger.error("Database error in register", e);
-            handleError(request, response, e.getMessage(), null);
+        } catch (SecurityException e) {
+            // CSRF token validation error
+            logger.warn("Security error in register: {}", e.getMessage());
+            handleError(request, response, e.getMessage());
+
+        } catch (RuntimeException e) {
+            // Database errors
+            logger.error("Runtime error in register", e);
+            handleError(request, response, e.getMessage());
 
         } catch (Exception e) {
             logger.error("Unexpected error in register", e);
-            handleError(request, response, "Đã xảy ra lỗi. Vui lòng thử lại.", null);
+            handleError(request, response, "Đã xảy ra lỗi. Vui lòng thử lại.");
         }
     }
 
     /**
      * Validate CSRF token
      */
-    private void validateCsrfToken(HttpServletRequest request) throws ValidationException {
+    private void validateCsrfToken(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
         if (session == null) {
-            throw new ValidationException("Phiên làm việc đã hết hạn");
+            throw new SecurityException("Phiên làm việc đã hết hạn");
         }
 
         String sessionToken = (String) session.getAttribute("csrfToken");
@@ -145,7 +149,7 @@ public class RegisterServlet extends HttpServlet {
 
         if (sessionToken == null || !sessionToken.equals(requestToken)) {
             logger.warn("CSRF token validation failed during registration");
-            throw new ValidationException("Yêu cầu không hợp lệ (CSRF)");
+            throw new SecurityException("Yêu cầu không hợp lệ (CSRF)");
         }
     }
 
@@ -172,7 +176,7 @@ public class RegisterServlet extends HttpServlet {
      * Handle error and show registration form again
      */
     private void handleError(HttpServletRequest request, HttpServletResponse response,
-                             String errorMessage, String fieldName)
+                             String errorMessage)
             throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
 

@@ -6,7 +6,6 @@ import dao.CarDAO;
 import model.Order;
 import model.OrderDetail;
 import model.User;
-import exception.DatabaseException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -130,7 +129,7 @@ public class OrderCancelServlet extends HttpServlet {
             session.setAttribute("error", "ID đơn hàng không hợp lệ!");
             response.sendRedirect(request.getContextPath() + "/orders");
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error in OrderCancelServlet", e);
             session.setAttribute("error", "Không thể hủy đơn hàng. Vui lòng thử lại!");
             response.sendRedirect(request.getContextPath() + "/orders");

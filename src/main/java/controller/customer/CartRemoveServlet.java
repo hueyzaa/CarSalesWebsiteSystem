@@ -34,7 +34,7 @@ public class CartRemoveServlet extends HttpServlet {
 
         try {
             int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
-            boolean success = cartDAO.removeCartItem(cartItemId);  // ✅ Fixed method name
+            boolean success = cartDAO.removeCartItem(cartItemId);
 
             if (success) {
                 session.setAttribute("success", "Đã xóa sản phẩm khỏi giỏ hàng!");

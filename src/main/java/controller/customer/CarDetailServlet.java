@@ -5,7 +5,7 @@ import service.PromotionService;
 import model.Car;
 import model.Promotion;
 import model.User;
-import exception.DatabaseException;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -107,7 +107,7 @@ public class CarDetailServlet extends HttpServlet {
                             bestPromotion = promo;
                         }
                     }
-                } catch (DatabaseException e) {
+                } catch (Exception e) {
                     logger.error("Error getting car discount info", e);
                 }
             }
@@ -140,7 +140,7 @@ public class CarDetailServlet extends HttpServlet {
             request.getSession().setAttribute("error", "ID xe không hợp lệ!");
             response.sendRedirect(request.getContextPath() + "/cars");
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error loading car detail", e);
             request.setAttribute("error", "Không thể tải thông tin xe!");
             request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);

@@ -3,7 +3,6 @@ package controller.customer;
 import dao.PromotionDAO;
 import model.Promotion;
 import model.User;
-import exception.DatabaseException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -51,7 +50,7 @@ public class PromotionServlet extends HttpServlet {
                             .filter(p -> !p.isUsedByUser())
                             .count();
                     request.setAttribute("unusedCount", unusedCount);
-                } catch (DatabaseException e) {
+                } catch (Exception e) {
                     logger.error("Error getting unused promotion count", e);
                 }
             } else {
@@ -63,7 +62,7 @@ public class PromotionServlet extends HttpServlet {
             request.setAttribute("isLoggedIn", currentUser != null);
             request.getRequestDispatcher("/WEB-INF/views/promotions.jsp").forward(request, response);
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error loading promotions", e);
             request.setAttribute("error", "Không thể tải thông tin khuyến mãi.");
             request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);

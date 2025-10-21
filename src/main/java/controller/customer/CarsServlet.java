@@ -5,7 +5,7 @@ import dao.CarDAO;
 import model.Brand;
 import model.Car;
 import model.User;
-import exception.DatabaseException;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -124,7 +124,7 @@ public class CarsServlet extends HttpServlet {
             // Forward to JSP
             request.getRequestDispatcher("/WEB-INF/views/cars.jsp").forward(request, response);
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error in CarsServlet", e);
             request.setAttribute("error", "Không thể tải danh sách xe. Vui lòng thử lại sau.");
             request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);

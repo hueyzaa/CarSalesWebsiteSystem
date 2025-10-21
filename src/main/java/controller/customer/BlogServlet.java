@@ -2,7 +2,7 @@ package controller.customer;
 
 import dao.BlogDAO;
 import model.Blog;
-import exception.DatabaseException;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -39,7 +39,7 @@ public class BlogServlet extends HttpServlet {
             request.setAttribute("blogs", blogs);
             request.getRequestDispatcher("/WEB-INF/views/blog.jsp").forward(request, response);
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error loading blogs", e);
             request.setAttribute("error", "Không thể tải tin tức.");
             request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);

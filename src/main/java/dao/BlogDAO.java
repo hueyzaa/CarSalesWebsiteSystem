@@ -1,7 +1,6 @@
 package dao;
 
 import model.Blog;
-import exception.DatabaseException;
 import util.DBContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +15,7 @@ public class BlogDAO {
     /**
      * Get all blogs from database
      */
-    public List<Blog> getAllBlogs() throws DatabaseException {
+    public List<Blog> getAllBlogs() {
         List<Blog> blogs = new ArrayList<>();
         String sql = "SELECT blog_id, title, content, author_id, created_at " +
                 "FROM Blog " +
@@ -42,14 +41,14 @@ public class BlogDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving all blogs", e);
-            throw new DatabaseException("Không thể lấy danh sách blog", e);
+            throw new RuntimeException("Không thể lấy danh sách blog", e);
         }
     }
 
     /**
      * Get blog by ID
      */
-    public Blog getBlogById(int blogId) throws DatabaseException {
+    public Blog getBlogById(int blogId) {
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, " +
                 "u.name as author_name " +
                 "FROM Blog b " +
@@ -81,14 +80,14 @@ public class BlogDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving blog by ID: {}", blogId, e);
-            throw new DatabaseException("Không thể lấy thông tin blog", e);
+            throw new RuntimeException("Không thể lấy thông tin blog", e);
         }
     }
 
     /**
      * Get recent blogs (limit)
      */
-    public List<Blog> getRecentBlogs(int limit) throws DatabaseException {
+    public List<Blog> getRecentBlogs(int limit) {
         List<Blog> blogs = new ArrayList<>();
         String sql = "SELECT TOP (?) b.blog_id, b.title, b.content, b.author_id, b.created_at, " +
                 "u.name as author_name " +
@@ -120,14 +119,14 @@ public class BlogDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving recent blogs", e);
-            throw new DatabaseException("Không thể lấy danh sách blog mới nhất", e);
+            throw new RuntimeException("Không thể lấy danh sách blog mới nhất", e);
         }
     }
 
     /**
      * Get blogs by author
      */
-    public List<Blog> getBlogsByAuthor(int authorId) throws DatabaseException {
+    public List<Blog> getBlogsByAuthor(int authorId)  {
         List<Blog> blogs = new ArrayList<>();
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, " +
                 "u.name as author_name " +
@@ -160,14 +159,14 @@ public class BlogDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving blogs by author: {}", authorId, e);
-            throw new DatabaseException("Không thể lấy danh sách blog của tác giả", e);
+            throw new RuntimeException("Không thể lấy danh sách blog của tác giả", e);
         }
     }
 
     /**
      * Search blogs by title or content
      */
-    public List<Blog> searchBlogs(String keyword) throws DatabaseException {
+    public List<Blog> searchBlogs(String keyword){
         List<Blog> blogs = new ArrayList<>();
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, " +
                 "u.name as author_name " +
@@ -202,14 +201,14 @@ public class BlogDAO {
 
         } catch (SQLException e) {
             logger.error("Error searching blogs with keyword: {}", keyword, e);
-            throw new DatabaseException("Không thể tìm kiếm blog", e);
+            throw new RuntimeException("Không thể tìm kiếm blog", e);
         }
     }
 
     /**
      * Create new blog
      */
-    public int createBlog(Blog blog) throws DatabaseException {
+    public int createBlog(Blog blog) {
         String sql = "INSERT INTO Blog (title, content, author_id) VALUES (?, ?, ?)";
 
         try (Connection conn = DBContext.getConnection();
@@ -222,7 +221,7 @@ public class BlogDAO {
             int affectedRows = stmt.executeUpdate();
 
             if (affectedRows == 0) {
-                throw new DatabaseException("Tạo blog thất bại, không có dòng nào bị ảnh hưởng");
+                throw new RuntimeException("Tạo blog thất bại, không có dòng nào bị ảnh hưởng");
             }
 
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
@@ -231,20 +230,20 @@ public class BlogDAO {
                     logger.info("Created blog with ID: {}", blogId);
                     return blogId;
                 } else {
-                    throw new DatabaseException("Tạo blog thất bại, không lấy được ID");
+                    throw new RuntimeException("Tạo blog thất bại, không lấy được ID");
                 }
             }
 
         } catch (SQLException e) {
             logger.error("Error creating blog", e);
-            throw new DatabaseException("Không thể tạo blog", e);
+            throw new RuntimeException("Không thể tạo blog", e);
         }
     }
 
     /**
      * Update blog
      */
-    public boolean updateBlog(Blog blog) throws DatabaseException {
+    public boolean updateBlog(Blog blog) {
         String sql = "UPDATE Blog SET title = ?, content = ? WHERE blog_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -262,14 +261,14 @@ public class BlogDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating blog: {}", blog.getBlogId(), e);
-            throw new DatabaseException("Không thể cập nhật blog", e);
+            throw new RuntimeException("Không thể cập nhật blog", e);
         }
     }
 
     /**
      * Delete blog
      */
-    public boolean deleteBlog(int blogId) throws DatabaseException {
+    public boolean deleteBlog(int blogId) {
         String sql = "DELETE FROM Blog WHERE blog_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -285,14 +284,14 @@ public class BlogDAO {
 
         } catch (SQLException e) {
             logger.error("Error deleting blog: {}", blogId, e);
-            throw new DatabaseException("Không thể xóa blog", e);
+            throw new RuntimeException("Không thể xóa blog", e);
         }
     }
 
     /**
      * Get blog count
      */
-    public int getBlogCount() throws DatabaseException {
+    public int getBlogCount() {
         String sql = "SELECT COUNT(*) as total FROM Blog";
 
         try (Connection conn = DBContext.getConnection();
@@ -309,7 +308,7 @@ public class BlogDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting blog count", e);
-            throw new DatabaseException("Không thể đếm số lượng blog", e);
+            throw new RuntimeException("Không thể đếm số lượng blog", e);
         }
     }
 }

@@ -5,7 +5,6 @@ import dao.OrderDetailDAO;
 import dao.TransactionDAO;
 import model.Order;
 import model.User;
-import exception.DatabaseException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -109,7 +108,7 @@ public class OrderDetailServlet extends HttpServlet {
             session.setAttribute("error", "ID đơn hàng không hợp lệ!");
             response.sendRedirect(request.getContextPath() + "/orders");
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error in OrderDetailServlet", e);
             request.setAttribute("error", "Không thể tải thông tin đơn hàng.");
             request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);

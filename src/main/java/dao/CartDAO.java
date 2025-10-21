@@ -3,7 +3,6 @@ package dao;
 import model.Car;
 import model.CartItem;
 import util.DBContext;
-import exception.DatabaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +60,7 @@ public class CartDAO {
         } catch (SQLException e) {
             rollback(conn);
             logger.error("Error adding to cart for userId: {}, carId: {}", userId, carId, e);
-            throw new DatabaseException("Failed to add item to cart", e);
+            throw new RuntimeException("Failed to add item to cart", e);
 
         } finally {
             closeConnection(conn);
@@ -99,9 +98,9 @@ public class CartDAO {
                     car.setPrice(rs.getDouble("price"));
                     car.setDescription(rs.getString("description"));
                     car.setStatus(rs.getString("status"));
-                    car.setStock(rs.getInt("stock"));        // ✅ FIXED: Added stock
-                    car.setYear(rs.getInt("year"));          // ✅ FIXED: Added year
-                    car.setColor(rs.getString("color"));     // ✅ FIXED: Added color
+                    car.setStock(rs.getInt("stock"));
+                    car.setYear(rs.getInt("year"));
+                    car.setColor(rs.getString("color"));
                     car.setBrandName(rs.getString("brand_name"));
                     car.setImageUrl(rs.getString("image_url"));
 
@@ -121,7 +120,7 @@ public class CartDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting cart items for userId: {}", userId, e);
-            throw new DatabaseException("Failed to retrieve cart items", e);
+            throw new RuntimeException("Failed to retrieve cart items", e);
         }
     }
 
@@ -147,7 +146,7 @@ public class CartDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating cart item quantity: {}", cartItemId, e);
-            throw new DatabaseException("Failed to update cart item quantity", e);
+            throw new RuntimeException("Failed to update cart item quantity", e);
         }
     }
 
@@ -173,7 +172,7 @@ public class CartDAO {
 
         } catch (SQLException e) {
             logger.error("Error removing from cart: {}", cartItemId, e);
-            throw new DatabaseException("Failed to remove item from cart", e);
+            throw new RuntimeException("Failed to remove item from cart", e);
         }
     }
 
@@ -195,7 +194,7 @@ public class CartDAO {
 
         } catch (SQLException e) {
             logger.error("Error clearing cart for userId: {}", userId, e);
-            throw new DatabaseException("Failed to clear cart", e);
+            throw new RuntimeException("Failed to clear cart", e);
         }
     }
 

@@ -3,7 +3,6 @@ package dao;
 import model.Car;
 import model.OrderDetail;
 import util.DBContext;
-import exception.DatabaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +59,7 @@ public class OrderDetailDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting order details for order: {}", orderId, e);
-            throw new DatabaseException("Failed to retrieve order details", e);
+            throw new RuntimeException("Failed to retrieve order details", e);
         }
     }
 
@@ -107,7 +106,7 @@ public class OrderDetailDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting order detail: {}", orderDetailId, e);
-            throw new DatabaseException("Failed to retrieve order detail", e);
+            throw new RuntimeException("Failed to retrieve order detail", e);
         }
     }
 

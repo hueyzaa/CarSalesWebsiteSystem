@@ -2,7 +2,6 @@ package dao;
 
 import model.User;
 import util.DBContext;
-import exception.DatabaseException;
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +52,7 @@ public class UserDAO {
 
         } catch (SQLException e) {
             logger.error("Error during login for email: {}", email, e);
-            throw new DatabaseException("Failed to login", e);
+            throw new RuntimeException("Failed to login", e);
         }
 
         return null;
@@ -95,7 +94,7 @@ public class UserDAO {
                 return false;
             }
             logger.error("Error registering user: {}", email, e);
-            throw new DatabaseException("Failed to register user", e);
+            throw new RuntimeException("Failed to register user", e);
         }
     }
 
@@ -127,7 +126,7 @@ public class UserDAO {
 
         } catch (SQLException e) {
             logger.error("Error checking email exists: {}", email, e);
-            throw new DatabaseException("Failed to check email existence", e);
+            throw new RuntimeException("Failed to check email existence", e);
         }
 
         return false;
@@ -166,7 +165,7 @@ public class UserDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting user by ID: {}", userId, e);
-            throw new DatabaseException("Failed to retrieve user", e);
+            throw new RuntimeException("Failed to retrieve user", e);
         }
     }
 
@@ -199,7 +198,7 @@ public class UserDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting all users", e);
-            throw new DatabaseException("Failed to retrieve users", e);
+            throw new RuntimeException("Failed to retrieve users", e);
         }
     }
 
@@ -231,7 +230,7 @@ public class UserDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating user: {}", user.getUserId(), e);
-            throw new DatabaseException("Failed to update user", e);
+            throw new RuntimeException("Failed to update user", e);
         }
     }
 
@@ -261,7 +260,7 @@ public class UserDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating password for user: {}", userId, e);
-            throw new DatabaseException("Failed to update password", e);
+            throw new RuntimeException("Failed to update password", e);
         }
     }
 
@@ -288,7 +287,7 @@ public class UserDAO {
 
         } catch (SQLException e) {
             logger.error("Error deleting user: {}", userId, e);
-            throw new DatabaseException("Failed to delete user", e);
+            throw new RuntimeException("Failed to delete user", e);
         }
     }
 
@@ -314,7 +313,7 @@ public class UserDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating user role for ID: {}", userId, e);
-            throw new DatabaseException("Failed to update user role", e);
+            throw new RuntimeException("Failed to update user role", e);
         }
     }
 
@@ -371,7 +370,7 @@ public class UserDAO {
 
         } catch (SQLException e) {
             logger.error("Error verifying password for user: {}", userId, e);
-            throw new DatabaseException("Failed to verify password", e);
+            throw new RuntimeException("Failed to verify password", e);
         }
 
         return false;
@@ -417,7 +416,7 @@ public class UserDAO {
 
         } catch (SQLException e) {
             logger.error("Error searching users with keyword: {}", keyword, e);
-            throw new DatabaseException("Failed to search users", e);
+            throw new RuntimeException("Failed to search users", e);
         }
     }
 

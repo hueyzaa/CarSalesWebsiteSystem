@@ -5,7 +5,6 @@ import dao.OrderDetailDAO;
 import dao.TransactionDAO;
 import model.Order;
 import model.User;
-import exception.DatabaseException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -86,7 +85,7 @@ public class OrdersServlet extends HttpServlet {
             // Forward to JSP
             request.getRequestDispatcher("/WEB-INF/views/orders.jsp").forward(request, response);
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error in OrdersServlet", e);
             request.setAttribute("error", "Không thể tải danh sách đơn hàng.");
             request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);

@@ -4,7 +4,6 @@ import dao.UserDAO;
 import model.User;
 import filter.RateLimitFilter;
 import util.ValidationUtil;
-import exception.ValidationException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -63,7 +62,7 @@ public class LoginServlet extends HttpServlet {
             String password = request.getParameter("password");
 
             if (password == null || password.trim().isEmpty()) {
-                throw new ValidationException("password", "Mật khẩu không được để trống");
+                throw new IllegalArgumentException("Mật khẩu không được để trống");
             }
 
             // Attempt login
@@ -111,11 +110,17 @@ public class LoginServlet extends HttpServlet {
                 RateLimitFilter.recordFailedAttempt(email);
                 logger.warn("Failed login attempt for email: {}", email);
 
-                throw new ValidationException("Thông tin đăng nhập không chính xác");
+                throw new SecurityException("Thông tin đăng nhập không chính xác");
             }
 
-        } catch (ValidationException e) {
+        } catch (IllegalArgumentException e) {
+            // Validation errors (email format, empty password)
             logger.debug("Validation error in login: {}", e.getMessage());
+            handleError(request, response, e.getMessage());
+
+        } catch (SecurityException e) {
+            // Authentication/CSRF errors
+            logger.debug("Security error in login: {}", e.getMessage());
             handleError(request, response, e.getMessage());
 
         } catch (Exception e) {
@@ -127,11 +132,11 @@ public class LoginServlet extends HttpServlet {
     /**
      * Validate CSRF token
      */
-    private void validateCsrfToken(HttpServletRequest request) throws ValidationException {
+    private void validateCsrfToken(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
         if (session == null) {
-            throw new ValidationException("Phiên làm việc đã hết hạn");
+            throw new SecurityException("Phiên làm việc đã hết hạn");
         }
 
         String sessionToken = (String) session.getAttribute("csrfToken");
@@ -139,7 +144,7 @@ public class LoginServlet extends HttpServlet {
 
         if (sessionToken == null || !sessionToken.equals(requestToken)) {
             logger.warn("CSRF token validation failed");
-            throw new ValidationException("Yêu cầu không hợp lệ (CSRF)");
+            throw new SecurityException("Yêu cầu không hợp lệ (CSRF)");
         }
     }
 

@@ -3,7 +3,6 @@ package controller.customer;
 import dao.PromotionDAO;
 import model.Promotion;
 import model.User;
-import exception.DatabaseException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -65,7 +64,7 @@ public class MyPromotionsServlet extends HttpServlet {
             request.setAttribute("usedCount", usedCount);
             request.getRequestDispatcher("/WEB-INF/views/my-promotions.jsp").forward(request, response);
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error loading my promotions", e);
             request.setAttribute("error", "Không thể tải danh sách khuyến mãi của bạn.");
             request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);

@@ -2,7 +2,6 @@ package dao;
 
 import model.Transaction;
 import util.DBContext;
-import exception.DatabaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +43,7 @@ public class TransactionDAO {
 
         } catch (SQLException e) {
             logger.error("Error creating transaction for order: {}", orderId, e);
-            throw new DatabaseException("Failed to create transaction", e);
+            throw new RuntimeException("Failed to create transaction", e);
         }
     }
 
@@ -79,7 +78,7 @@ public class TransactionDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating payment status for transaction: {}", transactionId, e);
-            throw new DatabaseException("Failed to update payment status", e);
+            throw new RuntimeException("Failed to update payment status", e);
         }
     }
 
@@ -128,7 +127,7 @@ public class TransactionDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting transactions for order: {}", orderId, e);
-            throw new DatabaseException("Failed to retrieve transactions", e);
+            throw new RuntimeException("Failed to retrieve transactions", e);
         }
     }
 
@@ -165,7 +164,7 @@ public class TransactionDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting transactions for user: {}", userId, e);
-            throw new DatabaseException("Failed to retrieve transactions", e);
+            throw new RuntimeException("Failed to retrieve transactions", e);
         }
     }
 
@@ -198,7 +197,7 @@ public class TransactionDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting transaction: {}", transactionId, e);
-            throw new DatabaseException("Failed to retrieve transaction", e);
+            throw new RuntimeException("Failed to retrieve transaction", e);
         }
     }
 
@@ -276,7 +275,7 @@ public class TransactionDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting transactions by type: {}", type, e);
-            throw new DatabaseException("Failed to retrieve transactions by type", e);
+            throw new RuntimeException("Failed to retrieve transactions by type", e);
         }
     }
 
@@ -310,7 +309,7 @@ public class TransactionDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting pending showroom payments", e);
-            throw new DatabaseException("Failed to retrieve pending showroom payments", e);
+            throw new RuntimeException("Failed to retrieve pending showroom payments", e);
         }
     }
 }

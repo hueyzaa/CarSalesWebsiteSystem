@@ -7,7 +7,7 @@ import service.PromotionService;
 import model.CartItem;
 import model.User;
 import model.Promotion;
-import exception.DatabaseException;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -118,7 +118,7 @@ public class CheckoutServlet extends HttpServlet {
             logger.info("Forwarding to checkout.jsp");
             request.getRequestDispatcher("/WEB-INF/views/checkout.jsp").forward(request, response);
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error in CheckoutServlet", e);
             request.setAttribute("error", "Không thể tải trang thanh toán.");
             request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
@@ -322,7 +322,7 @@ public class CheckoutServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/payment?orderId=" + orderId);
             }
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error in CheckoutServlet POST", e);
             session.setAttribute("error", "Không thể xử lý đơn hàng!");
             response.sendRedirect(request.getContextPath() + "/checkout");

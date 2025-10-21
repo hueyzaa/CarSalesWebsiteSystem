@@ -2,7 +2,7 @@ package controller.customer;
 
 import dao.PromotionDAO;
 import model.User;
-import exception.DatabaseException;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -84,7 +84,7 @@ public class ClaimPromotionServlet extends HttpServlet {
             logger.error("Invalid promotion ID format", e);
             session.setAttribute("errorMessage", "ID khuyến mãi không hợp lệ!");
 
-        } catch (DatabaseException e) {
+        } catch (RuntimeException e) {
             logger.error("Database error claiming promotion", e);
             session.setAttribute("errorMessage", e.getMessage());
 
