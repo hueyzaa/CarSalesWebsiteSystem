@@ -122,7 +122,7 @@ CREATE TABLE Orders (
                         deposit_amount DECIMAL(15,2),
                         remaining_amount DECIMAL(15,2),
                         notes NVARCHAR(MAX),
-                        promotion_id INT NULL,  -- ✅ NEW: Track which promotion was used
+                        promotion_id INT NULL,
                         FOREIGN KEY (user_id) REFERENCES AppUsers(user_id),
                         CONSTRAINT FK_Orders_Promotion FOREIGN KEY (promotion_id) REFERENCES Promotion(promotion_id)
 );
@@ -341,7 +341,7 @@ CREATE NONCLUSTERED INDEX IX_Orders_UserId ON Orders(user_id);
 CREATE NONCLUSTERED INDEX IX_Orders_Status ON Orders(status);
 CREATE NONCLUSTERED INDEX IX_Orders_PaymentType ON Orders(payment_type);
 CREATE NONCLUSTERED INDEX IX_Orders_CreatedAt ON Orders(created_at);
-CREATE NONCLUSTERED INDEX IX_Orders_PromotionId ON Orders(promotion_id);  -- ✅ NEW INDEX
+CREATE NONCLUSTERED INDEX IX_Orders_PromotionId ON Orders(promotion_id);
 
 -- OrderDetail Indexes
 CREATE NONCLUSTERED INDEX IX_OrderDetail_OrderId ON OrderDetail(order_id);

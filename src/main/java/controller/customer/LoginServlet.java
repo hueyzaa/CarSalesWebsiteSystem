@@ -3,6 +3,7 @@ package controller.customer;
 import dao.UserDAO;
 import model.User;
 import filter.RateLimitFilter;
+import org.eclipse.tags.shaded.org.apache.regexp.RE;
 import util.ValidationUtil;
 import exception.ValidationException;
 import jakarta.servlet.ServletException;
@@ -32,14 +33,14 @@ public class LoginServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check if already logged in
+
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("user") != null) {
             response.sendRedirect(request.getContextPath() + "/home");
             return;
         }
 
-        // Generate CSRF token
+
         String csrfToken = UUID.randomUUID().toString();
         request.getSession().setAttribute("csrfToken", csrfToken);
         request.setAttribute("csrfToken", csrfToken);
@@ -66,35 +67,32 @@ public class LoginServlet extends HttpServlet {
                 throw new ValidationException("password", "Mật khẩu không được để trống");
             }
 
-            // Attempt login
+
             User user = userDAO.login(email, password);
 
             if (user != null) {
-                // Success - reset rate limit
+
                 RateLimitFilter.resetAttempts(email);
 
-                // Create session
+
                 HttpSession session = request.getSession();
                 session.setAttribute("user", user);
                 session.setAttribute("userId", user.getUserId());
                 session.setAttribute("userName", user.getName());
                 session.setAttribute("userRole", user.getRole());
 
-                // Set session timeout (30 minutes)
+
                 session.setMaxInactiveInterval(30 * 60);
 
-                // Prevent session fixation
+
                 request.changeSessionId();
 
                 logger.info("User logged in successfully: {}", email);
 
-                // ==========================================
-                // NEW: Handle redirect after login
-                // ==========================================
+
                 String redirectUrl = (String) session.getAttribute("redirectAfterLogin");
 
                 if (redirectUrl != null && !redirectUrl.isEmpty()) {
-                    // Remove redirect attributes from session
                     session.removeAttribute("redirectAfterLogin");
                     session.removeAttribute("loginMessage");
 
@@ -102,9 +100,14 @@ public class LoginServlet extends HttpServlet {
                     response.sendRedirect(redirectUrl);
                     return;
                 }
-
-                // Default redirect to home
-                response.sendRedirect(request.getContextPath() + "/home");
+                String role = user.getRole();
+                if("ADMIN".equalsIgnoreCase(role)) {
+                    response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
+                } else  if("STAFF".equalsIgnoreCase(role)) {
+                    response.sendRedirect(request.getContextPath() + "/Staff/dashboard");
+                } else {
+                    response.sendRedirect(request.getContextPath() + "/home");
+                }
 
             } else {
                 // Failed login - record attempt
