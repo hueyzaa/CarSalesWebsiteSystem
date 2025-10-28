@@ -104,7 +104,7 @@ public class LoginServlet extends HttpServlet {
                 if("ADMIN".equalsIgnoreCase(role)) {
                     response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
                 } else  if("STAFF".equalsIgnoreCase(role)) {
-                    response.sendRedirect(request.getContextPath() + "/Staff/dashboard");
+                    response.sendRedirect(request.getContextPath() + "/staff/dashboard");
                 } else {
                     response.sendRedirect(request.getContextPath() + "/home");
                 }
