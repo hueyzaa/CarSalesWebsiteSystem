@@ -289,6 +289,11 @@
         document.getElementById("viewStaffBtn").addEventListener("click", function() {
             loadSection("${pageContext.request.contextPath}/Admin/staff-list");
         });
+        document.getElementById("btnManageUsers").addEventListener("click", function(e) {
+            e.preventDefault();
+            loadSection("${pageContext.request.contextPath}/Admin/user-list");
+        });
+
 
 
         const params = new URLSearchParams(window.location.search);

@@ -214,7 +214,7 @@
                 </button>
             </form>
 
-            <!-- Right side - Cart & User -->
+
             <div class="d-flex align-items-center mt-3 mt-lg-0">
                 <!-- Cart Button -->
                 <a href="${pageContext.request.contextPath}/cart" class="cart-btn-nav">
@@ -223,7 +223,7 @@
                     <span class="cart-badge-nav" id="cartBadge">0</span>
                 </a>
 
-                <!-- User Menu - Sát bên phải -->
+
                 <ul class="navbar-nav ms-3 mb-0">
                     <c:choose>
                     <c:when test="${not empty sessionScope.user}">
@@ -232,27 +232,35 @@
                             <i class="fas fa-user"></i> ${sessionScope.user.name}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/profile">
-                                    <i class="fas fa-user-circle"></i> Hồ Sơ
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/orders">
-                                    <i class="fas fa-receipt"></i> Đơn Hàng
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/my-promotions">
-                                    <i class="fas fa-gift"></i> Khuyến Mãi Của Tôi
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
-                                    <i class="fas fa-sign-out-alt"></i> Đăng Xuất
-                                </a>
-                            </li>
+
+                            <c:if test="${sessionScope.user.role == 'ADMIN'}">
+
+
+                                <li><h6 class="dropdown-header">Quản lý hệ thống</h6></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/Admin/dashboard">
+                                    <i class="fas fa-car"></i> Bảng điều khiển
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
+                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                </a></li>
+
+                            </c:if>
+
+
+                            <c:if test="${sessionScope.user.role != 'ADMIN'}">
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/orders">
+                                    <i class="fas fa-receipt"></i> Đơn hàng
+                                </a></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile">
+                                    <i class="fas fa-user-circle"></i> Thông tin cá nhân
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
+                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                </a></li>
+                            </c:if>
                         </ul>
                     </li>
                     </c:when>

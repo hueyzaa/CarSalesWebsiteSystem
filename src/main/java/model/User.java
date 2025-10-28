@@ -13,6 +13,7 @@ public class User implements Serializable {
     private String role;
     private String oauthProvider;
     private Date createdAt;
+    private String status;
 
     // Additional fields for JSP display
     private String phone;
@@ -21,11 +22,12 @@ public class User implements Serializable {
     // Constructors
     public User() {}
 
-    public User(int userId, String name, String email, String role) {
+    public User(int userId, String name, String email, String role, String status) {
         this.userId = userId;
         this.name = name;
         this.email = email;
         this.role = role;
+        this.status = status;
     }
 
     public User(String name, String email, String passwordHash, String role) {
@@ -51,6 +53,12 @@ public class User implements Serializable {
 
     public void setId(int userId) {
         this.userId = userId;
+    }
+    public String getStatus(){
+        return status;
+    }
+    public void setStatus(String status){
+        this.status = status;
     }
 
     public String getName() {

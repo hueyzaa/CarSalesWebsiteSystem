@@ -48,7 +48,8 @@ CREATE TABLE AppUsers (
                           oauth_provider NVARCHAR(50),
                           created_at DATETIME DEFAULT GETDATE(),
                           phone NVARCHAR(20),
-                          address NVARCHAR(255)
+                          address NVARCHAR(255),
+                          status NVARCHAR(20) CHECK ([status] IN ('ACTIVE', 'INACTIVE')) DEFAULT 'ACTIVE'
 );
 GO
 

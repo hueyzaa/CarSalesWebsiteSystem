@@ -15,7 +15,7 @@ public class UpdateStaffServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Lấy ID nhân viên từ URL
+
         String idParam = request.getParameter("id");
         if (idParam == null) {
             response.sendRedirect(request.getContextPath() + "/Admin/staff-list");
@@ -52,7 +52,7 @@ public class UpdateStaffServlet extends HttpServlet {
             String phone = request.getParameter("phone");
             String address = request.getParameter("address");
 
-            // Lấy thông tin nhân viên hiện tại
+
             User staff = userDAO.getUserById(userId);
             if (staff == null) {
                 request.setAttribute("error", "Không tìm thấy nhân viên để cập nhật!");

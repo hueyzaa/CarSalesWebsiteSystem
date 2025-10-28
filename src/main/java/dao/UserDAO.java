@@ -137,14 +137,13 @@ public class UserDAO {
      * Get user by ID
      */
     public User getUserById(int userId) {
-        String sql = "SELECT user_id, name, email, role, phone, address, created_at " +
+        String sql = "SELECT user_id, name, email, role, phone, address, status, created_at " +
                 "FROM AppUsers WHERE user_id = ?";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, userId);
-
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     User user = new User();
@@ -154,20 +153,16 @@ public class UserDAO {
                     user.setRole(rs.getString("role"));
                     user.setPhone(rs.getString("phone"));
                     user.setAddress(rs.getString("address"));
+                    user.setStatus(rs.getString("status"));
                     user.setCreatedAt(rs.getTimestamp("created_at"));
-
-                    logger.debug("Retrieved user: {}", userId);
                     return user;
                 }
             }
-
-            logger.debug("User not found: {}", userId);
-            return null;
-
         } catch (SQLException e) {
             logger.error("Error getting user by ID: {}", userId, e);
             throw new DatabaseException("Failed to retrieve user", e);
         }
+        return null;
     }
 
     /**
@@ -175,8 +170,13 @@ public class UserDAO {
      */
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT user_id, name, email, role, phone, address, created_at " +
-                "FROM AppUsers ORDER BY created_at DESC";
+        String sql = "SELECT user_id, name, email, role, phone, address, status, created_at " +
+                "FROM AppUsers " +
+                "ORDER BY CASE " +
+                "    WHEN role = 'ADMIN' THEN 1 " +
+                "    WHEN role = 'STAFF' THEN 2 " +
+                "    WHEN role = 'CUSTOMER' THEN 3 " +
+                "    ELSE 4 END, created_at DESC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -190,11 +190,12 @@ public class UserDAO {
                 user.setRole(rs.getString("role"));
                 user.setPhone(rs.getString("phone"));
                 user.setAddress(rs.getString("address"));
+                user.setStatus(rs.getString("status"));
                 user.setCreatedAt(rs.getTimestamp("created_at"));
                 users.add(user);
             }
 
-            logger.debug("Retrieved {} users", users.size());
+            logger.debug("Retrieved {} users (sorted by role priority)", users.size());
             return users;
 
         } catch (SQLException e) {
@@ -203,11 +204,13 @@ public class UserDAO {
         }
     }
 
+
+
     /**
      * Update user profile
      */
     public boolean updateUser(User user) {
-        String sql = "UPDATE AppUsers SET name = ?, email = ?, phone = ?, address = ? " +
+        String sql = "UPDATE AppUsers SET name = ?, email = ?, phone = ?, address = ?, role = ?, status = ? " +
                 "WHERE user_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -215,16 +218,18 @@ public class UserDAO {
 
             stmt.setString(1, user.getName().trim());
             stmt.setString(2, user.getEmail().toLowerCase().trim());
-            stmt.setString(3, user.getPhone()); // Can be null
-            stmt.setString(4, user.getAddress()); // Can be null
-            stmt.setInt(5, user.getUserId());
+            stmt.setString(3, user.getPhone());
+            stmt.setString(4, user.getAddress());
+            stmt.setString(5, user.getRole());
+            stmt.setString(6, user.getStatus());
+            stmt.setInt(7, user.getUserId());
 
             boolean success = stmt.executeUpdate() > 0;
 
             if (success) {
                 logger.info("Updated user: {}", user.getUserId());
             } else {
-                logger.warn("No user updated with ID: {}", user.getUserId());
+                logger.warn("⚠No user updated with ID: {}", user.getUserId());
             }
 
             return success;
@@ -234,6 +239,47 @@ public class UserDAO {
             throw new DatabaseException("Failed to update user", e);
         }
     }
+
+
+    /**
+     * Register new user with a specific role (Admin use only)
+     */
+    public boolean registerWithRole(String name, String email, String password, String phone, String address, String role) {
+        String sql = "INSERT INTO AppUsers (name, email, password_hash, role, phone, address) VALUES (?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            // Hash password
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
+
+            stmt.setString(1, name.trim());
+            stmt.setString(2, email.toLowerCase().trim());
+            stmt.setString(3, hashedPassword);
+            stmt.setString(4, role.toUpperCase());
+            stmt.setString(5, phone);
+            stmt.setString(6, address);
+
+            boolean success = stmt.executeUpdate() > 0;
+
+            if (success) {
+                logger.info("Registered user with custom role: {} ({})", email, role);
+            } else {
+                logger.warn("Failed to register user with role {}: {}", role, email);
+            }
+
+            return success;
+
+        } catch (SQLException e) {
+            if (e.getMessage().contains("Violation of UNIQUE KEY constraint")) {
+                logger.warn("Email already exists: {}", email);
+                return false;
+            }
+            logger.error("Error registering user with role: {}", email, e);
+            throw new DatabaseException("Failed to register user with role", e);
+        }
+    }
+
 
     /**
      * Update user password

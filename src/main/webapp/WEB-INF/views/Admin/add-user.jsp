@@ -1,8 +1,8 @@
 <%--
   Created by IntelliJ IDEA.
   User: hungn
-  Date: 10/18/2025
-  Time: 3:05 PM
+  Date: 10/28/2025
+  Time: 7:18 AM
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
@@ -11,7 +11,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Cập nhật nhân viên</title>
+    <title>Thêm Người Dùng Mới</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
@@ -38,13 +38,13 @@
             margin-bottom: 25px;
         }
 
-        .form-control {
+        .form-control, .form-select {
             background-color: #2a2a2a;
             color: #fff;
             border: 1px solid #444;
         }
 
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             border-color: #ffd700;
             box-shadow: 0 0 6px #ffd700;
         }
@@ -69,15 +69,21 @@
         .btn-secondary:hover {
             background-color: #555;
         }
+
+        .alert {
+            border-radius: 10px;
+        }
         .form-label{
             color: #fff;
         }
+
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h3><i class="fas fa-user-edit"></i> Cập nhật thông tin nhân viên</h3>
+    <h3><i class="fas fa-user-plus"></i> Thêm Người Dùng Mới</h3>
+
 
     <c:if test="${not empty error}">
         <div class="alert alert-danger text-center">${error}</div>
@@ -86,45 +92,69 @@
     <c:if test="${not empty success}">
         <div class="alert alert-success text-center">${success}</div>
     </c:if>
-    <script>
-        setTimeout(() => {
-            window.location.href = "${pageContext.request.contextPath}/Admin/dashboard";
-        }, 2000);
-    </script>
 
-    <form method="post" action="${pageContext.request.contextPath}/Admin/update-staff">
-        <input type="hidden" name="userId" value="${staff.userId}">
+    <form method="post" action="${pageContext.request.contextPath}/Admin/add-user">
 
         <div class="mb-3">
-            <label class="form-label">Tên nhân viên</label>
-            <input type="text" name="name" value="${staff.name}" class="form-control" required maxlength="100">
+            <label class="form-label">Tên người dùng</label>
+            <input type="text" name="name" value="${name}" class="form-control" required maxlength="100">
         </div>
+
+
+        <div class="mb-3">
+            <label class="form-label">Vai trò</label>
+            <select name="role" class="form-select" required>
+                <option value="">-- Chọn vai trò --</option>
+                <option value="ADMIN" ${role == 'ADMIN' ? 'selected' : ''}>Quản trị viên</option>
+                <option value="STAFF" ${role == 'STAFF' ? 'selected' : ''}>Nhân viên</option>
+                <option value="CUSTOMER" ${role == 'CUSTOMER' ? 'selected' : ''}>Khách hàng</option>
+            </select>
+        </div>
+
 
         <div class="mb-3">
             <label class="form-label">Email</label>
-            <input type="email" name="email" value="${staff.email}" class="form-control" readonly>
+            <input type="email" name="email" value="${email}" class="form-control" required>
         </div>
+
+
+        <div class="mb-3">
+            <label class="form-label">Mật khẩu</label>
+            <input type="password" name="password" class="form-control" required minlength="6">
+        </div>
+
 
         <div class="mb-3">
             <label class="form-label">Số điện thoại</label>
-            <input type="text" name="phone" value="${staff.phone}" class="form-control">
+            <input type="text" name="phone" value="${phone}" class="form-control">
         </div>
+
 
         <div class="mb-3">
             <label class="form-label">Địa chỉ</label>
-            <input type="text" name="address" value="${staff.address}" class="form-control">
+            <input type="text" name="address" value="${address}" class="form-control">
         </div>
-
-        <div class="text-center mt-4">
-            <button type="submit" class="btn btn-primary me-2">
-                <i class="fas fa-save"></i> Lưu thay đổi
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save"></i> Thêm người dùng
             </button>
-            <a href="${pageContext.request.contextPath}/Admin/dashboard" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+            <a href="${pageContext.request.contextPath}/Admin/user-list" class="btn btn-secondary px-4 ms-2">
+                <i class="fas fa-arrow-left"></i> Quay lại
             </a>
         </div>
     </form>
 </div>
+
+<script>
+
+    document.querySelector("form").addEventListener("submit", function() {
+        if (window.parent && window.parent.document.getElementById("adminDynamicContent")) {
+            const dynamicContent = window.parent.document.getElementById("adminDynamicContent");
+            const overview = window.parent.document.getElementById("overviewSection");
+            dynamicContent.style.display = "none";
+            overview.style.display = "block";
+        }
+    });
+</script>
 </body>
 </html>
-

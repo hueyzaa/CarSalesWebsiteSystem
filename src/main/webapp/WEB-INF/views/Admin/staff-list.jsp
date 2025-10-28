@@ -7,6 +7,7 @@
 --%>
 
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
 <div class="admin-table-container">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -19,7 +20,7 @@
     <table class="table table-dark table-striped table-hover text-center align-middle">
         <thead>
         <tr>
-            <th>ID</th>
+            <th>STT</th>
             <th>Tên</th>
             <th>Email</th>
             <th>Số điện thoại</th>
@@ -29,9 +30,9 @@
         </tr>
         </thead>
         <tbody>
-        <c:forEach var="staff" items="${staffList}">
+        <c:forEach var="staff" items="${staffList}" varStatus="loop">
             <tr>
-                <td>${staff.userId}</td>
+                <td>${loop.count}</td>
                 <td>${staff.name}</td>
                 <td>${staff.email}</td>
                 <td>${staff.phone}</td>
