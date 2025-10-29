@@ -27,18 +27,14 @@ public class RegisterServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check if already logged in
+        // Redirect if already logged in
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("user") != null) {
             response.sendRedirect(request.getContextPath() + "/home");
             return;
         }
 
-        // Generate CSRF token
-        String csrfToken = UUID.randomUUID().toString();
-        request.getSession().setAttribute("csrfToken", csrfToken);
-        request.setAttribute("csrfToken", csrfToken);
-
+        setCSRFToken(request);
         request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
     }
 
@@ -47,91 +43,87 @@ public class RegisterServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
 
         try {
-            // Verify CSRF token
+            // Security validation
             validateCsrfToken(request);
 
-            // Validate input
-            String name = ValidationUtil.validateString(
-                    request.getParameter("name"), "Họ và tên", 100);
-
+            // Input validation
+            String name = ValidationUtil.validateString(request.getParameter("name"), "Họ và tên", 100);
             String email = ValidationUtil.validateEmail(request.getParameter("email"));
-
-            // Phone (optional)
-            String phone = request.getParameter("phone");
-            if (phone != null && !phone.trim().isEmpty()) {
-                phone = ValidationUtil.validatePhone(phone);
-            } else {
-                phone = null;
-            }
-
-            // Address (optional)
-            String address = request.getParameter("address");
-            if (address != null && !address.trim().isEmpty()) {
-                address = ValidationUtil.validateString(address, "Địa chỉ", 255);
-            } else {
-                address = null;
-            }
-
-            String password = request.getParameter("password");
-            String confirmPassword = request.getParameter("confirmPassword");
-
-            // Validate password
-            ValidationUtil.validatePassword(password);
-
-            // Check password match
-            if (!password.equals(confirmPassword)) {
-                throw new IllegalArgumentException("Mật khẩu xác nhận không khớp");
-            }
+            String phone = validateOptionalPhone(request.getParameter("phone"));
+            String address = validateOptionalString(request.getParameter("address"), "Địa chỉ", 255);
+            String password = validatePasswordMatch(
+                    request.getParameter("password"),
+                    request.getParameter("confirmPassword")
+            );
 
             // Check email exists
             if (userDAO.emailExists(email)) {
                 throw new IllegalArgumentException("Email đã được sử dụng");
             }
 
-            // Register user with phone and address
-            boolean success = userDAO.register(name, email, password, phone, address);
-
-            if (success) {
-                logger.info("User registered successfully: {}", email);
-
-                // Auto-login after registration
+            // Register and auto-login
+            if (userDAO.register(name, email, password, phone, address)) {
+                logger.info("User registered: {}", email);
                 User user = userDAO.login(email, password);
-
-                if (user != null) {
-                    createUserSession(request, user);
-                    response.sendRedirect(request.getContextPath() + "/home");
-                } else {
-                    // Redirect to login if auto-login fails
-                    HttpSession session = request.getSession();
-                    session.setAttribute("success", "Đăng ký thành công! Vui lòng đăng nhập.");
-                    response.sendRedirect(request.getContextPath() + "/login");
-                }
+                createUserSession(request, user);
+                response.sendRedirect(request.getContextPath() + "/home");
             } else {
                 throw new RuntimeException("Đăng ký thất bại. Vui lòng thử lại.");
             }
 
-        } catch (IllegalArgumentException e) {
-            // Validation errors (name, email, phone, password mismatch, email exists)
-            logger.debug("Validation error in register: {}", e.getMessage());
-            handleError(request, response, e.getMessage());
-
-        } catch (SecurityException e) {
-            // CSRF token validation error
-            logger.warn("Security error in register: {}", e.getMessage());
-            handleError(request, response, e.getMessage());
-
-        } catch (RuntimeException e) {
-            // Database errors
-            logger.error("Runtime error in register", e);
+        } catch (IllegalArgumentException | SecurityException e) {
+            logger.warn("Validation/Security error: {}", e.getMessage());
             handleError(request, response, e.getMessage());
 
         } catch (Exception e) {
-            logger.error("Unexpected error in register", e);
+            logger.error("Registration error", e);
             handleError(request, response, "Đã xảy ra lỗi. Vui lòng thử lại.");
         }
+    }
+
+    /**
+     * Validate optional phone field
+     */
+    private String validateOptionalPhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            return null;
+        }
+        return ValidationUtil.validatePhone(phone);
+    }
+
+    /**
+     * Validate optional string field
+     */
+    private String validateOptionalString(String value, String fieldName, int maxLength) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return ValidationUtil.validateString(value, fieldName, maxLength);
+    }
+
+    /**
+     * Validate password and confirm password match
+     */
+    private String validatePasswordMatch(String password, String confirmPassword) {
+        ValidationUtil.validatePassword(password);
+
+        if (!password.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Mật khẩu xác nhận không khớp");
+        }
+
+        return password;
+    }
+
+
+    /**
+     * Set CSRF token in session and request
+     */
+    private void setCSRFToken(HttpServletRequest request) {
+        String csrfToken = UUID.randomUUID().toString();
+        request.getSession().setAttribute("csrfToken", csrfToken);
+        request.setAttribute("csrfToken", csrfToken);
     }
 
     /**
@@ -139,7 +131,6 @@ public class RegisterServlet extends HttpServlet {
      */
     private void validateCsrfToken(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-
         if (session == null) {
             throw new SecurityException("Phiên làm việc đã hết hạn");
         }
@@ -148,13 +139,13 @@ public class RegisterServlet extends HttpServlet {
         String requestToken = request.getParameter("csrfToken");
 
         if (sessionToken == null || !sessionToken.equals(requestToken)) {
-            logger.warn("CSRF token validation failed during registration");
             throw new SecurityException("Yêu cầu không hợp lệ (CSRF)");
         }
     }
 
+
     /**
-     * Create session for user
+     * Create user session after successful registration
      */
     private void createUserSession(HttpServletRequest request, User user) {
         HttpSession session = request.getSession();
@@ -162,35 +153,30 @@ public class RegisterServlet extends HttpServlet {
         session.setAttribute("userId", user.getUserId());
         session.setAttribute("userName", user.getName());
         session.setAttribute("userRole", user.getRole());
+        session.setMaxInactiveInterval(30 * 60); // 30 minutes
 
-        // Security: Set session timeout (30 minutes)
-        session.setMaxInactiveInterval(30 * 60);
-
-        // Security: Regenerate session ID to prevent session fixation
+        // Prevent session fixation
         request.changeSessionId();
 
-        logger.info("User session created for: {}", user.getEmail());
+        logger.info("Session created for: {}", user.getEmail());
     }
 
+
     /**
-     * Handle error and show registration form again
+     * Handle error and redisplay form with preserved data
      */
-    private void handleError(HttpServletRequest request, HttpServletResponse response,
-                             String errorMessage)
+    private void handleError(HttpServletRequest request, HttpServletResponse response, String errorMessage)
             throws ServletException, IOException {
+
         request.setAttribute("error", errorMessage);
 
-        // Preserve form data
+        // Preserve form data (except password)
         request.setAttribute("name", request.getParameter("name"));
         request.setAttribute("email", request.getParameter("email"));
         request.setAttribute("phone", request.getParameter("phone"));
         request.setAttribute("address", request.getParameter("address"));
 
-        // Generate new CSRF token
-        String csrfToken = UUID.randomUUID().toString();
-        request.getSession().setAttribute("csrfToken", csrfToken);
-        request.setAttribute("csrfToken", csrfToken);
-
+        setCSRFToken(request);
         request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
     }
 }
