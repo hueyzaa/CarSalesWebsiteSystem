@@ -194,6 +194,7 @@ CREATE TABLE Blog (
                       content NVARCHAR(MAX),
                       author_id INT,
                       created_at DATETIME DEFAULT GETDATE(),
+                      image_url NVARCHAR(500) NULL,
                       FOREIGN KEY (author_id) REFERENCES AppUsers(user_id)
 );
 GO
@@ -341,7 +342,7 @@ CREATE NONCLUSTERED INDEX IX_Orders_UserId ON Orders(user_id);
 CREATE NONCLUSTERED INDEX IX_Orders_Status ON Orders(status);
 CREATE NONCLUSTERED INDEX IX_Orders_PaymentType ON Orders(payment_type);
 CREATE NONCLUSTERED INDEX IX_Orders_CreatedAt ON Orders(created_at);
-CREATE NONCLUSTERED INDEX IX_Orders_PromotionId ON Orders(promotion_id);  -- ✅ NEW INDEX
+CREATE NONCLUSTERED INDEX IX_Orders_PromotionId ON Orders(promotion_id);
 
 -- OrderDetail Indexes
 CREATE NONCLUSTERED INDEX IX_OrderDetail_OrderId ON OrderDetail(order_id);

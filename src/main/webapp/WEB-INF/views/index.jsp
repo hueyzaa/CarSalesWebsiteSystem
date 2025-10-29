@@ -37,6 +37,7 @@
             color: #ffd700;
         }
 
+        /* Search Box */
         .search-navbar {
             position: relative;
             max-width: 600px;
@@ -44,41 +45,28 @@
         }
 
         .search-navbar input {
-            padding: 8px 45px 8px 15px;
-            border: 1px solid #444;
+            padding: 10px 20px;
+            border: 2px solid #555;
             border-radius: 25px;
             width: 100%;
-            background: #2a2a2a;
-            color: #fff;
+            background: #3a3a3a;
+            color: #f0f0f0;
+            font-size: 0.95rem;
+            font-weight: 400;
+            transition: all 0.3s;
         }
 
         .search-navbar input::placeholder {
-            color: #888;
+            color: #bbb;
+            font-weight: 300;
         }
 
         .search-navbar input:focus {
             outline: none;
-            border-color: #ffd700;
-            background: #333;
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
-        }
-
-        .search-navbar button {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border: none;
-            border-radius: 50%;
-            width: 35px;
-            height: 35px;
-            color: #1a1a1a;
-        }
-
-        .search-navbar button:hover {
-            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+            border-color: #0d6efd;
+            background: #2a2a2a;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+            color: #ffffff;
         }
 
         .cart-btn-nav {
@@ -220,40 +208,44 @@
             box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
         }
 
-        /* Car Cards */
+        /* Car Cards - Updated to match reference image */
         .car-card {
-            transition: transform 0.3s, box-shadow 0.3s;
-            height: 100%;
-            border: none;
-            border-radius: 15px;
+            background: linear-gradient(145deg, #1f1f1f 0%, #1a1a1a 100%);
+            border: 1px solid #2a2a2a;
+            border-radius: 20px;
             overflow: hidden;
-            background: #1a1a1a;
-            border: 1px solid #333;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
         }
 
         .car-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.3);
-            border-color: #ffd700;
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(255, 215, 0, 0.25);
+            border-color: rgba(255, 215, 0, 0.5);
         }
 
         .car-card img {
-            height: 220px;
+            height: 200px;
             object-fit: cover;
-            transition: transform 0.3s;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
         }
 
         .car-card:hover img {
-            transform: scale(1.1);
+            transform: scale(1.15);
         }
 
         .car-card .card-body {
-            padding: 20px;
-            background: #1a1a1a;
+            padding: 1.5rem 1.25rem;
+            background: transparent;
         }
 
         .car-card .card-title {
-            color: #f8f9fa;
+            color: #ffffff;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
         }
 
         .car-card .text-primary {
@@ -262,18 +254,32 @@
 
         .car-card .small {
             color: #ffd700 !important;
+            font-size: 0.75rem !important;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            margin-bottom: 0.5rem;
         }
 
         .car-card .btn-primary {
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             border: none;
-            color: #1a1a1a;
-            font-weight: 600;
+            border-radius: 10px;
+            color: #000000;
+            font-weight: 700;
+            padding: 0.85rem;
+            transition: all 0.3s ease;
         }
 
         .car-card .btn-primary:hover {
             background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+            color: #000000;
+            transform: translateY(-2px);
+        }
+
+        .car-card .card-text {
+            font-size: 1.25rem !important;
+            margin-bottom: 1rem !important;
         }
 
         .section-title {
@@ -424,9 +430,6 @@
                        name="search"
                        class="form-control"
                        placeholder="Tìm kiếm xe...">
-                <button type="submit">
-                    <i class="fas fa-search"></i>
-                </button>
             </form>
 
             <!-- Right side - Cart & User -->
@@ -557,7 +560,7 @@
                                 </h6>
                                 <h5 class="card-title fw-bold">${car.name}</h5>
                                 <p class="card-text text-primary fw-bold fs-5">
-                                    <fmt:formatNumber value="${car.price}" type="currency" currencySymbol="₫"/>
+                                    <fmt:formatNumber value="${car.price}" pattern="#,##0" /> ₫
                                 </p>
                                 <a href="${pageContext.request.contextPath}/car-detail?id=${car.id}"
                                    class="btn btn-primary w-100">

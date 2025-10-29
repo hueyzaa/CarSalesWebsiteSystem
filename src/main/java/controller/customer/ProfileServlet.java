@@ -25,7 +25,7 @@ public class ProfileServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("user") == null) {
+        if (session == null || session.getAttribute("userId") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -47,7 +47,7 @@ public class ProfileServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("user") == null) {
+        if (session == null || session.getAttribute("userId") == null) {
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -58,18 +58,30 @@ public class ProfileServlet extends HttpServlet {
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
 
+        // Validate
+        if (name == null || name.trim().isEmpty()) {
+            session.setAttribute("error", "Tên không được để trống!");
+            response.sendRedirect(request.getContextPath() + "/profile");
+            return;
+        }
+
+        if (email == null || email.trim().isEmpty()) {
+            session.setAttribute("error", "Email không được để trống!");
+            response.sendRedirect(request.getContextPath() + "/profile");
+            return;
+        }
+
         User user = userDAO.getUserById(userId);
         if (user != null) {
-            user.setName(name);
-            user.setEmail(email);
-            user.setPhone(phone);
-            user.setAddress(address);
+            user.setName(name.trim());
+            user.setEmail(email.trim());
+            user.setPhone(phone != null && !phone.trim().isEmpty() ? phone.trim() : null);
+            user.setAddress(address != null && !address.trim().isEmpty() ? address.trim() : null);
 
             boolean success = userDAO.updateUser(user);
 
             if (success) {
-                // Update session
-                session.setAttribute("userName", name);
+                session.setAttribute("userName", name.trim());
                 session.setAttribute("user", user);
                 session.setAttribute("success", "Cập nhật thông tin thành công!");
             } else {

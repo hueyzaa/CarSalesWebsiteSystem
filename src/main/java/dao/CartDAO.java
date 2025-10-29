@@ -14,7 +14,7 @@ public class CartDAO {
     private static final Logger logger = LoggerFactory.getLogger(CartDAO.class);
 
     /**
-     * Add item to cart (with transaction)
+     * Add item to cart (with transaction and stock validation)
      */
     public boolean addToCart(int userId, int carId, int quantity) {
         String sqlCart = "INSERT INTO Cart (user_id) VALUES (?)";
@@ -24,6 +24,15 @@ public class CartDAO {
         try {
             conn = DBContext.getConnection();
             conn.setAutoCommit(false);
+
+            // Validate stock first
+            int availableStock = getCarStock(conn, carId);
+            if (availableStock < quantity) {
+                logger.warn("Insufficient stock for carId: {}. Available: {}, Requested: {}",
+                        carId, availableStock, quantity);
+                conn.rollback();
+                return false;
+            }
 
             // Get or create cart
             int cartId = getCartIdByUserId(conn, userId);
@@ -39,6 +48,18 @@ public class CartDAO {
                         return false;
                     }
                 }
+            }
+
+            // Check existing quantity in cart
+            int existingQuantity = getCartItemQuantity(conn, cartId, carId);
+            int totalQuantity = existingQuantity + quantity;
+
+            // Validate total quantity against stock
+            if (totalQuantity > availableStock) {
+                logger.warn("Total quantity exceeds stock. Stock: {}, Existing: {}, Adding: {}",
+                        availableStock, existingQuantity, quantity);
+                conn.rollback();
+                return false;
             }
 
             // Add or update cart item
@@ -68,7 +89,7 @@ public class CartDAO {
     }
 
     /**
-     * Get cart items by user ID (WITH Car object populated - FIXED VERSION)
+     * Get cart items by user ID (WITH Car object populated - INCLUDING STOCK)
      */
     public List<CartItem> getCartItemsByUserId(int userId) {
         List<CartItem> cartItems = new ArrayList<>();
@@ -91,14 +112,14 @@ public class CartDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    // Create Car object with FULL details
+                    // Create Car object with FULL details INCLUDING STOCK
                     Car car = new Car();
                     car.setId(rs.getInt("car_id"));
                     car.setName(rs.getString("model"));
                     car.setPrice(rs.getDouble("price"));
                     car.setDescription(rs.getString("description"));
                     car.setStatus(rs.getString("status"));
-                    car.setStock(rs.getInt("stock"));
+                    car.setStock(rs.getInt("stock")); // IMPORTANT: Stock info
                     car.setYear(rs.getInt("year"));
                     car.setColor(rs.getString("color"));
                     car.setBrandName(rs.getString("brand_name"));
@@ -125,33 +146,74 @@ public class CartDAO {
     }
 
     /**
-     * Update cart item quantity (renamed from updateQuantity)
+     * Update cart item quantity WITH STOCK VALIDATION
      */
     public boolean updateCartItem(int cartItemId, int quantity) {
-        String sql = "UPDATE CartItem SET quantity = ? WHERE cart_item_id = ?";
+        Connection conn = null;
 
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
 
-            stmt.setInt(1, quantity);
-            stmt.setInt(2, cartItemId);
+            // Get car ID and current stock
+            String getCarSql = "SELECT ci.car_id, c.stock " +
+                    "FROM CartItem ci " +
+                    "JOIN Car c ON ci.car_id = c.car_id " +
+                    "WHERE ci.cart_item_id = ?";
 
-            boolean success = stmt.executeUpdate() > 0;
+            int carId = 0;
+            int availableStock = 0;
 
-            if (success) {
-                logger.info("Updated cart item {} quantity to {}", cartItemId, quantity);
+            try (PreparedStatement stmt = conn.prepareStatement(getCarSql)) {
+                stmt.setInt(1, cartItemId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        carId = rs.getInt("car_id");
+                        availableStock = rs.getInt("stock");
+                    } else {
+                        conn.rollback();
+                        return false;
+                    }
+                }
             }
 
-            return success;
+            // Validate quantity against stock
+            if (quantity > availableStock) {
+                logger.warn("Cannot update cart item {}. Requested: {}, Available: {}",
+                        cartItemId, quantity, availableStock);
+                conn.rollback();
+                return false;
+            }
+
+            // Update quantity
+            String updateSql = "UPDATE CartItem SET quantity = ? WHERE cart_item_id = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(updateSql)) {
+                stmt.setInt(1, quantity);
+                stmt.setInt(2, cartItemId);
+
+                boolean success = stmt.executeUpdate() > 0;
+
+                if (success) {
+                    conn.commit();
+                    logger.info("Updated cart item {} quantity to {}", cartItemId, quantity);
+                    return true;
+                } else {
+                    conn.rollback();
+                    return false;
+                }
+            }
 
         } catch (SQLException e) {
+            rollback(conn);
             logger.error("Error updating cart item quantity: {}", cartItemId, e);
             throw new RuntimeException("Failed to update cart item quantity", e);
+        } finally {
+            closeConnection(conn);
         }
     }
 
     /**
-     * Remove cart item (renamed from removeFromCart)
+     * Remove cart item
      */
     public boolean removeCartItem(int cartItemId) {
         String sql = "DELETE FROM CartItem WHERE cart_item_id = ?";
@@ -190,7 +252,7 @@ public class CartDAO {
             stmt.executeUpdate();
 
             logger.info("Cleared cart for userId: {}", userId);
-            return true; // Return true even if no items (idempotent)
+            return true;
 
         } catch (SQLException e) {
             logger.error("Error clearing cart for userId: {}", userId, e);
@@ -223,6 +285,41 @@ public class CartDAO {
             logger.error("Error getting cart item count for userId: {}", userId, e);
             return 0;
         }
+    }
+
+    /**
+     * Get car stock - HELPER METHOD
+     */
+    private int getCarStock(Connection conn, int carId) throws SQLException {
+        String sql = "SELECT stock FROM Car WHERE car_id = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, carId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("stock");
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Get existing cart item quantity
+     */
+    private int getCartItemQuantity(Connection conn, int cartId, int carId) throws SQLException {
+        String sql = "SELECT quantity FROM CartItem WHERE cart_id = ? AND car_id = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, cartId);
+            stmt.setInt(2, carId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("quantity");
+                }
+            }
+        }
+        return 0;
     }
 
     /**

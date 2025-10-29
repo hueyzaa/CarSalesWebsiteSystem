@@ -17,9 +17,11 @@ public class BlogDAO {
      */
     public List<Blog> getAllBlogs() {
         List<Blog> blogs = new ArrayList<>();
-        String sql = "SELECT blog_id, title, content, author_id, created_at " +
-                "FROM Blog " +
-                "ORDER BY created_at DESC";
+        String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
+                "u.name as author_name " +
+                "FROM Blog b " +
+                "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
+                "ORDER BY b.created_at DESC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -32,6 +34,8 @@ public class BlogDAO {
                 blog.setContent(rs.getString("content"));
                 blog.setAuthorId(rs.getInt("author_id"));
                 blog.setCreatedAt(rs.getTimestamp("created_at"));
+                blog.setImageUrl(rs.getString("image_url"));  // NEW
+                blog.setAuthorName(rs.getString("author_name"));
 
                 blogs.add(blog);
             }
@@ -49,7 +53,7 @@ public class BlogDAO {
      * Get blog by ID
      */
     public Blog getBlogById(int blogId) {
-        String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, " +
+        String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
                 "u.name as author_name " +
                 "FROM Blog b " +
                 "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
@@ -68,6 +72,7 @@ public class BlogDAO {
                     blog.setContent(rs.getString("content"));
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
+                    blog.setImageUrl(rs.getString("image_url"));  // NEW
                     blog.setAuthorName(rs.getString("author_name"));
 
                     logger.info("Retrieved blog: {}", blogId);
@@ -89,7 +94,7 @@ public class BlogDAO {
      */
     public List<Blog> getRecentBlogs(int limit) {
         List<Blog> blogs = new ArrayList<>();
-        String sql = "SELECT TOP (?) b.blog_id, b.title, b.content, b.author_id, b.created_at, " +
+        String sql = "SELECT TOP (?) b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
                 "u.name as author_name " +
                 "FROM Blog b " +
                 "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
@@ -108,6 +113,7 @@ public class BlogDAO {
                     blog.setContent(rs.getString("content"));
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
+                    blog.setImageUrl(rs.getString("image_url"));  // NEW
                     blog.setAuthorName(rs.getString("author_name"));
 
                     blogs.add(blog);
@@ -128,7 +134,7 @@ public class BlogDAO {
      */
     public List<Blog> getBlogsByAuthor(int authorId)  {
         List<Blog> blogs = new ArrayList<>();
-        String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, " +
+        String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
                 "u.name as author_name " +
                 "FROM Blog b " +
                 "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
@@ -148,6 +154,7 @@ public class BlogDAO {
                     blog.setContent(rs.getString("content"));
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
+                    blog.setImageUrl(rs.getString("image_url"));  // NEW
                     blog.setAuthorName(rs.getString("author_name"));
 
                     blogs.add(blog);
@@ -168,7 +175,7 @@ public class BlogDAO {
      */
     public List<Blog> searchBlogs(String keyword){
         List<Blog> blogs = new ArrayList<>();
-        String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, " +
+        String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
                 "u.name as author_name " +
                 "FROM Blog b " +
                 "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
@@ -190,6 +197,7 @@ public class BlogDAO {
                     blog.setContent(rs.getString("content"));
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
+                    blog.setImageUrl(rs.getString("image_url"));  // NEW
                     blog.setAuthorName(rs.getString("author_name"));
 
                     blogs.add(blog);
@@ -209,7 +217,7 @@ public class BlogDAO {
      * Create new blog
      */
     public int createBlog(Blog blog) {
-        String sql = "INSERT INTO Blog (title, content, author_id) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO Blog (title, content, author_id, image_url) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -217,6 +225,7 @@ public class BlogDAO {
             stmt.setString(1, blog.getTitle());
             stmt.setString(2, blog.getContent());
             stmt.setInt(3, blog.getAuthorId());
+            stmt.setString(4, blog.getImageUrl());  // NEW
 
             int affectedRows = stmt.executeUpdate();
 
@@ -244,14 +253,15 @@ public class BlogDAO {
      * Update blog
      */
     public boolean updateBlog(Blog blog) {
-        String sql = "UPDATE Blog SET title = ?, content = ? WHERE blog_id = ?";
+        String sql = "UPDATE Blog SET title = ?, content = ?, image_url = ? WHERE blog_id = ?";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, blog.getTitle());
             stmt.setString(2, blog.getContent());
-            stmt.setInt(3, blog.getBlogId());
+            stmt.setString(3, blog.getImageUrl());  // NEW
+            stmt.setInt(4, blog.getBlogId());
 
             int affectedRows = stmt.executeUpdate();
             boolean success = affectedRows > 0;

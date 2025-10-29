@@ -10,7 +10,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 public class VNPayConfig {
 
-    // CẬP NHẬT URL này khi deploy hoặc dùng ngrok
     public static final String VNP_PAY_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
     public static final String VNP_RETURN_URL = "http://localhost:8080/CarSalesWebsiteSystem/payment-callback";
     public static final String VNP_TMN_CODE = "NUB9I46D";
@@ -81,10 +80,6 @@ public class VNPayConfig {
 
     /**
      * Verify payment callback from VNPay
-     */
-    /**
-     * Verify payment callback from VNPay
-     * FIXED VERSION - Raw URL parameters
      */
     public static boolean verifyPaymentCallback(HttpServletRequest request) {
         try {

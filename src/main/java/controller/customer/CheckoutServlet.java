@@ -6,8 +6,8 @@ import dao.TransactionDAO;
 import service.PromotionService;
 import model.CartItem;
 import model.User;
+import model.Order;
 import model.Promotion;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -144,7 +144,67 @@ public class CheckoutServlet extends HttpServlet {
         try {
             User user = (User) session.getAttribute("user");
             int userId = user.getId();
-            logger.info("Processing checkout POST for user ID: {}", userId);
+
+            // ===== RETRY PAYMENT FUNCTIONALITY =====
+            // Check if this is a retry payment request
+            String retryOrderIdParam = request.getParameter("retryOrderId");
+            if (retryOrderIdParam != null && !retryOrderIdParam.trim().isEmpty()) {
+                try {
+                    int retryOrderId = Integer.parseInt(retryOrderIdParam);
+                    logger.info("Retry payment requested for order ID: {} by user ID: {}", retryOrderId, userId);
+
+                    // Validate order exists and belongs to user
+                    Order order = ordersDAO.getOrderById(retryOrderId);
+                    if (order == null) {
+                        logger.warn("Order {} not found for retry payment", retryOrderId);
+                        session.setAttribute("error", "Đơn hàng không tồn tại!");
+                        response.sendRedirect(request.getContextPath() + "/orders");
+                        return;
+                    }
+
+                    // Check ownership
+                    if (order.getUserId() != userId) {
+                        logger.warn("User {} attempted to retry payment for order {} belonging to user {}",
+                                userId, retryOrderId, order.getUserId());
+                        session.setAttribute("error", "Bạn không có quyền thực hiện thao tác này!");
+                        response.sendRedirect(request.getContextPath() + "/orders");
+                        return;
+                    }
+
+                    // Validate order status is PENDING
+                    if (!"PENDING".equals(order.getStatus())) {
+                        logger.warn("Cannot retry payment for order {} with status {}", retryOrderId, order.getStatus());
+                        session.setAttribute("error", "Chỉ có thể thanh toán lại cho đơn hàng đang chờ xử lý!");
+                        response.sendRedirect(request.getContextPath() + "/order-detail?id=" + retryOrderId);
+                        return;
+                    }
+
+                    // Validate order is not paid
+                    if (order.getPaidAmount() > 0) {
+                        logger.warn("Order {} already has payment amount: {}, cannot retry",
+                                retryOrderId, order.getPaidAmount());
+                        session.setAttribute("error", "Đơn hàng này đã có giao dịch thanh toán!");
+                        response.sendRedirect(request.getContextPath() + "/order-detail?id=" + retryOrderId);
+                        return;
+                    }
+
+                    // All validations passed - redirect to payment page
+                    logger.info("Redirecting to payment page for retry order {}", retryOrderId);
+                    session.setAttribute("success", "Tiếp tục thanh toán cho đơn hàng #" + retryOrderId);
+                    response.sendRedirect(request.getContextPath() + "/payment?orderId=" + retryOrderId);
+                    return;
+
+                } catch (NumberFormatException e) {
+                    logger.error("Invalid retry order ID format: {}", retryOrderIdParam);
+                    session.setAttribute("error", "Mã đơn hàng không hợp lệ!");
+                    response.sendRedirect(request.getContextPath() + "/orders");
+                    return;
+                }
+            }
+            // ===== END RETRY PAYMENT FUNCTIONALITY =====
+
+            // Normal checkout flow continues here
+            logger.info("Processing normal checkout POST for user ID: {}", userId);
 
             // Get payment type
             String paymentType = request.getParameter("paymentType");
@@ -264,12 +324,25 @@ public class CheckoutServlet extends HttpServlet {
                     depositAmount = finalTotal * DEPOSIT_PERCENTAGE;
                     paymentAmount = depositAmount;
                     paymentStatus = "PENDING";
-                    notes = String.format(
-                            "Chờ thanh toán đặt cọc %,.0f₫ (10%%). " +
-                                    (promotionDiscount > 0 ? "Đã áp dụng khuyến mãi giảm %,.0f₫. " : "") +
-                                    "Sau khi đặt cọc thành công, khách hàng cần thanh toán %,.0f₫ tại showroom khi nhận xe.",
-                            depositAmount, promotionDiscount, finalTotal - depositAmount
-                    );
+
+                    // Calculate remaining after deposit
+                    double remainingAfterDeposit = finalTotal - depositAmount;
+
+                    // Build notes based on whether promotion was applied
+                    if (promotionDiscount > 0) {
+                        notes = String.format(
+                                "Chờ thanh toán đặt cọc %,.0f₫ (10%%). " +
+                                        "Đã áp dụng khuyến mãi giảm %,.0f₫. " +
+                                        "Sau khi đặt cọc thành công, khách hàng cần thanh toán %,.0f₫ tại showroom khi nhận xe.",
+                                depositAmount, promotionDiscount, remainingAfterDeposit
+                        );
+                    } else {
+                        notes = String.format(
+                                "Chờ thanh toán đặt cọc %,.0f₫ (10%%). " +
+                                        "Sau khi đặt cọc thành công, khách hàng cần thanh toán %,.0f₫ tại showroom khi nhận xe.",
+                                depositAmount, remainingAfterDeposit
+                        );
+                    }
                     break;
 
                 default:

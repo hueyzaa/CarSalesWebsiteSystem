@@ -14,39 +14,43 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            background-color: #0f0f0f;
             color: #e0e0e0;
         }
 
         .result-container {
-            max-width: 700px;
-            margin: 80px auto;
-            padding: 40px;
+            max-width: 650px;
+            margin: 60px auto 40px;
+            padding: 0 20px;
+        }
+
+        .result-card {
             background: #1a1a1a;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border-radius: 15px;
             border: 1px solid #333;
+            padding: 40px;
+            text-align: center;
         }
 
         .result-icon {
-            width: 100px;
-            height: 100px;
-            margin: 0 auto 30px;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 25px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 50px;
+            font-size: 45px;
         }
 
         .result-icon.success {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: #28a745;
             color: white;
             animation: successPulse 2s infinite;
         }
 
         .result-icon.failed {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            background: #dc3545;
             color: white;
             animation: errorShake 0.5s;
         }
@@ -58,14 +62,13 @@
 
         @keyframes errorShake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
         }
 
         .result-title {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            text-align: center;
             margin-bottom: 10px;
         }
 
@@ -78,25 +81,24 @@
         }
 
         .result-message {
-            text-align: center;
-            font-size: 1.1rem;
-            color: #888;
-            margin-bottom: 40px;
+            font-size: 1rem;
+            color: #999;
+            margin-bottom: 30px;
         }
 
         .info-box {
             background: #0f0f0f;
-            border-radius: 15px;
-            padding: 25px;
+            border-radius: 12px;
+            padding: 20px;
             margin-bottom: 25px;
-            border: 1px solid #333;
+            text-align: left;
         }
 
         .info-row {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #333;
+            padding: 10px 0;
+            border-bottom: 1px solid #2a2a2a;
         }
 
         .info-row:last-child {
@@ -105,29 +107,33 @@
 
         .info-label {
             color: #888;
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 0.95rem;
         }
 
         .info-value {
             color: #f8f9fa;
             font-weight: 600;
             text-align: right;
+            font-size: 0.95rem;
         }
 
         .info-value.highlight {
             color: #ffd700;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
 
         .btn-action {
             width: 100%;
-            padding: 15px;
-            font-size: 1.1rem;
-            font-weight: 700;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 600;
             border-radius: 10px;
             border: none;
             margin-bottom: 10px;
             transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn-primary-custom {
@@ -138,7 +144,8 @@
         .btn-primary-custom:hover {
             background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+            color: #000;
         }
 
         .btn-secondary-custom {
@@ -150,36 +157,44 @@
         .btn-secondary-custom:hover {
             background: #444;
             border-color: #666;
+            color: #fff;
         }
 
         footer {
             margin-top: auto;
         }
 
-        .loading-spinner {
-            border: 4px solid #333;
-            border-top: 4px solid #ffd700;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
+        @media (max-width: 768px) {
+            .result-card {
+                padding: 30px 20px;
+            }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            .result-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 40px;
+            }
+
+            .result-title {
+                font-size: 1.5rem;
+            }
+
+            .info-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .info-value {
+                text-align: left;
+            }
         }
     </style>
 </head>
 <body>
-<!-- Header -->
 <jsp:include page="header.jsp" />
 
-<!-- Main Content -->
-<div class="container">
-    <div class="result-container">
-        <!-- Check if payment was successful -->
+<div class="container result-container">
+    <div class="result-card">
         <c:choose>
             <c:when test="${param.success == 'true' || sessionScope.paymentSuccess == true}">
                 <!-- SUCCESS -->
@@ -187,7 +202,7 @@
                     <i class="fas fa-check"></i>
                 </div>
 
-                <h1 class="result-title success">Thanh Toán Thành Công!</h1>
+                <h1 class="result-title success">Thanh toán thành công!</h1>
                 <p class="result-message">
                         ${not empty sessionScope.paymentMessage ? sessionScope.paymentMessage : 'Đơn hàng của bạn đã được thanh toán thành công.'}
                 </p>
@@ -195,29 +210,29 @@
                 <div class="info-box">
                     <c:if test="${not empty sessionScope.paymentOrderId || not empty param.orderId}">
                         <div class="info-row">
-                            <span class="info-label"><i class="fas fa-hashtag"></i> Mã đơn hàng:</span>
+                            <span class="info-label">Mã đơn hàng</span>
                             <span class="info-value">#${not empty sessionScope.paymentOrderId ? sessionScope.paymentOrderId : param.orderId}</span>
                         </div>
                     </c:if>
 
                     <c:if test="${not empty sessionScope.paymentAmount}">
                         <div class="info-row">
-                            <span class="info-label"><i class="fas fa-money-bill-wave"></i> Số tiền đã thanh toán:</span>
+                            <span class="info-label">Số tiền đã thanh toán</span>
                             <span class="info-value highlight">
-                                <fmt:formatNumber value="${sessionScope.paymentAmount}" type="currency" currencySymbol="₫"/>
+                                <fmt:formatNumber value="${sessionScope.paymentAmount}" pattern="#,##0" /> ₫
                             </span>
                         </div>
                     </c:if>
 
                     <c:if test="${not empty sessionScope.paymentTransactionNo}">
                         <div class="info-row">
-                            <span class="info-label"><i class="fas fa-receipt"></i> Mã giao dịch VNPay:</span>
+                            <span class="info-label">Mã giao dịch VNPay</span>
                             <span class="info-value">${sessionScope.paymentTransactionNo}</span>
                         </div>
                     </c:if>
 
                     <div class="info-row">
-                        <span class="info-label"><i class="fas fa-clock"></i> Thời gian:</span>
+                        <span class="info-label">Thời gian</span>
                         <span class="info-value">
                             <fmt:formatDate value="<%= new java.util.Date() %>" pattern="dd/MM/yyyy HH:mm:ss"/>
                         </span>
@@ -226,15 +241,15 @@
 
                 <a href="${pageContext.request.contextPath}/order-detail?id=${not empty sessionScope.paymentOrderId ? sessionScope.paymentOrderId : param.orderId}"
                    class="btn btn-action btn-primary-custom">
-                    <i class="fas fa-file-invoice"></i> Xem Chi Tiết Đơn Hàng
+                    <i class="fas fa-file-invoice"></i> Xem chi tiết đơn hàng
                 </a>
 
                 <a href="${pageContext.request.contextPath}/orders" class="btn btn-action btn-secondary-custom">
-                    <i class="fas fa-list"></i> Xem Tất Cả Đơn Hàng
+                    <i class="fas fa-list"></i> Danh sách đơn hàng
                 </a>
 
                 <a href="${pageContext.request.contextPath}/home" class="btn btn-action btn-secondary-custom">
-                    <i class="fas fa-home"></i> Về Trang Chủ
+                    <i class="fas fa-home"></i> Về trang chủ
                 </a>
 
             </c:when>
@@ -244,37 +259,50 @@
                     <i class="fas fa-times"></i>
                 </div>
 
-                <h1 class="result-title failed">Thanh Toán Thất Bại!</h1>
+                <h1 class="result-title failed">Thanh toán thất bại!</h1>
                 <p class="result-message">
                         ${not empty sessionScope.paymentMessage ? sessionScope.paymentMessage : 'Giao dịch không thành công. Vui lòng thử lại.'}
                 </p>
 
                 <div class="info-box">
+                    <c:if test="${not empty sessionScope.paymentOrderId || not empty param.orderId}">
+                        <div class="info-row">
+                            <span class="info-label">Mã đơn hàng</span>
+                            <span class="info-value">#${not empty sessionScope.paymentOrderId ? sessionScope.paymentOrderId : param.orderId}</span>
+                        </div>
+                    </c:if>
+
                     <c:if test="${not empty sessionScope.paymentResponseCode}">
                         <div class="info-row">
-                            <span class="info-label"><i class="fas fa-exclamation-triangle"></i> Mã lỗi:</span>
+                            <span class="info-label">Mã lỗi</span>
                             <span class="info-value">${sessionScope.paymentResponseCode}</span>
                         </div>
                     </c:if>
 
                     <div class="info-row">
-                        <span class="info-label"><i class="fas fa-clock"></i> Thời gian:</span>
+                        <span class="info-label">Thời gian</span>
                         <span class="info-value">
                             <fmt:formatDate value="<%= new java.util.Date() %>" pattern="dd/MM/yyyy HH:mm:ss"/>
                         </span>
                     </div>
                 </div>
 
-                <a href="${pageContext.request.contextPath}/checkout" class="btn btn-action btn-primary-custom">
-                    <i class="fas fa-redo"></i> Thử Lại
-                </a>
+                <!-- Retry payment button if order exists -->
+                <c:if test="${not empty sessionScope.paymentOrderId || not empty param.orderId}">
+                    <form method="post" action="${pageContext.request.contextPath}/checkout">
+                        <input type="hidden" name="retryOrderId" value="${not empty sessionScope.paymentOrderId ? sessionScope.paymentOrderId : param.orderId}">
+                        <button type="submit" class="btn btn-action btn-primary-custom">
+                            <i class="fas fa-credit-card"></i> Thanh toán lại
+                        </button>
+                    </form>
+                </c:if>
 
-                <a href="${pageContext.request.contextPath}/cart" class="btn btn-action btn-secondary-custom">
-                    <i class="fas fa-shopping-cart"></i> Quay Lại Giỏ Hàng
+                <a href="${pageContext.request.contextPath}/orders" class="btn btn-action btn-secondary-custom">
+                    <i class="fas fa-list"></i> Xem đơn hàng
                 </a>
 
                 <a href="${pageContext.request.contextPath}/home" class="btn btn-action btn-secondary-custom">
-                    <i class="fas fa-home"></i> Về Trang Chủ
+                    <i class="fas fa-home"></i> Về trang chủ
                 </a>
 
             </c:otherwise>
@@ -282,7 +310,6 @@
     </div>
 </div>
 
-<!-- Footer -->
 <jsp:include page="footer.jsp" />
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

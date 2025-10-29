@@ -13,6 +13,22 @@
         <listener-class>util.ApplicationListener</listener-class>
     </listener>
 
+    <!-- Cấu hình để serve static resources -->
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/images/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/css/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/js/*</url-pattern>
+    </servlet-mapping>
+
     <error-page>
         <exception-type>java.lang.Exception</exception-type>
         <location>/error</location>
@@ -31,10 +47,6 @@
             <url-pattern>*.jsp</url-pattern>
             <page-encoding>UTF-8</page-encoding>
             <default-content-type>text/html</default-content-type>
-            <init-param>
-                <param-name>javax.servlet.jsp.jstl.fmt.localizationContext</param-name>
-                <param-value>messages</param-value>
-            </init-param>
         </jsp-property-group>
     </jsp-config>
 </web-app>

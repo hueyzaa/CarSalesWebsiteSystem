@@ -249,12 +249,12 @@
                                         ${item.car.name}
                                 </div>
                                 <div style="color: #888;">
-                                    <fmt:formatNumber value="${item.car.price}" type="currency" currencySymbol="₫"/>
+                                    <fmt:formatNumber value="${item.car.price}" pattern="#,##0" /> ₫
                                     × ${item.quantity}
                                 </div>
                             </div>
                             <div style="text-align: right; color: #ffd700; font-weight: 700; font-size: 1.1rem;">
-                                <fmt:formatNumber value="${item.subtotal}" type="currency" currencySymbol="₫"/>
+                                <fmt:formatNumber value="${item.subtotal}" pattern="#,##0" /> ₫
                             </div>
                         </div>
                     </c:forEach>
@@ -327,7 +327,7 @@
                                                     -${promo.discountPercentage}%
                                                 </c:when>
                                                 <c:otherwise>
-                                                    -<fmt:formatNumber value="${promo.discountAmount}" type="number"/>₫
+                                                    -<fmt:formatNumber value="${promo.discountAmount}" pattern="#,##0" /> ₫
                                                 </c:otherwise>
                                             </c:choose>
                                         </div>
@@ -347,7 +347,7 @@
                     <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #333;">
                         <span style="color: #888;">Tổng giá trị:</span>
                         <span style="color: #f8f9fa; font-weight: 600;">
-                            <fmt:formatNumber value="${total}" type="currency" currencySymbol="₫"/>
+                            <fmt:formatNumber value="${total}" pattern="#,##0" /> ₫
                         </span>
                     </div>
 
@@ -358,7 +358,7 @@
                          border-top: 2px solid #444; margin-top: 15px;">
                         <span style="color: #888; font-weight: 600;">Tổng thanh toán:</span>
                         <span class="summary-value total" style="color: #ffd700; font-size: 1.5rem; font-weight: 700;">
-                            <fmt:formatNumber value="${total}" type="currency" currencySymbol="₫"/>
+                            <fmt:formatNumber value="${total}" pattern="#,##0" /> ₫
                         </span>
                     </div>
 

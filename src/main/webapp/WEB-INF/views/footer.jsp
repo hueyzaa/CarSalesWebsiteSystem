@@ -5,25 +5,23 @@
     .footer {
         background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
         color: #b0b0b0;
-        padding: 60px 0 20px;
+        padding: 40px 0 20px;
         margin-top: auto;
         border-top: 2px solid #ffd700;
-        box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
     }
 
     .footer h5 {
-        color: #ffd700 !important;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 20px;
-        font-size: 1.1rem;
+        color: #ffd700;
+        font-weight: 600;
+        margin-bottom: 18px;
+        font-size: 1rem;
     }
 
     .footer .brand-footer {
-        color: #fff !important;
-        font-size: 1.3rem;
-        margin-bottom: 15px;
+        color: #fff;
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+        font-weight: 600;
     }
 
     .footer .brand-footer i {
@@ -32,8 +30,8 @@
 
     .footer p {
         font-size: 0.9rem;
-        line-height: 1.8;
-        color: #888;
+        line-height: 1.7;
+        color: #999;
     }
 
     .footer ul {
@@ -42,48 +40,47 @@
     }
 
     .footer ul li {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
     .footer ul li a {
         color: #b0b0b0;
         text-decoration: none;
-        transition: all 0.3s;
-        display: inline-block;
+        transition: color 0.3s;
+        font-size: 0.9rem;
     }
 
     .footer ul li a:hover {
         color: #ffd700;
-        padding-left: 5px;
-        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
     }
 
     .footer .contact-info i {
         color: #ffd700;
-        width: 20px;
+        width: 18px;
         margin-right: 8px;
     }
 
-    .footer hr {
-        border-color: #333 !important;
-        margin: 30px 0 20px;
+    .footer .contact-info p {
+        margin-bottom: 10px;
     }
 
     .footer-bottom {
         text-align: center;
-        padding-top: 20px;
+        padding-top: 25px;
+        margin-top: 30px;
         border-top: 1px solid #333;
     }
 
     .footer-bottom p {
         margin: 5px 0;
         font-size: 0.85rem;
+        color: #888;
     }
 
     .footer-bottom a {
         color: #888;
         text-decoration: none;
-        transition: all 0.3s;
+        transition: color 0.3s;
     }
 
     .footer-bottom a:hover {
@@ -92,34 +89,80 @@
 
     .social-links {
         margin-top: 15px;
+        display: flex;
+        gap: 10px;
     }
 
     .social-links a {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         width: 40px;
         height: 40px;
-        line-height: 40px;
-        text-align: center;
         border-radius: 50%;
         background: #2a2a2a;
-        color: #888;
-        margin: 0 5px;
         transition: all 0.3s;
         border: 1px solid #333;
     }
 
+    .social-links a img {
+        width: 22px;
+        height: 22px;
+        object-fit: contain;
+        transition: transform 0.3s;
+    }
+
     .social-links a:hover {
-        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-        color: #1a1a1a;
-        border-color: #ffd700;
         transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        border-color: #ffd700;
+    }
+
+    .social-links a.facebook:hover {
+        background: #ffffff;
+    }
+
+    .social-links a.instagram:hover {
+        background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    }
+
+    .social-links a.twitter:hover {
+        background: #000000;
+    }
+
+    .social-links a.youtube:hover {
+        background: #ff0000;
+    }
+
+    .social-links a.tiktok:hover {
+        background: #000000;
+    }
+
+    .social-links a.zalo:hover {
+        background: #0068ff;
+    }
+
+    .social-links a:hover img {
+        transform: scale(1.1);
+    }
+
+    @media (max-width: 768px) {
+        .footer {
+            padding: 30px 0 20px;
+        }
+
+        .footer h5 {
+            font-size: 0.95rem;
+        }
+
+        .social-links {
+            justify-content: center;
+        }
     }
 </style>
 
 <footer class="footer">
     <div class="container">
-        <div class="row mb-4">
+        <div class="row mb-3">
             <!-- About Section -->
             <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
                 <h5 class="brand-footer">
@@ -127,38 +170,52 @@
                 </h5>
                 <p>Khám phá bộ sưu tập xe hơi đẳng cấp với giá tốt nhất. Chúng tôi cam kết mang đến trải nghiệm mua sắm xe hơi tuyệt vời nhất.</p>
                 <div class="social-links">
-                    <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
-                    <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
-                    <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
+                    <a href="https://facebook.com" target="_blank" title="Facebook" class="facebook">
+                        <img src="${pageContext.request.contextPath}/images/facebook-logo.png" alt="Facebook">
+                    </a>
+                    <a href="https://instagram.com" target="_blank" title="Instagram" class="instagram">
+                        <img src="${pageContext.request.contextPath}/images/ins-logo.png" alt="Instagram">
+                    </a>
+                    <a href="https://twitter.com" target="_blank" title="Twitter" class="twitter">
+                        <img src="${pageContext.request.contextPath}/images/x-logo.png" alt="Twitter">
+                    </a>
+                    <a href="https://youtube.com" target="_blank" title="YouTube" class="youtube">
+                        <img src="${pageContext.request.contextPath}/images/youtube-logo.png" alt="YouTube">
+                    </a>
+                    <a href="https://tiktok.com" target="_blank" title="TikTok" class="tiktok">
+                        <img src="${pageContext.request.contextPath}/images/tiktok-logo.png" alt="TikTok">
+                    </a>
+                    <a href="https://zalo.me" target="_blank" title="Zalo" class="zalo">
+                        <img src="${pageContext.request.contextPath}/images/zalo-logo.png" alt="Zalo">
+                    </a>
                 </div>
             </div>
 
             <!-- Quick Links -->
             <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
-                <h5>Liên Kết</h5>
+                <h5>Liên kết</h5>
                 <ul>
-                    <li><a href="${pageContext.request.contextPath}/"><i class="fas fa-angle-right"></i> Trang Chủ</a></li>
-                    <li><a href="${pageContext.request.contextPath}/cars"><i class="fas fa-angle-right"></i> Xem Xe</a></li>
-                    <li><a href="${pageContext.request.contextPath}/promotions"><i class="fas fa-angle-right"></i> Khuyến Mãi</a></li>
-                    <li><a href="${pageContext.request.contextPath}/blog"><i class="fas fa-angle-right"></i> Tin Tức</a></li>
+                    <li><a href="${pageContext.request.contextPath}/">Trang chủ</a></li>
+                    <li><a href="${pageContext.request.contextPath}/cars">Xem xe</a></li>
+                    <li><a href="${pageContext.request.contextPath}/promotions">Khuyến mãi</a></li>
+                    <li><a href="${pageContext.request.contextPath}/blog">Tin tức</a></li>
                 </ul>
             </div>
 
             <!-- Customer Service -->
             <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
-                <h5>Dịch Vụ</h5>
+                <h5>Dịch vụ</h5>
                 <ul>
-                    <li><a href="#"><i class="fas fa-angle-right"></i> Chính Sách Bảo Mật</a></li>
-                    <li><a href="#"><i class="fas fa-angle-right"></i> Điều Khoản Dịch Vụ</a></li>
-                    <li><a href="#"><i class="fas fa-angle-right"></i> Chính Sách Đổi Trả</a></li>
-                    <li><a href="#"><i class="fas fa-angle-right"></i> Hỗ Trợ Khách Hàng</a></li>
+                    <li><a href="#">Chính sách bảo mật</a></li>
+                    <li><a href="#">Điều khoản dịch vụ</a></li>
+                    <li><a href="#">Chính sách đổi trả</a></li>
+                    <li><a href="#">Hỗ trợ khách hàng</a></li>
                 </ul>
             </div>
 
             <!-- Contact Info -->
             <div class="col-lg-3 col-md-6">
-                <h5>Liên Hệ</h5>
+                <h5>Liên hệ</h5>
                 <div class="contact-info">
                     <p>
                         <i class="fas fa-map-marker-alt"></i> Cần Thơ, Việt Nam
@@ -169,23 +226,13 @@
                     <p>
                         <i class="fas fa-envelope"></i> info@carshowroom.com
                     </p>
-                    <p>
-                        <i class="fas fa-clock"></i> T2-T7: 8:00 - 20:00<br>
-                        <span style="padding-left: 28px;">CN: 9:00 - 18:00</span>
-                    </p>
                 </div>
             </div>
         </div>
 
         <!-- Footer Bottom -->
         <div class="footer-bottom">
-            <hr>
             <p>&copy; 2025 <strong style="color: #ffd700;">Car Showroom</strong>. Bảo lưu mọi quyền.</p>
-            <p>
-                <a href="#">Chính sách bảo mật</a> |
-                <a href="#">Điều khoản sử dụng</a> |
-                <a href="#">Sitemap</a>
-            </p>
         </div>
     </div>
 </footer>
