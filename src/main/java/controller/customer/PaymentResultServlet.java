@@ -18,13 +18,12 @@ public class PaymentResultServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        logger.info("========================================");
-        logger.info("PAYMENT RESULT PAGE ACCESSED");
-        logger.info("Success param: {}", request.getParameter("success"));
-        logger.info("Order ID param: {}", request.getParameter("orderId"));
-        logger.info("========================================");
+        boolean success = "true".equals(request.getParameter("success"));
+        String orderId = request.getParameter("orderId");
 
-        // Forward to JSP page
-        request.getRequestDispatcher("/WEB-INF/views/payment-result.jsp").forward(request, response);
+        logger.info("Payment result: success={}, orderId={}", success, orderId);
+
+        request.getRequestDispatcher("/WEB-INF/views/payment-result.jsp")
+                .forward(request, response);
     }
 }

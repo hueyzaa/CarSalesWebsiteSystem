@@ -8,10 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-/**
- * SecurityHeadersFilter - Add security headers to all responses
- * Protects against XSS, clickjacking, MIME sniffing, and other attacks
- */
 @WebFilter("/*")
 public class SecurityHeadersFilter implements Filter {
     private static final Logger logger = LoggerFactory.getLogger(SecurityHeadersFilter.class);
@@ -23,13 +19,9 @@ public class SecurityHeadersFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
         httpResponse.setHeader("X-Frame-Options", "DENY");
-
         httpResponse.setHeader("X-Content-Type-Options", "nosniff");
-
         httpResponse.setHeader("X-XSS-Protection", "1; mode=block");
-
         httpResponse.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-
         httpResponse.setHeader("Permissions-Policy",
                 "geolocation=(), microphone=(), camera=()");
 
@@ -51,7 +43,7 @@ public class SecurityHeadersFilter implements Filter {
                         "connect-src 'self'; " +
                         "frame-ancestors 'none'; " +
                         "base-uri 'self'; " +
-                        "form-action 'self';");
+                        "form-action 'self' https://sandbox.vnpayment.vn;");
 
         chain.doFilter(request, response);
     }
