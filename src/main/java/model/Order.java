@@ -9,11 +9,11 @@ public class Order implements Serializable {
 
     private int orderId;
     private int userId;
-    private String status;  // PENDING, APPROVED, CANCELLED, COMPLETED
+    private String status;
     private Timestamp createdAt;
 
     // Payment-related fields
-    private String paymentType;  // FULL, DEPOSIT, SHOWROOM
+    private String paymentType;
     private Double depositAmount;
     private Double remainingAmount;
     private String notes;
@@ -23,7 +23,7 @@ public class Order implements Serializable {
     private List<Transaction> transactions;
     private double totalAmount;
     private double paidAmount;
-    private User user;  // For admin view
+    private User user;
 
     // Constructors
     public Order() {

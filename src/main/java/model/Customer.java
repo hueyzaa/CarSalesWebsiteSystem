@@ -4,48 +4,61 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * User model - Base user entity from AppUsers table
+ * Customer model - Simplified version
+ * Removed: loyalty_points
  */
-public class User implements Serializable {
+public class Customer implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    // Core fields from AppUsers table
-    private int userId;
+    // From User (AppUsers table)
+    private int customerId;
     private String email;
-    private String passwordHash;
-    private String role; // ADMIN, STAFF, CUSTOMER
     private boolean isActive;
     private Date createdAt;
     private Date lastLogin;
 
-    // Additional fields from vw_AllUsers (from Customers/Staff tables)
+    // Customer-specific fields
     private String name;
     private String phone;
     private String address;
+    private String oauthProvider;
+
+    // Additional fields from view
+    private int totalOrders;
+    private double totalSpent;
 
     // Constructors
-    public User() {}
+    public Customer() {}
 
-    public User(int userId, String email, String role) {
-        this.userId = userId;
-        this.email = email;
-        this.role = role;
-    }
-
-    public User(int userId, String email, String name, String role) {
-        this.userId = userId;
+    public Customer(int customerId, String email, String name) {
+        this.customerId = customerId;
         this.email = email;
         this.name = name;
-        this.role = role;
     }
 
     // Getters and Setters
-    public int getUserId() {
-        return userId;
+    public int getCustomerId() {
+        return customerId;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
+    }
+
+    public int getUserId() {
+        return customerId;
+    }
+
+    public void setUserId(int customerId) {
+        this.customerId = customerId;
+    }
+
+    public int getId() {
+        return customerId;
+    }
+
+    public void setId(int customerId) {
+        this.customerId = customerId;
     }
 
     public String getEmail() {
@@ -54,22 +67,6 @@ public class User implements Serializable {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 
     public boolean isActive() {
@@ -104,6 +101,14 @@ public class User implements Serializable {
         this.name = name;
     }
 
+    public String getFullname() {
+        return name;
+    }
+
+    public void setFullname(String name) {
+        this.name = name;
+    }
+
     public String getPhone() {
         return phone;
     }
@@ -120,18 +125,38 @@ public class User implements Serializable {
         this.address = address;
     }
 
+    public String getOauthProvider() {
+        return oauthProvider;
+    }
+
+    public void setOauthProvider(String oauthProvider) {
+        this.oauthProvider = oauthProvider;
+    }
+
+    public int getTotalOrders() {
+        return totalOrders;
+    }
+
+    public void setTotalOrders(int totalOrders) {
+        this.totalOrders = totalOrders;
+    }
+
+    public double getTotalSpent() {
+        return totalSpent;
+    }
+
+    public void setTotalSpent(double totalSpent) {
+        this.totalSpent = totalSpent;
+    }
+
     // Convenience methods
     public String getDisplayName() {
-        if (name != null && !name.trim().isEmpty()) {
-            return name;
-        }
-        return email != null ? email : "Unknown";
+        return name != null ? name : email;
     }
 
     public String getInitials() {
         if (name == null || name.trim().isEmpty()) {
-            return email != null && !email.isEmpty() ?
-                    email.substring(0, 1).toUpperCase() : "?";
+            return email != null && !email.isEmpty() ? email.substring(0, 1).toUpperCase() : "?";
         }
         String[] parts = name.trim().split("\\s+");
         if (parts.length >= 2) {
@@ -140,37 +165,24 @@ public class User implements Serializable {
         return name.substring(0, Math.min(2, name.length())).toUpperCase();
     }
 
+    public String getRole() {
+        return "CUSTOMER";
+    }
+
     public boolean isAdmin() {
-        return "ADMIN".equalsIgnoreCase(role);
+        return false;
     }
 
     public boolean isStaff() {
-        return "STAFF".equalsIgnoreCase(role);
+        return false;
     }
 
     public boolean isCustomer() {
-        return "CUSTOMER".equalsIgnoreCase(role);
+        return true;
     }
 
-    public String getRoleBadge() {
-        if (isAdmin()) return "badge-danger";
-        if (isStaff()) return "badge-warning";
-        if (isCustomer()) return "badge-info";
-        return "badge-secondary";
-    }
-
-    public String getRoleDisplay() {
-        if (isAdmin()) return "Quản trị viên";
-        if (isStaff()) return "Nhân viên";
-        if (isCustomer()) return "Khách hàng";
-        return role;
-    }
-
-    public String getRoleIcon() {
-        if (isAdmin()) return "bi-shield-fill";
-        if (isStaff()) return "bi-person-badge";
-        if (isCustomer()) return "bi-person";
-        return "bi-question-circle";
+    public boolean isOAuthUser() {
+        return oauthProvider != null && !oauthProvider.trim().isEmpty();
     }
 
     public String getStatusBadge() {
@@ -181,13 +193,17 @@ public class User implements Serializable {
         return isActive ? "Hoạt động" : "Vô hiệu hóa";
     }
 
+    public String getFormattedTotalSpent() {
+        return String.format("%,.0f ₫", totalSpent);
+    }
+
     @Override
     public String toString() {
-        return "User{" +
-                "userId=" + userId +
+        return "Customer{" +
+                "customerId=" + customerId +
                 ", email='" + email + '\'' +
-                ", role='" + role + '\'' +
                 ", name='" + name + '\'' +
+                ", oauthProvider='" + oauthProvider + '\'' +
                 ", isActive=" + isActive +
                 '}';
     }
@@ -196,12 +212,12 @@ public class User implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return userId == user.userId;
+        Customer customer = (Customer) o;
+        return customerId == customer.customerId;
     }
 
     @Override
     public int hashCode() {
-        return Integer.hashCode(userId);
+        return Integer.hashCode(customerId);
     }
 }

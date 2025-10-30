@@ -2,7 +2,7 @@ package controller.customer;
 
 import dao.PromotionDAO;
 import model.Promotion;
-import model.User;
+import util.SessionUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,6 +15,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * PromotionServlet - Display available promotions
+ * Accessible by everyone (Guest/Customer/Staff/Admin)
+ * Shows personalized data for logged-in users
+ */
 @WebServlet("/promotions")
 public class PromotionServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(PromotionServlet.class);
@@ -22,7 +27,9 @@ public class PromotionServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
+        super.init();
         promotionDAO = new PromotionDAO();
+        logger.info("PromotionServlet initialized");
     }
 
     @Override
@@ -30,47 +37,90 @@ public class PromotionServlet extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-            logger.info("Loading promotions page");
-
-            // Check if user is logged in
             HttpSession session = request.getSession(false);
-            User currentUser = (session != null) ? (User) session.getAttribute("user") : null;
+            Integer userId = SessionUtils.getUserId(session);
 
-            // Get promotions with user status if logged in
-            List<Promotion> promotions;
-            if (currentUser != null) {
-                promotions = promotionDAO.getAllActivePromotionsWithUserStatus(currentUser.getUserId());
-                logger.info("Retrieved {} promotions for logged-in user {}",
-                        promotions.size(), currentUser.getEmail());
+            // Get promotions (personalized if logged in)
+            List<Promotion> promotions = promotionDAO.getAllActivePromotionsWithUserStatus(userId);
 
-                // Get unused promotion count for notification
-                try {
-                    List<Promotion> userPromotions = promotionDAO.getUserClaimedPromotions(currentUser.getUserId());
-                    long unusedCount = userPromotions.stream()
-                            .filter(p -> !p.isUsedByUser())
-                            .count();
-                    request.setAttribute("unusedCount", unusedCount);
-                } catch (Exception e) {
-                    logger.error("Error getting unused promotion count", e);
-                }
-            } else {
-                promotions = promotionDAO.getAllActivePromotionsWithUserStatus(null);
-                logger.info("Retrieved {} promotions for guest user", promotions.size());
+            logger.info("Retrieved {} promotions for {} user{}",
+                    promotions.size(),
+                    userId != null ? "logged-in" : "guest",
+                    userId != null ? " ID: " + userId : "");
+
+            // Get unused promotion count for customers
+            if (SessionUtils.isCustomer(session)) {
+                setUnusedPromotionCount(request, userId);
             }
 
-            request.setAttribute("promotions", promotions);
-            request.setAttribute("isLoggedIn", currentUser != null);
-            request.getRequestDispatcher("/WEB-INF/views/promotions.jsp").forward(request, response);
+            // Set attributes
+            setRequestAttributes(request, session, promotions);
+
+            // Forward to JSP
+            request.getRequestDispatcher("/WEB-INF/views/promotions.jsp")
+                    .forward(request, response);
 
         } catch (RuntimeException e) {
             logger.error("Database error loading promotions", e);
-            request.setAttribute("error", "Không thể tải thông tin khuyến mãi.");
-            request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
-
+            handleError(request, response, "Không thể tải thông tin khuyến mãi: " + e.getMessage());
         } catch (Exception e) {
             logger.error("Unexpected error loading promotions", e);
-            request.setAttribute("error", "Đã xảy ra lỗi không mong muốn.");
-            request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
+            handleError(request, response, "Đã xảy ra lỗi không mong muốn.");
         }
+    }
+
+    /**
+     * Set unused promotion count for customer notification
+     */
+    private void setUnusedPromotionCount(HttpServletRequest request, Integer userId) {
+        try {
+            List<Promotion> userPromotions = promotionDAO.getUserClaimedPromotions(userId);
+            long unusedCount = userPromotions.stream()
+                    .filter(p -> !p.isUsedByUser())
+                    .count();
+            request.setAttribute("unusedCount", unusedCount);
+
+            logger.debug("User {} has {} unused promotions", userId, unusedCount);
+        } catch (Exception e) {
+            logger.error("Error getting unused promotion count for user {}", userId, e);
+        }
+    }
+
+    /**
+     * Set all request attributes for JSP
+     */
+    private void setRequestAttributes(HttpServletRequest request, HttpSession session,
+                                      List<Promotion> promotions) {
+        // Promotion data
+        request.setAttribute("promotions", promotions);
+        request.setAttribute("totalPromotions", promotions.size());
+
+        // User info
+        request.setAttribute("isLoggedIn", SessionUtils.isLoggedIn(session));
+        request.setAttribute("isCustomer", SessionUtils.isCustomer(session));
+        request.setAttribute("isStaff", SessionUtils.isStaff(session));
+        request.setAttribute("isAdmin", SessionUtils.isAdmin(session));
+
+        if (SessionUtils.isLoggedIn(session)) {
+            request.setAttribute("userId", SessionUtils.getUserId(session));
+            request.setAttribute("userRole", SessionUtils.getUserRole(session));
+            request.setAttribute("userEmail", SessionUtils.getUserEmail(session));
+        }
+    }
+
+    /**
+     * Handle error and forward to error page
+     */
+    private void handleError(HttpServletRequest request, HttpServletResponse response,
+                             String errorMessage) throws ServletException, IOException {
+        request.setAttribute("error", errorMessage);
+        request.getRequestDispatcher("/WEB-INF/views/error.jsp")
+                .forward(request, response);
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        logger.info("PromotionServlet destroyed");
     }
 }

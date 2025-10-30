@@ -17,8 +17,10 @@ public class BlogDAO {
      */
     public List<Blog> getAllBlogs() {
         List<Blog> blogs = new ArrayList<>();
+
+        // ✅ FIX: Bỏ u.name vì AppUsers không có column name
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
-                "u.name as author_name " +
+                "u.email as author_email " +  // ✅ Dùng email thay vì name
                 "FROM Blog b " +
                 "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
                 "ORDER BY b.created_at DESC";
@@ -34,8 +36,8 @@ public class BlogDAO {
                 blog.setContent(rs.getString("content"));
                 blog.setAuthorId(rs.getInt("author_id"));
                 blog.setCreatedAt(rs.getTimestamp("created_at"));
-                blog.setImageUrl(rs.getString("image_url"));  // NEW
-                blog.setAuthorName(rs.getString("author_name"));
+                blog.setImageUrl(rs.getString("image_url"));
+                blog.setAuthorName(rs.getString("author_email")); // ✅ Set email vào authorName
 
                 blogs.add(blog);
             }
@@ -53,8 +55,9 @@ public class BlogDAO {
      * Get blog by ID
      */
     public Blog getBlogById(int blogId) {
+        // ✅ FIX: Dùng email thay vì name
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
-                "u.name as author_name " +
+                "u.email as author_email " +
                 "FROM Blog b " +
                 "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
                 "WHERE b.blog_id = ?";
@@ -72,8 +75,8 @@ public class BlogDAO {
                     blog.setContent(rs.getString("content"));
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
-                    blog.setImageUrl(rs.getString("image_url"));  // NEW
-                    blog.setAuthorName(rs.getString("author_name"));
+                    blog.setImageUrl(rs.getString("image_url"));
+                    blog.setAuthorName(rs.getString("author_email")); // ✅ Email
 
                     logger.info("Retrieved blog: {}", blogId);
                     return blog;
@@ -94,8 +97,10 @@ public class BlogDAO {
      */
     public List<Blog> getRecentBlogs(int limit) {
         List<Blog> blogs = new ArrayList<>();
+
+        // ✅ FIX: Dùng email
         String sql = "SELECT TOP (?) b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
-                "u.name as author_name " +
+                "u.email as author_email " +
                 "FROM Blog b " +
                 "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
                 "ORDER BY b.created_at DESC";
@@ -113,8 +118,8 @@ public class BlogDAO {
                     blog.setContent(rs.getString("content"));
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
-                    blog.setImageUrl(rs.getString("image_url"));  // NEW
-                    blog.setAuthorName(rs.getString("author_name"));
+                    blog.setImageUrl(rs.getString("image_url"));
+                    blog.setAuthorName(rs.getString("author_email")); // ✅ Email
 
                     blogs.add(blog);
                 }
@@ -134,8 +139,10 @@ public class BlogDAO {
      */
     public List<Blog> getBlogsByAuthor(int authorId)  {
         List<Blog> blogs = new ArrayList<>();
+
+        // ✅ FIX: Dùng email
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
-                "u.name as author_name " +
+                "u.email as author_email " +
                 "FROM Blog b " +
                 "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
                 "WHERE b.author_id = ? " +
@@ -154,8 +161,8 @@ public class BlogDAO {
                     blog.setContent(rs.getString("content"));
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
-                    blog.setImageUrl(rs.getString("image_url"));  // NEW
-                    blog.setAuthorName(rs.getString("author_name"));
+                    blog.setImageUrl(rs.getString("image_url"));
+                    blog.setAuthorName(rs.getString("author_email")); // ✅ Email
 
                     blogs.add(blog);
                 }
@@ -175,8 +182,10 @@ public class BlogDAO {
      */
     public List<Blog> searchBlogs(String keyword){
         List<Blog> blogs = new ArrayList<>();
+
+        // ✅ FIX: Dùng email
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
-                "u.name as author_name " +
+                "u.email as author_email " +
                 "FROM Blog b " +
                 "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
                 "WHERE b.title LIKE ? OR b.content LIKE ? " +
@@ -197,8 +206,8 @@ public class BlogDAO {
                     blog.setContent(rs.getString("content"));
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
-                    blog.setImageUrl(rs.getString("image_url"));  // NEW
-                    blog.setAuthorName(rs.getString("author_name"));
+                    blog.setImageUrl(rs.getString("image_url"));
+                    blog.setAuthorName(rs.getString("author_email")); // ✅ Email
 
                     blogs.add(blog);
                 }
@@ -213,9 +222,8 @@ public class BlogDAO {
         }
     }
 
-    /**
-     * Create new blog
-     */
+    // ✅ Các methods create, update, delete giữ nguyên (không cần JOIN)
+
     public int createBlog(Blog blog) {
         String sql = "INSERT INTO Blog (title, content, author_id, image_url) VALUES (?, ?, ?, ?)";
 
@@ -225,12 +233,12 @@ public class BlogDAO {
             stmt.setString(1, blog.getTitle());
             stmt.setString(2, blog.getContent());
             stmt.setInt(3, blog.getAuthorId());
-            stmt.setString(4, blog.getImageUrl());  // NEW
+            stmt.setString(4, blog.getImageUrl());
 
             int affectedRows = stmt.executeUpdate();
 
             if (affectedRows == 0) {
-                throw new RuntimeException("Tạo blog thất bại, không có dòng nào bị ảnh hưởng");
+                throw new RuntimeException("Tạo blog thất bại");
             }
 
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
@@ -249,9 +257,6 @@ public class BlogDAO {
         }
     }
 
-    /**
-     * Update blog
-     */
     public boolean updateBlog(Blog blog) {
         String sql = "UPDATE Blog SET title = ?, content = ?, image_url = ? WHERE blog_id = ?";
 
@@ -260,7 +265,7 @@ public class BlogDAO {
 
             stmt.setString(1, blog.getTitle());
             stmt.setString(2, blog.getContent());
-            stmt.setString(3, blog.getImageUrl());  // NEW
+            stmt.setString(3, blog.getImageUrl());
             stmt.setInt(4, blog.getBlogId());
 
             int affectedRows = stmt.executeUpdate();
@@ -275,9 +280,6 @@ public class BlogDAO {
         }
     }
 
-    /**
-     * Delete blog
-     */
     public boolean deleteBlog(int blogId) {
         String sql = "DELETE FROM Blog WHERE blog_id = ?";
 
@@ -298,9 +300,6 @@ public class BlogDAO {
         }
     }
 
-    /**
-     * Get blog count
-     */
     public int getBlogCount() {
         String sql = "SELECT COUNT(*) as total FROM Blog";
 

@@ -1,18 +1,23 @@
 package util;
 
 import java.math.BigDecimal;
+import java.time.Year;
 import java.util.regex.Pattern;
 
 /**
- * Utility class for input validation
+ * Utility class for input validation (ENHANCED VERSION)
  */
 public class ValidationUtil {
 
-    // Regex patterns
+    // Regex patterns (compiled once for performance)
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9]{10,11}$");
     private static final Pattern ALPHANUMERIC_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s]+$");
+    private static final Pattern VIN_PATTERN = Pattern.compile("^[A-HJ-NPR-Z0-9]{17}$");
+    private static final Pattern LICENSE_PLATE_PATTERN = Pattern.compile("^\\d{2}[A-Z]-?\\d{3,5}\\.?\\d{0,2}$");
+
+    // ==================== STRING VALIDATION ====================
 
     /**
      * Validate string field
@@ -33,7 +38,7 @@ public class ValidationUtil {
     }
 
     /**
-     * Validate string field with allowed characters
+     * Validate string field with alphanumeric characters only
      */
     public static String validateAlphanumeric(String input, String fieldName, int maxLength) {
         input = validateString(input, fieldName, maxLength);
@@ -45,6 +50,8 @@ public class ValidationUtil {
 
         return input;
     }
+
+    // ==================== EMAIL & PASSWORD ====================
 
     /**
      * Validate email format
@@ -93,6 +100,8 @@ public class ValidationUtil {
                     "Mật khẩu phải chứa chữ hoa, chữ thường và số");
         }
     }
+
+    // ==================== NUMERIC VALIDATION ====================
 
     /**
      * Validate price
@@ -162,6 +171,32 @@ public class ValidationUtil {
     }
 
     /**
+     * Validate car year (NEW)
+     */
+    public static int validateYear(String yearStr) {
+        if (yearStr == null || yearStr.trim().isEmpty()) {
+            throw new IllegalArgumentException("Năm sản xuất không được để trống");
+        }
+
+        try {
+            int year = Integer.parseInt(yearStr.trim());
+            int currentYear = Year.now().getValue();
+
+            if (year < 1900 || year > currentYear + 1) {
+                throw new IllegalArgumentException(
+                        "Năm sản xuất phải từ 1900 đến " + (currentYear + 1));
+            }
+
+            return year;
+
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Năm sản xuất không hợp lệ");
+        }
+    }
+
+    // ==================== STATUS & ENUM ====================
+
+    /**
      * Validate status
      */
     public static String validateStatus(String status) {
@@ -177,6 +212,8 @@ public class ValidationUtil {
 
         return status;
     }
+
+    // ==================== URL & CONTACT ====================
 
     /**
      * Validate URL
@@ -200,39 +237,6 @@ public class ValidationUtil {
     }
 
     /**
-     * Sanitize string input (remove dangerous characters)
-     */
-    public static String sanitize(String input) {
-        if (input == null) {
-            return null;
-        }
-
-        return input.trim()
-                .replaceAll("[<>\"'`]", "") // Remove HTML/script characters
-                .replaceAll("\\s+", " "); // Normalize whitespace
-    }
-
-    /**
-     * Validate search keyword
-     */
-    public static String validateSearchKeyword(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return "";
-        }
-
-        keyword = keyword.trim();
-
-        if (keyword.length() > 100) {
-            throw new IllegalArgumentException("Từ khóa tìm kiếm quá dài");
-        }
-
-        // Remove SQL special characters
-        keyword = keyword.replaceAll("[';\"\\\\%_]", "");
-
-        return keyword;
-    }
-
-    /**
      * Validate phone number
      */
     public static String validatePhone(String phone) {
@@ -248,5 +252,89 @@ public class ValidationUtil {
         }
 
         return phone;
+    }
+
+    // ==================== VEHICLE-SPECIFIC (NEW) ====================
+
+    /**
+     * Validate VIN (Vehicle Identification Number) - NEW
+     */
+    public static String validateVIN(String vin) {
+        if (vin == null || vin.trim().isEmpty()) {
+            throw new IllegalArgumentException("Số VIN không được để trống");
+        }
+
+        vin = vin.trim().toUpperCase();
+
+        if (vin.length() != 17) {
+            throw new IllegalArgumentException("Số VIN phải có 17 ký tự");
+        }
+
+        if (!VIN_PATTERN.matcher(vin).matches()) {
+            throw new IllegalArgumentException("Số VIN không hợp lệ (không chứa I, O, Q)");
+        }
+
+        return vin;
+    }
+
+    /**
+     * Validate Vietnamese license plate - NEW
+     */
+    public static String validateLicensePlate(String plate) {
+        if (plate == null || plate.trim().isEmpty()) {
+            throw new IllegalArgumentException("Biển số xe không được để trống");
+        }
+
+        plate = plate.trim().toUpperCase().replaceAll("\\s+", "");
+
+        // Vietnam format: 99A-999.99 or 99A-99999
+        if (!LICENSE_PLATE_PATTERN.matcher(plate).matches()) {
+            throw new IllegalArgumentException(
+                    "Biển số xe không hợp lệ (định dạng: 29A-12345 hoặc 29A-123.45)");
+        }
+
+        return plate;
+    }
+
+    // ==================== SECURITY & SANITIZATION ====================
+
+    /**
+     * Sanitize string input (ENHANCED - prevent XSS)
+     */
+    public static String sanitize(String input) {
+        if (input == null) {
+            return null;
+        }
+
+        return input.trim()
+                .replaceAll("[<>\"'`]", "")           // Remove HTML/script characters
+                .replaceAll("&", "&amp;")              // Encode ampersand
+                .replaceAll("javascript:", "")         // Remove javascript: protocol
+                .replaceAll("on\\w+\\s*=", "")        // Remove event handlers
+                .replaceAll("\\s+", " ");              // Normalize whitespace
+    }
+
+    /**
+     * Validate search keyword (ENHANCED)
+     */
+    public static String validateSearchKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return "";
+        }
+
+        keyword = keyword.trim();
+
+        if (keyword.length() > 100) {
+            throw new IllegalArgumentException("Từ khóa tìm kiếm quá dài");
+        }
+
+        // Remove SQL injection characters
+        keyword = keyword.replaceAll("[';\"\\\\]", "");
+
+        // Note: If using PreparedStatement, LIKE wildcards (%, _) are safe
+        // If NOT using PreparedStatement, uncomment below:
+        // keyword = keyword.replaceAll("%", "\\\\%").replaceAll("_", "\\\\_");
+
+        return keyword;
     }
 }

@@ -435,12 +435,12 @@
                                     <input type="hidden" name="action" value="update">
                                     <input type="hidden" name="cartItemId" value="${item.id}">
                                     <button type="button" class="btn-quantity minus-btn">
-                                        <i class="fas fa-minus">-</i>
+                                        <i class="fas fa-minus"></i>
                                     </button>
                                     <input type="number" name="quantity" value="${item.quantity}"
                                            min="1" max="${item.car.stock}" class="quantity-input" readonly>
                                     <button type="button" class="btn-quantity plus-btn">
-                                        <i class="fas fa-plus">+</i>
+                                        <i class="fas fa-plus"></i>
                                     </button>
                                     <button type="submit" class="btn btn-quantity" style="width: auto; padding: 0 15px;">
                                         <i class="fas fa-check"></i> Cập Nhật

@@ -4,48 +4,60 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * User model - Base user entity from AppUsers table
+ * Staff model - Simplified version
+ * Removed: position, department, hiredDate, salary, createdBy, notes
  */
-public class User implements Serializable {
+public class Staff implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    // Core fields from AppUsers table
-    private int userId;
+    // From User (AppUsers table)
+    private int staffId;
     private String email;
-    private String passwordHash;
-    private String role; // ADMIN, STAFF, CUSTOMER
     private boolean isActive;
     private Date createdAt;
     private Date lastLogin;
 
-    // Additional fields from vw_AllUsers (from Customers/Staff tables)
+    // Staff-specific fields (simplified)
     private String name;
     private String phone;
     private String address;
 
+    // Additional fields from view
+    private int totalOrders;
+    private int totalBlogs;
+
     // Constructors
-    public User() {}
+    public Staff() {}
 
-    public User(int userId, String email, String role) {
-        this.userId = userId;
-        this.email = email;
-        this.role = role;
-    }
-
-    public User(int userId, String email, String name, String role) {
-        this.userId = userId;
+    public Staff(int staffId, String email, String name) {
+        this.staffId = staffId;
         this.email = email;
         this.name = name;
-        this.role = role;
     }
 
     // Getters and Setters
-    public int getUserId() {
-        return userId;
+    public int getStaffId() {
+        return staffId;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
+    public void setStaffId(int staffId) {
+        this.staffId = staffId;
+    }
+
+    public int getUserId() {
+        return staffId;
+    }
+
+    public void setUserId(int staffId) {
+        this.staffId = staffId;
+    }
+
+    public int getId() {
+        return staffId;
+    }
+
+    public void setId(int staffId) {
+        this.staffId = staffId;
     }
 
     public String getEmail() {
@@ -54,22 +66,6 @@ public class User implements Serializable {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 
     public boolean isActive() {
@@ -104,6 +100,14 @@ public class User implements Serializable {
         this.name = name;
     }
 
+    public String getFullname() {
+        return name;
+    }
+
+    public void setFullname(String name) {
+        this.name = name;
+    }
+
     public String getPhone() {
         return phone;
     }
@@ -120,18 +124,30 @@ public class User implements Serializable {
         this.address = address;
     }
 
+    public int getTotalOrders() {
+        return totalOrders;
+    }
+
+    public void setTotalOrders(int totalOrders) {
+        this.totalOrders = totalOrders;
+    }
+
+    public int getTotalBlogs() {
+        return totalBlogs;
+    }
+
+    public void setTotalBlogs(int totalBlogs) {
+        this.totalBlogs = totalBlogs;
+    }
+
     // Convenience methods
     public String getDisplayName() {
-        if (name != null && !name.trim().isEmpty()) {
-            return name;
-        }
-        return email != null ? email : "Unknown";
+        return name != null ? name : email;
     }
 
     public String getInitials() {
         if (name == null || name.trim().isEmpty()) {
-            return email != null && !email.isEmpty() ?
-                    email.substring(0, 1).toUpperCase() : "?";
+            return email != null && !email.isEmpty() ? email.substring(0, 1).toUpperCase() : "?";
         }
         String[] parts = name.trim().split("\\s+");
         if (parts.length >= 2) {
@@ -140,37 +156,20 @@ public class User implements Serializable {
         return name.substring(0, Math.min(2, name.length())).toUpperCase();
     }
 
+    public String getRole() {
+        return "STAFF";
+    }
+
     public boolean isAdmin() {
-        return "ADMIN".equalsIgnoreCase(role);
+        return false;
     }
 
     public boolean isStaff() {
-        return "STAFF".equalsIgnoreCase(role);
+        return true;
     }
 
     public boolean isCustomer() {
-        return "CUSTOMER".equalsIgnoreCase(role);
-    }
-
-    public String getRoleBadge() {
-        if (isAdmin()) return "badge-danger";
-        if (isStaff()) return "badge-warning";
-        if (isCustomer()) return "badge-info";
-        return "badge-secondary";
-    }
-
-    public String getRoleDisplay() {
-        if (isAdmin()) return "Quản trị viên";
-        if (isStaff()) return "Nhân viên";
-        if (isCustomer()) return "Khách hàng";
-        return role;
-    }
-
-    public String getRoleIcon() {
-        if (isAdmin()) return "bi-shield-fill";
-        if (isStaff()) return "bi-person-badge";
-        if (isCustomer()) return "bi-person";
-        return "bi-question-circle";
+        return false;
     }
 
     public String getStatusBadge() {
@@ -183,10 +182,9 @@ public class User implements Serializable {
 
     @Override
     public String toString() {
-        return "User{" +
-                "userId=" + userId +
+        return "Staff{" +
+                "staffId=" + staffId +
                 ", email='" + email + '\'' +
-                ", role='" + role + '\'' +
                 ", name='" + name + '\'' +
                 ", isActive=" + isActive +
                 '}';
@@ -196,12 +194,12 @@ public class User implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return userId == user.userId;
+        Staff staff = (Staff) o;
+        return staffId == staff.staffId;
     }
 
     @Override
     public int hashCode() {
-        return Integer.hashCode(userId);
+        return Integer.hashCode(staffId);
     }
 }

@@ -10,7 +10,7 @@ public class OrderDetail implements Serializable {
     private int carId;
     private double price;
     private int quantity;
-    private Car car;  // For joined data
+    private Car car;
 
     public OrderDetail() {
     }

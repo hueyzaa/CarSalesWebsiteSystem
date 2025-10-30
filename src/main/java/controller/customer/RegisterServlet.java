@@ -1,8 +1,9 @@
 package controller.customer;
 
 import dao.UserDAO;
-import model.User;
+import model.Customer;
 import util.ValidationUtil;
+import util.SessionUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -12,6 +13,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.UUID;
 
+/**
+ * RegisterServlet - Handle customer registration
+ * Features: Input validation, CSRF protection, auto-login
+ * UPDATED: No changes needed - already compatible with new schema
+ */
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(RegisterServlet.class);
@@ -21,6 +27,7 @@ public class RegisterServlet extends HttpServlet {
     public void init() throws ServletException {
         super.init();
         userDAO = new UserDAO();
+        logger.info("RegisterServlet initialized");
     }
 
     @Override
@@ -28,8 +35,7 @@ public class RegisterServlet extends HttpServlet {
             throws ServletException, IOException {
 
         // Redirect if already logged in
-        HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("user") != null) {
+        if (SessionUtils.isLoggedIn(request.getSession(false))) {
             response.sendRedirect(request.getContextPath() + "/home");
             return;
         }
@@ -45,14 +51,14 @@ public class RegisterServlet extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
 
         try {
-            // Security validation
             validateCsrfToken(request);
 
-            // Input validation
+            // Validate inputs
             String name = ValidationUtil.validateString(request.getParameter("name"), "Họ và tên", 100);
             String email = ValidationUtil.validateEmail(request.getParameter("email"));
-            String phone = validateOptionalPhone(request.getParameter("phone"));
-            String address = validateOptionalString(request.getParameter("address"), "Địa chỉ", 255);
+            String phone = validateOptional(request.getParameter("phone"), ValidationUtil::validatePhone);
+            String address = validateOptional(request.getParameter("address"), s ->
+                    ValidationUtil.validateString(s, "Địa chỉ", 255));
             String password = validatePasswordMatch(
                     request.getParameter("password"),
                     request.getParameter("confirmPassword")
@@ -63,72 +69,63 @@ public class RegisterServlet extends HttpServlet {
                 throw new IllegalArgumentException("Email đã được sử dụng");
             }
 
-            // Register and auto-login
-            if (userDAO.register(name, email, password, phone, address)) {
-                logger.info("User registered: {}", email);
-                User user = userDAO.login(email, password);
-                createUserSession(request, user);
-                response.sendRedirect(request.getContextPath() + "/home");
-            } else {
+            // Register customer (oauthProvider = null for normal registration)
+            if (!userDAO.registerCustomer(name, email, password, phone, address, null)) {
                 throw new RuntimeException("Đăng ký thất bại. Vui lòng thử lại.");
             }
 
-        } catch (IllegalArgumentException | SecurityException e) {
-            logger.warn("Validation/Security error: {}", e.getMessage());
-            handleError(request, response, e.getMessage());
+            logger.info("Customer registered: {}", email);
 
+            // Auto-login
+            Customer customer = (Customer) userDAO.login(email, password);
+            if (customer == null) {
+                throw new RuntimeException("Không thể tải thông tin tài khoản");
+            }
+
+            // Create session
+            SessionUtils.setUser(request.getSession(), customer);
+            SessionUtils.preventSessionFixation(request);
+
+            logger.info("Customer auto-logged in: {} (ID: {})", email, customer.getCustomerId());
+            response.sendRedirect(request.getContextPath() + "/home?registered=true");
+
+        } catch (IllegalArgumentException | SecurityException e) {
+            logger.warn("Validation error: {}", e.getMessage());
+            handleError(request, response, e.getMessage());
         } catch (Exception e) {
             logger.error("Registration error", e);
             handleError(request, response, "Đã xảy ra lỗi. Vui lòng thử lại.");
         }
     }
 
-    /**
-     * Validate optional phone field
-     */
-    private String validateOptionalPhone(String phone) {
-        if (phone == null || phone.trim().isEmpty()) {
-            return null;
-        }
-        return ValidationUtil.validatePhone(phone);
+    // ==================== VALIDATION ====================
+
+    @FunctionalInterface
+    private interface Validator {
+        String validate(String input);
     }
 
-    /**
-     * Validate optional string field
-     */
-    private String validateOptionalString(String value, String fieldName, int maxLength) {
-        if (value == null || value.trim().isEmpty()) {
-            return null;
-        }
-        return ValidationUtil.validateString(value, fieldName, maxLength);
+    private String validateOptional(String value, Validator validator) {
+        return (value == null || value.trim().isEmpty()) ? null : validator.validate(value);
     }
 
-    /**
-     * Validate password and confirm password match
-     */
     private String validatePasswordMatch(String password, String confirmPassword) {
         ValidationUtil.validatePassword(password);
-
         if (!password.equals(confirmPassword)) {
             throw new IllegalArgumentException("Mật khẩu xác nhận không khớp");
         }
-
         return password;
     }
 
+    // ==================== CSRF ====================
 
-    /**
-     * Set CSRF token in session and request
-     */
     private void setCSRFToken(HttpServletRequest request) {
-        String csrfToken = UUID.randomUUID().toString();
-        request.getSession().setAttribute("csrfToken", csrfToken);
-        request.setAttribute("csrfToken", csrfToken);
+        String token = UUID.randomUUID().toString();
+        HttpSession session = request.getSession();
+        session.setAttribute("csrfToken", token);
+        request.setAttribute("csrfToken", token);
     }
 
-    /**
-     * Validate CSRF token
-     */
     private void validateCsrfToken(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
         if (session == null) {
@@ -143,40 +140,26 @@ public class RegisterServlet extends HttpServlet {
         }
     }
 
+    // ==================== ERROR HANDLING ====================
 
-    /**
-     * Create user session after successful registration
-     */
-    private void createUserSession(HttpServletRequest request, User user) {
-        HttpSession session = request.getSession();
-        session.setAttribute("user", user);
-        session.setAttribute("userId", user.getUserId());
-        session.setAttribute("userName", user.getName());
-        session.setAttribute("userRole", user.getRole());
-        session.setMaxInactiveInterval(30 * 60); // 30 minutes
-
-        // Prevent session fixation
-        request.changeSessionId();
-
-        logger.info("Session created for: {}", user.getEmail());
-    }
-
-
-    /**
-     * Handle error and redisplay form with preserved data
-     */
-    private void handleError(HttpServletRequest request, HttpServletResponse response, String errorMessage)
+    private void handleError(HttpServletRequest request, HttpServletResponse response, String error)
             throws ServletException, IOException {
 
-        request.setAttribute("error", errorMessage);
+        request.setAttribute("error", error);
 
         // Preserve form data (except password)
-        request.setAttribute("name", request.getParameter("name"));
-        request.setAttribute("email", request.getParameter("email"));
-        request.setAttribute("phone", request.getParameter("phone"));
-        request.setAttribute("address", request.getParameter("address"));
+        String[] fields = {"name", "email", "phone", "address"};
+        for (String field : fields) {
+            request.setAttribute(field, request.getParameter(field));
+        }
 
         setCSRFToken(request);
         request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        logger.info("RegisterServlet destroyed");
     }
 }

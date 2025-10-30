@@ -5,9 +5,9 @@ import dao.OrdersDAO;
 import dao.TransactionDAO;
 import service.PromotionService;
 import model.CartItem;
-import model.User;
 import model.Order;
 import model.Promotion;
+import util.SessionUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,6 +20,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * CheckoutServlet - Handle checkout process
+ * UPDATED: Use SessionUtils for user management
+ */
 @WebServlet("/checkout")
 public class CheckoutServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(CheckoutServlet.class);
@@ -43,15 +47,23 @@ public class CheckoutServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("user") == null) {
+
+        // Check if user is logged in using SessionUtils
+        if (!SessionUtils.isLoggedIn(session)) {
             logger.warn("User not logged in, redirecting to login");
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         try {
-            User user = (User) session.getAttribute("user");
-            int userId = user.getId();
+            // Get user ID using SessionUtils
+            Integer userId = SessionUtils.getUserId(session);
+            if (userId == null) {
+                logger.error("User ID is null despite being logged in");
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
+
             logger.info("Processing checkout for user ID: {}", userId);
 
             // Get cart items
@@ -112,7 +124,9 @@ public class CheckoutServlet extends HttpServlet {
             request.setAttribute("total", total);
             request.setAttribute("depositAmount", depositAmount);
             request.setAttribute("depositPercentage", DEPOSIT_PERCENTAGE * 100);
-            request.setAttribute("user", user);
+            request.setAttribute("userId", userId);
+            request.setAttribute("userName", SessionUtils.getUserName(session));
+            request.setAttribute("userEmail", SessionUtils.getUserEmail(session));
             request.setAttribute("availablePromotions", availablePromotions);
 
             logger.info("Forwarding to checkout.jsp");
@@ -135,15 +149,22 @@ public class CheckoutServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("user") == null) {
+
+        // Check if user is logged in using SessionUtils
+        if (!SessionUtils.isLoggedIn(session)) {
             logger.warn("User not logged in during checkout POST");
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         try {
-            User user = (User) session.getAttribute("user");
-            int userId = user.getId();
+            // Get user ID using SessionUtils
+            Integer userId = SessionUtils.getUserId(session);
+            if (userId == null) {
+                logger.error("User ID is null despite being logged in");
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
 
             // ===== RETRY PAYMENT FUNCTIONALITY =====
             // Check if this is a retry payment request

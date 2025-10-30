@@ -2,7 +2,7 @@ package controller.customer;
 
 import dao.PromotionDAO;
 import model.Promotion;
-import model.User;
+import util.SessionUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,6 +15,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * MyPromotionsServlet - Display user's claimed promotions
+ * Only accessible by customers
+ */
 @WebServlet("/my-promotions")
 public class MyPromotionsServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(MyPromotionsServlet.class);
@@ -22,7 +26,9 @@ public class MyPromotionsServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
+        super.init();
         promotionDAO = new PromotionDAO();
+        logger.info("MyPromotionsServlet initialized");
     }
 
     @Override
@@ -30,24 +36,27 @@ public class MyPromotionsServlet extends HttpServlet {
             throws ServletException, IOException {
 
         HttpSession session = request.getSession(false);
-        User currentUser = (session != null) ? (User) session.getAttribute("user") : null;
 
-        // Redirect to login if not logged in
-        if (currentUser == null) {
-            session = request.getSession(true);
-            session.setAttribute("redirectAfterLogin", request.getContextPath() + "/my-promotions");
-            session.setAttribute("loginMessage", "Vui lòng đăng nhập để xem khuyến mãi của bạn");
-            response.sendRedirect(request.getContextPath() + "/login");
+        if (!SessionUtils.isLoggedIn(session)) {
+            saveRedirectAndLogin(request, response);
+            return;
+        }
+
+        if (!SessionUtils.isCustomer(session)) {
+            logger.warn("Non-customer (role: {}) attempted to access my-promotions",
+                    SessionUtils.getUserRole(session));
+            redirectWithError(request, session, response, "/promotions",
+                    "Chức năng này chỉ dành cho khách hàng!");
             return;
         }
 
         try {
-            logger.info("Loading my promotions page for user: {}", currentUser.getEmail());
+            Integer userId = SessionUtils.getUserId(session);
+            logger.info("Loading promotions for user {} ({})",
+                    userId, SessionUtils.getUserEmail(session));
 
-            // Get user's claimed promotions
-            List<Promotion> claimedPromotions = promotionDAO.getUserClaimedPromotions(currentUser.getUserId());
+            List<Promotion> claimedPromotions = promotionDAO.getUserClaimedPromotions(userId);
 
-            // Separate into used and unused
             long unusedCount = claimedPromotions.stream()
                     .filter(p -> !p.isUsedByUser())
                     .count();
@@ -56,23 +65,47 @@ public class MyPromotionsServlet extends HttpServlet {
                     .filter(Promotion::isUsedByUser)
                     .count();
 
-            logger.info("User {} has {} claimed promotions ({} unused, {} used)",
-                    currentUser.getEmail(), claimedPromotions.size(), unusedCount, usedCount);
+            logger.info("User {} has {} promotions ({} unused, {} used)",
+                    userId, claimedPromotions.size(), unusedCount, usedCount);
 
             request.setAttribute("claimedPromotions", claimedPromotions);
             request.setAttribute("unusedCount", unusedCount);
             request.setAttribute("usedCount", usedCount);
-            request.getRequestDispatcher("/WEB-INF/views/my-promotions.jsp").forward(request, response);
+            request.setAttribute("totalPromotions", claimedPromotions.size());
+            request.setAttribute("isCustomer", true);
+
+            request.getRequestDispatcher("/WEB-INF/views/my-promotions.jsp")
+                    .forward(request, response);
 
         } catch (RuntimeException e) {
-            logger.error("Database error loading my promotions", e);
-            request.setAttribute("error", "Không thể tải danh sách khuyến mãi của bạn.");
-            request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
-
+            logger.error("Database error loading promotions", e);
+            redirectWithError(request, session, response, "/promotions",
+                    "Không thể tải danh sách khuyến mãi: " + e.getMessage());
         } catch (Exception e) {
-            logger.error("Unexpected error loading my promotions", e);
-            request.setAttribute("error", "Đã xảy ra lỗi không mong muốn.");
-            request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
+            logger.error("Unexpected error loading promotions", e);
+            redirectWithError(request, session, response, "/promotions",
+                    "Đã xảy ra lỗi không mong muốn.");
         }
+    }
+
+    private void saveRedirectAndLogin(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(true);
+        session.setAttribute("redirectAfterLogin", request.getContextPath() + "/my-promotions");
+        session.setAttribute("loginMessage", "Vui lòng đăng nhập để xem khuyến mãi của bạn");
+        response.sendRedirect(request.getContextPath() + "/login");
+    }
+
+    private void redirectWithError(HttpServletRequest request, HttpSession session,
+                                   HttpServletResponse response, String path,
+                                   String errorMessage) throws IOException {
+        session.setAttribute("error", errorMessage);
+        response.sendRedirect(request.getContextPath() + path);
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        logger.info("MyPromotionsServlet destroyed");
     }
 }

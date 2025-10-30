@@ -1,5 +1,8 @@
 package dao;
 
+import model.Admin;
+import model.Customer;
+import model.Staff;
 import model.User;
 import util.DBContext;
 import org.mindrot.jbcrypt.BCrypt;
@@ -10,14 +13,18 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * UserDAO - Handles authentication and user management for separated tables
+ * UPDATED: Removed loyalty_points, position, department, salary, etc.
+ */
 public class UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(UserDAO.class);
 
     /**
-     * Authenticate user (login)
+     * Authenticate user (login) - Returns appropriate user type
      */
-    public User login(String email, String password) {
-        String sql = "SELECT user_id, name, email, password_hash, role, phone, address, created_at " +
+    public Object login(String email, String password) {
+        String sql = "SELECT user_id, email, password_hash, role, is_active " +
                 "FROM AppUsers WHERE email = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -27,20 +34,29 @@ public class UserDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    // Check if account is active
+                    if (!rs.getBoolean("is_active")) {
+                        logger.warn("Login attempt for inactive account: {}", email);
+                        return null;
+                    }
+
                     String storedHash = rs.getString("password_hash");
 
                     // Verify password using BCrypt
                     if (BCrypt.checkpw(password, storedHash)) {
-                        User user = new User();
-                        user.setUserId(rs.getInt("user_id"));
-                        user.setName(rs.getString("name"));
-                        user.setEmail(rs.getString("email"));
-                        user.setRole(rs.getString("role"));
-                        user.setPhone(rs.getString("phone"));
-                        user.setAddress(rs.getString("address"));
-                        user.setCreatedAt(rs.getTimestamp("created_at"));
+                        int userId = rs.getInt("user_id");
+                        String role = rs.getString("role");
 
-                        logger.info("User logged in successfully: {}", email);
+                        // Update last login
+                        updateLastLogin(userId);
+
+                        // Return appropriate user object based on role
+                        Object user = getUserDetailsByRole(userId, role);
+
+                        if (user != null) {
+                            logger.info("User logged in successfully: {} (role: {})", email, role);
+                        }
+
                         return user;
                     } else {
                         logger.warn("Failed login attempt for email: {} (wrong password)", email);
@@ -59,50 +75,179 @@ public class UserDAO {
     }
 
     /**
-     * Register new user with phone and address
+     * Get user details by role
      */
-    public boolean register(String name, String email, String password, String phone, String address) {
-        String sql = "INSERT INTO AppUsers (name, email, password_hash, role, phone, address) " +
-                "VALUES (?, ?, ?, 'CUSTOMER', ?, ?)";
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            // Hash password using BCrypt
-            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
-
-            stmt.setString(1, name.trim());
-            stmt.setString(2, email.toLowerCase().trim());
-            stmt.setString(3, hashedPassword);
-            stmt.setString(4, phone); // Can be null
-            stmt.setString(5, address); // Can be null
-
-            boolean success = stmt.executeUpdate() > 0;
-
-            if (success) {
-                logger.info("User registered successfully: {} with phone: {}",
-                        email, phone != null ? "Yes" : "No");
-            } else {
-                logger.warn("Failed to register user: {}", email);
-            }
-
-            return success;
-
-        } catch (SQLException e) {
-            if (e.getMessage().contains("Violation of UNIQUE KEY constraint")) {
-                logger.warn("Email already exists: {}", email);
-                return false;
-            }
-            logger.error("Error registering user: {}", email, e);
-            throw new RuntimeException("Failed to register user", e);
+    private Object getUserDetailsByRole(int userId, String role) throws SQLException {
+        switch (role.toUpperCase()) {
+            case "ADMIN":
+                return getAdminDetails(userId);
+            case "STAFF":
+                return getStaffDetails(userId);
+            case "CUSTOMER":
+                return getCustomerDetails(userId);
+            default:
+                logger.error("Unknown role: {}", role);
+                return null;
         }
     }
 
     /**
-     * Register new user (backward compatibility - without phone/address)
+     * Get Admin details
+     */
+    private Admin getAdminDetails(int adminId) throws SQLException {
+        String sql = "SELECT u.user_id, u.email, u.is_active, u.created_at, u.last_login " +
+                "FROM AppUsers u WHERE u.user_id = ? AND u.role = 'ADMIN'";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, adminId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Admin admin = new Admin();
+                    admin.setAdminId(rs.getInt("user_id"));
+                    admin.setEmail(rs.getString("email"));
+                    admin.setActive(rs.getBoolean("is_active"));
+                    admin.setCreatedAt(rs.getTimestamp("created_at"));
+                    admin.setLastLogin(rs.getTimestamp("last_login"));
+                    return admin;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get Staff details - UPDATED: Removed position, department, salary, etc.
+     */
+    private Staff getStaffDetails(int staffId) throws SQLException {
+        String sql = "SELECT * FROM vw_StaffManagement WHERE staff_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, staffId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Staff staff = new Staff();
+                    staff.setStaffId(rs.getInt("staff_id"));
+                    staff.setEmail(rs.getString("email"));
+                    staff.setName(rs.getString("name"));
+                    staff.setPhone(rs.getString("phone"));
+                    staff.setAddress(rs.getString("address"));
+                    staff.setActive(rs.getBoolean("is_active"));
+                    staff.setCreatedAt(rs.getTimestamp("created_at"));
+                    staff.setLastLogin(rs.getTimestamp("last_login"));
+                    staff.setTotalOrders(rs.getInt("total_orders"));
+                    staff.setTotalBlogs(rs.getInt("total_blogs"));
+                    return staff;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get Customer details - UPDATED: Removed loyalty_points
+     */
+    private Customer getCustomerDetails(int customerId) throws SQLException {
+        String sql = "SELECT * FROM vw_CustomerList WHERE customer_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, customerId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Customer customer = new Customer();
+                    customer.setCustomerId(rs.getInt("customer_id"));
+                    customer.setEmail(rs.getString("email"));
+                    customer.setName(rs.getString("name"));
+                    customer.setPhone(rs.getString("phone"));
+                    customer.setAddress(rs.getString("address"));
+                    customer.setOauthProvider(rs.getString("oauth_provider"));
+                    customer.setActive(rs.getBoolean("is_active"));
+                    customer.setCreatedAt(rs.getTimestamp("created_at"));
+                    customer.setLastLogin(rs.getTimestamp("last_login"));
+                    customer.setTotalOrders(rs.getInt("total_orders"));
+                    customer.setTotalSpent(rs.getDouble("total_spent"));
+                    return customer;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Update last login timestamp
+     */
+    private void updateLastLogin(int userId) {
+        String sql = "UPDATE AppUsers SET last_login = GETDATE() WHERE user_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            logger.error("Error updating last login for user: {}", userId, e);
+        }
+    }
+
+    /**
+     * Register new customer using stored procedure
+     */
+    public boolean registerCustomer(String name, String email, String password,
+                                    String phone, String address, String oauthProvider) {
+        String sql = "{CALL sp_RegisterCustomer(?, ?, ?, ?, ?, ?)}";
+
+        try (Connection conn = DBContext.getConnection();
+             CallableStatement stmt = conn.prepareCall(sql)) {
+
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
+
+            stmt.setString(1, email.toLowerCase().trim());
+            stmt.setString(2, hashedPassword);
+            stmt.setString(3, name.trim());
+            stmt.setString(4, phone);
+            stmt.setString(5, address);
+            stmt.setString(6, oauthProvider);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String result = rs.getString("Result");
+                if ("SUCCESS".equals(result)) {
+                    logger.info("Customer registered successfully: {}", email);
+                    return true;
+                } else {
+                    logger.warn("Failed to register customer: {}", rs.getString("Message"));
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error registering customer: {}", email, e);
+            throw new RuntimeException("Failed to register customer", e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Register customer (backward compatibility)
+     */
+    public boolean register(String name, String email, String password, String phone, String address) {
+        return registerCustomer(name, email, password, phone, address, null);
+    }
+
+    /**
+     * Register customer (backward compatibility - without phone/address)
      */
     public boolean register(String name, String email, String password) {
-        return register(name, email, password, null, null);
+        return registerCustomer(name, email, password, null, null, null);
     }
 
     /**
@@ -133,10 +278,10 @@ public class UserDAO {
     }
 
     /**
-     * Get user by ID
+     * Get user by ID (returns base User object)
      */
     public User getUserById(int userId) {
-        String sql = "SELECT user_id, name, email, role, phone, address, created_at " +
+        String sql = "SELECT user_id, email, role, is_active, created_at, last_login " +
                 "FROM AppUsers WHERE user_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -148,12 +293,11 @@ public class UserDAO {
                 if (rs.next()) {
                     User user = new User();
                     user.setUserId(rs.getInt("user_id"));
-                    user.setName(rs.getString("name"));
                     user.setEmail(rs.getString("email"));
                     user.setRole(rs.getString("role"));
-                    user.setPhone(rs.getString("phone"));
-                    user.setAddress(rs.getString("address"));
+                    user.setActive(rs.getBoolean("is_active"));
                     user.setCreatedAt(rs.getTimestamp("created_at"));
+                    user.setLastLogin(rs.getTimestamp("last_login"));
 
                     logger.debug("Retrieved user: {}", userId);
                     return user;
@@ -170,67 +314,32 @@ public class UserDAO {
     }
 
     /**
-     * Get all users (admin)
+     * Update customer profile
      */
-    public List<User> getAllUsers() {
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT user_id, name, email, role, phone, address, created_at " +
-                "FROM AppUsers ORDER BY created_at DESC";
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                User user = new User();
-                user.setUserId(rs.getInt("user_id"));
-                user.setName(rs.getString("name"));
-                user.setEmail(rs.getString("email"));
-                user.setRole(rs.getString("role"));
-                user.setPhone(rs.getString("phone"));
-                user.setAddress(rs.getString("address"));
-                user.setCreatedAt(rs.getTimestamp("created_at"));
-                users.add(user);
-            }
-
-            logger.debug("Retrieved {} users", users.size());
-            return users;
-
-        } catch (SQLException e) {
-            logger.error("Error getting all users", e);
-            throw new RuntimeException("Failed to retrieve users", e);
-        }
-    }
-
-    /**
-     * Update user profile
-     */
-    public boolean updateUser(User user) {
-        String sql = "UPDATE AppUsers SET name = ?, email = ?, phone = ?, address = ? " +
-                "WHERE user_id = ?";
+    public boolean updateCustomer(int customerId, String name, String phone, String address) {
+        String sql = "UPDATE Customers SET name = ?, phone = ?, address = ? WHERE customer_id = ?";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, user.getName().trim());
-            stmt.setString(2, user.getEmail().toLowerCase().trim());
-            stmt.setString(3, user.getPhone()); // Can be null
-            stmt.setString(4, user.getAddress()); // Can be null
-            stmt.setInt(5, user.getUserId());
+            stmt.setString(1, name.trim());
+            stmt.setString(2, phone);
+            stmt.setString(3, address);
+            stmt.setInt(4, customerId);
 
             boolean success = stmt.executeUpdate() > 0;
 
             if (success) {
-                logger.info("Updated user: {}", user.getUserId());
+                logger.info("Updated customer: {}", customerId);
             } else {
-                logger.warn("No user updated with ID: {}", user.getUserId());
+                logger.warn("No customer updated with ID: {}", customerId);
             }
 
             return success;
 
         } catch (SQLException e) {
-            logger.error("Error updating user: {}", user.getUserId(), e);
-            throw new RuntimeException("Failed to update user", e);
+            logger.error("Error updating customer: {}", customerId, e);
+            throw new RuntimeException("Failed to update customer", e);
         }
     }
 
@@ -265,34 +374,33 @@ public class UserDAO {
     }
 
     /**
-     * Delete user (admin only)
+     * Verify user password
      */
-    public boolean deleteUser(int userId) {
-        String sql = "DELETE FROM AppUsers WHERE user_id = ?";
+    public boolean verifyPassword(int userId, String password) {
+        String sql = "SELECT password_hash FROM AppUsers WHERE user_id = ?";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, userId);
 
-            boolean success = stmt.executeUpdate() > 0;
-
-            if (success) {
-                logger.info("User deleted: {}", userId);
-            } else {
-                logger.warn("No user deleted with ID: {}", userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String storedHash = rs.getString("password_hash");
+                    return BCrypt.checkpw(password, storedHash);
+                }
             }
 
-            return success;
-
         } catch (SQLException e) {
-            logger.error("Error deleting user: {}", userId, e);
-            throw new RuntimeException("Failed to delete user", e);
+            logger.error("Error verifying password for user: {}", userId, e);
+            throw new RuntimeException("Failed to verify password", e);
         }
+
+        return false;
     }
 
     /**
-     * Update user role (admin only)
+     * Update user role (admin only - manual via SQL)
      */
     public boolean updateUserRole(int userId, String role) {
         String sql = "UPDATE AppUsers SET role = ? WHERE user_id = ?";
@@ -350,45 +458,80 @@ public class UserDAO {
         return new UserStats();
     }
 
+    // ============================================
+    // USER MANAGEMENT METHODS
+    // ============================================
+
     /**
-     * Verify user password (for password change operations)
+     * Get all users from vw_AllUsers view
      */
-    public boolean verifyPassword(int userId, String password) {
-        String sql = "SELECT password_hash FROM AppUsers WHERE user_id = ?";
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT user_id, email, role, is_active, created_at, last_login, " +
+                "name, phone, address FROM vw_AllUsers ORDER BY created_at DESC";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                User user = mapUserFromResultSet(rs);
+                users.add(user);
+            }
+
+            logger.debug("Retrieved {} users from vw_AllUsers", users.size());
+
+        } catch (SQLException e) {
+            logger.error("Error getting all users", e);
+            throw new RuntimeException("Failed to retrieve all users", e);
+        }
+
+        return users;
+    }
+
+    /**
+     * Get users by role
+     */
+    public List<User> getUsersByRole(String role) {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT user_id, email, role, is_active, created_at, last_login, " +
+                "name, phone, address FROM vw_AllUsers WHERE role = ? ORDER BY name";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, userId);
+            stmt.setString(1, role.toUpperCase());
+            ResultSet rs = stmt.executeQuery();
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    String storedHash = rs.getString("password_hash");
-                    return BCrypt.checkpw(password, storedHash);
-                }
+            while (rs.next()) {
+                User user = mapUserFromResultSet(rs);
+                users.add(user);
             }
 
+            logger.debug("Retrieved {} users with role: {}", users.size(), role);
+
         } catch (SQLException e) {
-            logger.error("Error verifying password for user: {}", userId, e);
-            throw new RuntimeException("Failed to verify password", e);
+            logger.error("Error getting users by role: {}", role, e);
+            throw new RuntimeException("Failed to retrieve users by role", e);
         }
 
-        return false;
+        return users;
     }
 
     /**
-     * Search users by keyword (name or email)
+     * Search users by keyword
      */
     public List<User> searchUsers(String keyword) {
         List<User> users = new ArrayList<>();
 
         if (keyword == null || keyword.trim().isEmpty()) {
-            return users;
+            return getAllUsers();
         }
 
-        String sql = "SELECT user_id, name, email, role, phone, address, created_at " +
-                "FROM AppUsers WHERE name LIKE ? OR email LIKE ? " +
-                "ORDER BY created_at DESC";
+        String sql = "SELECT user_id, email, role, is_active, created_at, last_login, " +
+                "name, phone, address FROM vw_AllUsers " +
+                "WHERE name LIKE ? OR email LIKE ? OR phone LIKE ? " +
+                "ORDER BY name";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -396,28 +539,80 @@ public class UserDAO {
             String searchPattern = "%" + keyword.trim() + "%";
             stmt.setString(1, searchPattern);
             stmt.setString(2, searchPattern);
+            stmt.setString(3, searchPattern);
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    User user = new User();
-                    user.setUserId(rs.getInt("user_id"));
-                    user.setName(rs.getString("name"));
-                    user.setEmail(rs.getString("email"));
-                    user.setRole(rs.getString("role"));
-                    user.setPhone(rs.getString("phone"));
-                    user.setAddress(rs.getString("address"));
-                    user.setCreatedAt(rs.getTimestamp("created_at"));
-                    users.add(user);
-                }
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                User user = mapUserFromResultSet(rs);
+                users.add(user);
             }
 
             logger.debug("Search for '{}' returned {} users", keyword, users.size());
-            return users;
 
         } catch (SQLException e) {
-            logger.error("Error searching users with keyword: {}", keyword, e);
+            logger.error("Error searching users", e);
             throw new RuntimeException("Failed to search users", e);
         }
+
+        return users;
+    }
+
+    /**
+     * Toggle user active status
+     */
+    public boolean toggleUserStatus(int userId, boolean isActive) {
+        String sql = "UPDATE AppUsers SET is_active = ? WHERE user_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setBoolean(1, isActive);
+            stmt.setInt(2, userId);
+
+            boolean success = stmt.executeUpdate() > 0;
+
+            if (success) {
+                logger.info("Toggled status for user {} to {}", userId, isActive ? "active" : "inactive");
+            }
+
+            return success;
+
+        } catch (SQLException e) {
+            logger.error("Error toggling user status for ID: {}", userId, e);
+            throw new RuntimeException("Failed to toggle user status", e);
+        }
+    }
+
+    /**
+     * Deactivate user (soft delete)
+     */
+    public boolean deactivateUser(int userId) {
+        return toggleUserStatus(userId, false);
+    }
+
+    /**
+     * Activate user
+     */
+    public boolean activateUser(int userId) {
+        return toggleUserStatus(userId, true);
+    }
+
+    /**
+     * Map ResultSet to User object
+     */
+    private User mapUserFromResultSet(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setUserId(rs.getInt("user_id"));
+        user.setEmail(rs.getString("email"));
+        user.setRole(rs.getString("role"));
+        user.setActive(rs.getBoolean("is_active"));
+        user.setCreatedAt(rs.getTimestamp("created_at"));
+        user.setLastLogin(rs.getTimestamp("last_login"));
+        user.setName(rs.getString("name"));
+        user.setPhone(rs.getString("phone"));
+        user.setAddress(rs.getString("address"));
+        return user;
     }
 
     /**

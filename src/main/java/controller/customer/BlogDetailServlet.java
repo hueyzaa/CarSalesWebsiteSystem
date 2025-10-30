@@ -13,6 +13,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * BlogDetailServlet - Display detailed blog post
+ * Accessible by everyone (Guest/Customer/Staff/Admin)
+ */
 @WebServlet("/blog-detail")
 public class BlogDetailServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(BlogDetailServlet.class);
@@ -20,7 +24,9 @@ public class BlogDetailServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
+        super.init();
         blogDAO = new BlogDAO();
+        logger.info("BlogDetailServlet initialized");
     }
 
     @Override
@@ -28,11 +34,10 @@ public class BlogDetailServlet extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-            // Get blog ID from parameter
             String idParam = request.getParameter("id");
 
             if (idParam == null || idParam.trim().isEmpty()) {
-                logger.warn("Blog ID parameter is missing");
+                logger.warn("Blog ID parameter missing");
                 response.sendRedirect(request.getContextPath() + "/blog");
                 return;
             }
@@ -40,41 +45,62 @@ public class BlogDetailServlet extends HttpServlet {
             int blogId = Integer.parseInt(idParam);
             logger.info("Loading blog detail for ID: {}", blogId);
 
-            // Get blog by ID
             Blog blog = blogDAO.getBlogById(blogId);
 
             if (blog == null) {
                 logger.warn("Blog not found: {}", blogId);
-                request.setAttribute("error", "Không tìm thấy bài viết.");
-                request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
+                handleError(request, response, "Không tìm thấy bài viết.");
                 return;
             }
 
-            // Get related blogs (same author or recent)
-            List<Blog> relatedBlogs = blogDAO.getRecentBlogs(4);
-            // Remove current blog from related list
-            relatedBlogs.removeIf(b -> b.getBlogId() == blogId);
-            if (relatedBlogs.size() > 3) {
-                relatedBlogs = relatedBlogs.subList(0, 3);
-            }
+            // Get related blogs
+            List<Blog> relatedBlogs = getRelatedBlogs(blogId);
 
             request.setAttribute("blog", blog);
             request.setAttribute("relatedBlogs", relatedBlogs);
-            request.getRequestDispatcher("/WEB-INF/views/blog-detail.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/blog-detail.jsp")
+                    .forward(request, response);
 
         } catch (NumberFormatException e) {
             logger.error("Invalid blog ID format", e);
             response.sendRedirect(request.getContextPath() + "/blog");
-
         } catch (RuntimeException e) {
             logger.error("Database error loading blog detail", e);
-            request.setAttribute("error", "Không thể tải bài viết.");
-            request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
-
+            handleError(request, response, "Không thể tải bài viết.");
         } catch (Exception e) {
             logger.error("Unexpected error loading blog detail", e);
-            request.setAttribute("error", "Đã xảy ra lỗi không mong muốn.");
-            request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
+            handleError(request, response, "Đã xảy ra lỗi không mong muốn.");
         }
+    }
+
+    /**
+     * Get related blogs (excluding current blog)
+     */
+    private List<Blog> getRelatedBlogs(int currentBlogId) {
+        List<Blog> relatedBlogs = blogDAO.getRecentBlogs(4);
+        relatedBlogs.removeIf(b -> b.getBlogId() == currentBlogId);
+
+        if (relatedBlogs.size() > 3) {
+            relatedBlogs = relatedBlogs.subList(0, 3);
+        }
+
+        logger.debug("Loaded {} related blogs", relatedBlogs.size());
+        return relatedBlogs;
+    }
+
+    /**
+     * Handle error and forward to error page
+     */
+    private void handleError(HttpServletRequest request, HttpServletResponse response,
+                             String errorMessage) throws ServletException, IOException {
+        request.setAttribute("error", errorMessage);
+        request.getRequestDispatcher("/WEB-INF/views/error.jsp")
+                .forward(request, response);
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        logger.info("BlogDetailServlet destroyed");
     }
 }

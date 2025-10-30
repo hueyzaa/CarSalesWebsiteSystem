@@ -16,12 +16,15 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 /**
- * AdminFilter - Restrict access to admin-only pages
- * Only users with ADMIN role can access /admin/* URLs
+ * StaffFilter - Restrict access to staff-only pages
+ * Only users with STAFF or ADMIN role can access staff URLs
  */
-@WebFilter({"/admin/*", "/users"})
-public class AdminFilter implements Filter {
-    private static final Logger logger = LoggerFactory.getLogger(AdminFilter.class);
+@WebFilter({
+        "/staff/*",
+        "/orders/manage/*"
+})
+public class StaffFilter implements Filter {
+    private static final Logger logger = LoggerFactory.getLogger(StaffFilter.class);
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -31,7 +34,8 @@ public class AdminFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         HttpSession session = httpRequest.getSession(false);
 
-        if (!SessionUtils.isAdmin(session)) {
+        // ✅ Check if user is staff or admin
+        if (!SessionUtils.isStaffOrAdmin(session)) {
             String requestURI = httpRequest.getRequestURI();
             String userRole = SessionUtils.getUserRole(session);
             String userEmail = SessionUtils.getUserEmail(session);
@@ -43,7 +47,7 @@ public class AdminFilter implements Filter {
             if (session == null || !SessionUtils.isLoggedIn(session)) {
                 session = httpRequest.getSession(true);
                 session.setAttribute("redirectAfterLogin", requestURI);
-                session.setAttribute("loginMessage", "Vui lòng đăng nhập với tài khoản Admin");
+                session.setAttribute("loginMessage", "Vui lòng đăng nhập với tài khoản Staff hoặc Admin");
             } else {
                 session.setAttribute("error", "Bạn không có quyền truy cập trang này!");
             }
@@ -52,7 +56,8 @@ public class AdminFilter implements Filter {
             return;
         }
 
-        logger.debug("Admin access granted to: {} for user: {}",
+        // ✅ Staff/Admin authenticated, allow access
+        logger.debug("Staff/Admin access granted to: {} for user: {}",
                 httpRequest.getRequestURI(), SessionUtils.getUserEmail(session));
 
         chain.doFilter(request, response);
