@@ -8,6 +8,7 @@ public class Blog {
     private String content;
     private int authorId;
     private Date createdAt;
+    private String imageUrl;  // NEW: Thêm trường hình ảnh
 
     // Additional fields for display
     private String authorName;
@@ -22,6 +23,15 @@ public class Blog {
         this.content = content;
         this.authorId = authorId;
         this.createdAt = createdAt;
+    }
+
+    public Blog(int blogId, String title, String content, int authorId, Date createdAt, String imageUrl) {
+        this.blogId = blogId;
+        this.title = title;
+        this.content = content;
+        this.authorId = authorId;
+        this.createdAt = createdAt;
+        this.imageUrl = imageUrl;
     }
 
     // Getters and Setters
@@ -65,6 +75,14 @@ public class Blog {
         this.createdAt = createdAt;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     public String getAuthorName() {
         return authorName;
     }
@@ -88,6 +106,10 @@ public class Blog {
         return title.substring(0, maxLength) + "...";
     }
 
+    public boolean hasImage() {
+        return imageUrl != null && !imageUrl.trim().isEmpty();
+    }
+
     @Override
     public String toString() {
         return "Blog{" +
@@ -95,6 +117,7 @@ public class Blog {
                 ", title='" + title + '\'' +
                 ", authorId=" + authorId +
                 ", authorName='" + authorName + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
                 ", createdAt=" + createdAt +
                 '}';
     }

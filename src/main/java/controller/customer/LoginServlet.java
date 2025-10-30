@@ -1,11 +1,12 @@
 package controller.customer;
 
 import dao.UserDAO;
-import model.User;
+import model.Customer;
+import model.Staff;
+import model.Admin;
 import filter.RateLimitFilter;
-import org.eclipse.tags.shaded.org.apache.regexp.RE;
 import util.ValidationUtil;
-import exception.ValidationException;
+import util.SessionUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -18,6 +19,11 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.UUID;
 
+/**
+ * LoginServlet - Handle user authentication
+ * Supports Customer/Staff/Admin login with role-based redirect
+ * UPDATED: Removed loyalty_points, position, department storage in session
+ */
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(LoginServlet.class);
@@ -27,24 +33,20 @@ public class LoginServlet extends HttpServlet {
     public void init() throws ServletException {
         super.init();
         userDAO = new UserDAO();
+        logger.info("LoginServlet initialized");
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-
-        HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("user") != null) {
+        if (SessionUtils.isLoggedIn(request.getSession(false))) {
+            logger.debug("User already logged in, redirecting to home");
             response.sendRedirect(request.getContextPath() + "/home");
             return;
         }
 
-
-        String csrfToken = UUID.randomUUID().toString();
-        request.getSession().setAttribute("csrfToken", csrfToken);
-        request.setAttribute("csrfToken", csrfToken);
-
+        setCSRFToken(request);
         request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
     }
 
@@ -53,74 +55,34 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
 
         try {
-            // Verify CSRF token
             validateCsrfToken(request);
 
-            // Validate input
             String email = ValidationUtil.validateEmail(request.getParameter("email"));
             String password = request.getParameter("password");
 
             if (password == null || password.trim().isEmpty()) {
-                throw new ValidationException("password", "Mật khẩu không được để trống");
+                throw new IllegalArgumentException("Mật khẩu không được để trống");
             }
 
+            logger.info("Login attempt for email: {}", email);
 
-            User user = userDAO.login(email, password);
+            Object userObject = userDAO.login(email, password);
 
-            if (user != null) {
-
-                RateLimitFilter.resetAttempts(email);
-
-
-                HttpSession session = request.getSession();
-                session.setAttribute("user", user);
-                session.setAttribute("userId", user.getUserId());
-                session.setAttribute("userName", user.getName());
-                session.setAttribute("userRole", user.getRole());
-
-
-                session.setMaxInactiveInterval(30 * 60);
-
-
-                request.changeSessionId();
-
-                logger.info("User logged in successfully: {}", email);
-
-
-                String redirectUrl = (String) session.getAttribute("redirectAfterLogin");
-
-                if (redirectUrl != null && !redirectUrl.isEmpty()) {
-                    session.removeAttribute("redirectAfterLogin");
-                    session.removeAttribute("loginMessage");
-
-                    logger.info("Redirecting user {} to: {}", email, redirectUrl);
-                    response.sendRedirect(redirectUrl);
-                    return;
-                }
-                String role = user.getRole();
-                if("ADMIN".equalsIgnoreCase(role)) {
-                    response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
-                } else  if("STAFF".equalsIgnoreCase(role)) {
-                    response.sendRedirect(request.getContextPath() + "/Staff/dashboard");
-                } else {
-                    response.sendRedirect(request.getContextPath() + "/home");
-                }
-
-            } else {
-                // Failed login - record attempt
+            if (userObject == null) {
                 RateLimitFilter.recordFailedAttempt(email);
                 logger.warn("Failed login attempt for email: {}", email);
-
-                throw new ValidationException("Thông tin đăng nhập không chính xác");
+                throw new SecurityException("Thông tin đăng nhập không chính xác");
             }
 
-        } catch (ValidationException e) {
-            logger.debug("Validation error in login: {}", e.getMessage());
-            handleError(request, response, e.getMessage());
+            // Success
+            RateLimitFilter.resetAttempts(email);
+            handleSuccessfulLogin(request, response, userObject, email);
 
+        } catch (IllegalArgumentException | SecurityException e) {
+            logger.debug("Login error: {}", e.getMessage());
+            handleError(request, response, e.getMessage());
         } catch (Exception e) {
             logger.error("Unexpected error in login", e);
             handleError(request, response, "Đã xảy ra lỗi. Vui lòng thử lại.");
@@ -128,13 +90,71 @@ public class LoginServlet extends HttpServlet {
     }
 
     /**
+     * Handle successful login
+     * UPDATED: Removed storage of loyalty_points, position, department
+     */
+    private void handleSuccessfulLogin(HttpServletRequest request, HttpServletResponse response,
+                                       Object userObject, String email) throws IOException {
+        HttpSession session = request.getSession();
+
+        // Set user in session (this handles all user types)
+        SessionUtils.setUser(session, userObject);
+
+        // Prevent session fixation
+        SessionUtils.preventSessionFixation(request);
+
+        String role = SessionUtils.getUserRole(userObject);
+        Integer userId = SessionUtils.getUserId(userObject);
+
+        logger.info("User logged in: {} (role: {}, ID: {})", email, role, userId);
+
+        // Handle redirect
+        String redirectUrl = (String) session.getAttribute("redirectAfterLogin");
+
+        if (redirectUrl != null && !redirectUrl.isEmpty()) {
+            session.removeAttribute("redirectAfterLogin");
+            session.removeAttribute("loginMessage");
+            logger.info("Redirecting to saved URL: {}", redirectUrl);
+            response.sendRedirect(redirectUrl);
+            return;
+        }
+
+        // Role-based default redirect
+        response.sendRedirect(request.getContextPath() + getDefaultRedirectByRole(role));
+    }
+
+    /**
+     * Get default redirect URL based on role
+     */
+    private String getDefaultRedirectByRole(String role) {
+        switch (role) {
+            case "ADMIN":
+                return "/admin/dashboard";
+            case "STAFF":
+                return "/staff/dashboard";
+            case "CUSTOMER":
+            default:
+                return "/home";
+        }
+    }
+
+    /**
+     * Set CSRF token in session and request
+     */
+    private void setCSRFToken(HttpServletRequest request) {
+        String csrfToken = UUID.randomUUID().toString();
+        request.getSession().setAttribute("csrfToken", csrfToken);
+        request.setAttribute("csrfToken", csrfToken);
+    }
+
+    /**
      * Validate CSRF token
      */
-    private void validateCsrfToken(HttpServletRequest request) throws ValidationException {
+    private void validateCsrfToken(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
         if (session == null) {
-            throw new ValidationException("Phiên làm việc đã hết hạn");
+            throw new SecurityException("Phiên làm việc đã hết hạn");
         }
 
         String sessionToken = (String) session.getAttribute("csrfToken");
@@ -142,25 +162,24 @@ public class LoginServlet extends HttpServlet {
 
         if (sessionToken == null || !sessionToken.equals(requestToken)) {
             logger.warn("CSRF token validation failed");
-            throw new ValidationException("Yêu cầu không hợp lệ (CSRF)");
+            throw new SecurityException("Yêu cầu không hợp lệ (CSRF)");
         }
     }
 
     /**
-     * Handle error and show login form again
+     * Handle error and redisplay login form
      */
-    private void handleError(HttpServletRequest request, HttpServletResponse response, String errorMessage)
-            throws ServletException, IOException {
+    private void handleError(HttpServletRequest request, HttpServletResponse response,
+                             String errorMessage) throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
-
-        // Preserve email
         request.setAttribute("email", request.getParameter("email"));
-
-        // Generate new CSRF token
-        String csrfToken = UUID.randomUUID().toString();
-        request.getSession().setAttribute("csrfToken", csrfToken);
-        request.setAttribute("csrfToken", csrfToken);
-
+        setCSRFToken(request);
         request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        logger.info("LoginServlet destroyed");
     }
 }

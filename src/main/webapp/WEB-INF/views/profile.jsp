@@ -16,7 +16,6 @@
             background-color: #0f0f0f;
         }
 
-        /* Profile Card */
         .profile-card {
             background: #1a1a1a;
             border: 1px solid #333;
@@ -101,9 +100,10 @@
             color: #666;
         }
 
-        .form-control:disabled {
+        .form-control:disabled,
+        .form-control[readonly] {
             background: #0a0a0a;
-            color: #666;
+            color: #888;
             cursor: not-allowed;
         }
 
@@ -166,13 +166,24 @@
         }
 
         .info-badge p {
-            color: #888;
+            color: #b0b0b0;
             margin: 0;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .info-badge i {
+            color: #ffd700;
         }
 
         .info-badge strong {
             color: #ffd700;
+            font-weight: 600;
+        }
+
+        .text-muted {
+            color: #999 !important;
+            font-size: 0.875rem;
         }
 
         footer {
@@ -181,14 +192,12 @@
     </style>
 </head>
 <body>
-<!-- Header -->
 <jsp:include page="header.jsp" />
 
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-7">
             <div class="profile-card">
-                <!-- Profile Header -->
                 <div class="profile-header">
                     <div class="profile-avatar">
                         <i class="fas fa-user"></i>
@@ -196,9 +205,7 @@
                     <h2><i class="fas fa-id-card"></i> Hồ Sơ Cá Nhân</h2>
                 </div>
 
-                <!-- Profile Body -->
                 <div class="profile-body">
-                    <!-- Success/Error Messages -->
                     <c:if test="${not empty sessionScope.success}">
                         <div class="alert alert-success" role="alert">
                             <i class="fas fa-check-circle"></i> ${sessionScope.success}
@@ -213,7 +220,6 @@
                         <c:remove var="error" scope="session"/>
                     </c:if>
 
-                    <!-- Info Badge -->
                     <div class="info-badge">
                         <p>
                             <i class="fas fa-info-circle"></i>
@@ -222,7 +228,6 @@
                         </p>
                     </div>
 
-                    <!-- Profile Form -->
                     <form method="post" action="${pageContext.request.contextPath}/profile">
                         <div class="mb-3">
                             <label for="name" class="form-label">
@@ -232,7 +237,7 @@
                                    class="form-control"
                                    id="name"
                                    name="name"
-                                   value="${user.name}"
+                                   value="${user.name != null ? user.name : ''}"
                                    required
                                    maxlength="100"
                                    placeholder="Nguyễn Văn A">
@@ -246,8 +251,9 @@
                                    class="form-control"
                                    id="email"
                                    name="email"
-                                   value="${user.email}"
-                                   disabled
+                                   value="${user.email != null ? user.email : ''}"
+                                   readonly
+                                   required
                                    title="Email không thể thay đổi">
                             <small class="text-muted">
                                 <i class="fas fa-lock"></i> Email không thể thay đổi
@@ -262,7 +268,7 @@
                                    class="form-control"
                                    id="phone"
                                    name="phone"
-                                   value="${user.phone}"
+                                   value="${user.phone != null ? user.phone : ''}"
                                    pattern="[0-9]{10,11}"
                                    maxlength="20"
                                    placeholder="0123456789">
@@ -278,7 +284,7 @@
                                       name="address"
                                       rows="3"
                                       maxlength="255"
-                                      placeholder="Nhập địa chỉ của bạn...">${user.address}</textarea>
+                                      placeholder="Nhập địa chỉ của bạn...">${user.address != null ? user.address : ''}</textarea>
                             <small class="text-muted">Tối đa 255 ký tự (không bắt buộc)</small>
                         </div>
 
@@ -297,12 +303,10 @@
     </div>
 </div>
 
-<!-- Footer -->
 <jsp:include page="footer.jsp" />
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Phone number validation - only allow numbers
     const phoneInput = document.getElementById('phone');
     if (phoneInput) {
         phoneInput.addEventListener('input', function() {

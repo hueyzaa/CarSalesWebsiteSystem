@@ -6,13 +6,13 @@ import java.sql.Timestamp;
 public class CartItem implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private int id;              // cart_item_id
-    private int cartId;          // cart_id
-    private int carId;           // car_id
-    private int quantity;        // quantity
-    private Car car;             // Car object (joined data)
-    private Timestamp createdAt; // created_at
-    private Timestamp updatedAt; // updated_at
+    private int id;
+    private int cartId;
+    private int carId;
+    private int quantity;
+    private Car car;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
 
     // Constructors
     public CartItem() {

@@ -5,7 +5,6 @@ import dao.CarDAO;
 import model.Promotion;
 import model.Car;
 import model.CartItem;
-import exception.DatabaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +41,7 @@ public class PromotionService {
      * 3. Currently active
      * 4. Applicable to at least one car in the cart
      */
-    public List<Promotion> getAvailablePromotionsForCart(int userId, List<CartItem> cartItems)
-            throws DatabaseException {
+    public List<Promotion> getAvailablePromotionsForCart(int userId, List<CartItem> cartItems) {
 
         logger.info("Getting available promotions for user {} with {} cart items",
                 userId, cartItems != null ? cartItems.size() : 0);
@@ -80,7 +78,7 @@ public class PromotionService {
                         }
 
                         return hasMatch;
-                    } catch (DatabaseException e) {
+                    } catch (Exception e) {
                         logger.error("Error checking promotion applicability", e);
                         return false;
                     }
@@ -96,7 +94,7 @@ public class PromotionService {
      * Returns map of carId -> discountAmount
      */
     public Map<Integer, Double> calculatePromotionDiscount(
-            int promotionId, List<CartItem> cartItems) throws DatabaseException {
+            int promotionId, List<CartItem> cartItems) {
 
         Map<Integer, Double> discounts = new HashMap<>();
 
@@ -168,8 +166,7 @@ public class PromotionService {
     /**
      * Calculate total discount for entire cart
      */
-    public double calculateTotalDiscount(int promotionId, List<CartItem> cartItems)
-            throws DatabaseException {
+    public double calculateTotalDiscount(int promotionId, List<CartItem> cartItems) {
 
         Map<Integer, Double> discounts = calculatePromotionDiscount(promotionId, cartItems);
         double totalDiscount = discounts.values().stream()
@@ -184,8 +181,7 @@ public class PromotionService {
      * Validate if promotion can be applied to cart
      * Returns null if valid, error message if invalid
      */
-    public String validatePromotionForCart(int userId, int promotionId, List<CartItem> cartItems)
-            throws DatabaseException {
+    public String validatePromotionForCart(int userId, int promotionId, List<CartItem> cartItems) {
 
         if (cartItems == null || cartItems.isEmpty()) {
             return "Giỏ hàng trống!";
@@ -226,8 +222,7 @@ public class PromotionService {
     /**
      * Get active promotions for a specific car (for car detail page)
      */
-    public List<Promotion> getActivePromotionsForCar(int carId, Integer userId)
-            throws DatabaseException {
+    public List<Promotion> getActivePromotionsForCar(int carId, Integer userId) {
 
         logger.info("Getting active promotions for car {}", carId);
 
@@ -252,7 +247,7 @@ public class PromotionService {
     /**
      * Get discount info for a car with a specific promotion
      */
-    public Car getCarWithPromotionInfo(int carId, int promotionId) throws DatabaseException {
+    public Car getCarWithPromotionInfo(int carId, int promotionId) {
         logger.debug("Getting car {} with promotion {} info", carId, promotionId);
 
         Car car = carDAO.getCarById(carId);
@@ -284,8 +279,7 @@ public class PromotionService {
     /**
      * Calculate best discount among multiple promotions for display
      */
-    public Promotion getBestPromotionForCar(int carId, List<Promotion> promotions)
-            throws DatabaseException {
+    public Promotion getBestPromotionForCar(int carId, List<Promotion> promotions) {
 
         if (promotions == null || promotions.isEmpty()) {
             return null;

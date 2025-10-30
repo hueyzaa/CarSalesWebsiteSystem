@@ -305,16 +305,6 @@ ORDER BY c.car_id, ci.is_primary DESC, ci.image_id;
 GO
 
 -- =============================================
--- 4. CREATE ADMIN USER (Nếu chưa có)
--- =============================================
-IF NOT EXISTS (SELECT 1 FROM AppUsers WHERE role = 'ADMIN')
-BEGIN
-INSERT INTO AppUsers (name, email, password_hash, role, phone, address) VALUES
-    (N'Admin User', 'admin@carshowroom.com', 'hashed_password_here', 'ADMIN', '0123456789', N'Cần Thơ, Việt Nam');
-END
-GO
-
--- =============================================
 -- 5. VERIFICATION - Kiểm tra kết quả
 -- =============================================
 PRINT '========================================';
@@ -900,7 +890,54 @@ VALUES (
            @adminId,
            DATEADD(day, -35, GETDATE())
        );
+-- Blog 1: 5 Tiêu Chí Quan Trọng Khi Chọn Mua Xe
+UPDATE Blog
+SET image_url = 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1200'
+WHERE title LIKE N'%5 Tiêu Chí%';
+PRINT '  ✓ Blog 1: Đã cập nhật ảnh';
 
+-- Blog 2: Sedan Hay SUV
+UPDATE Blog
+SET image_url = 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1200'
+WHERE title LIKE N'%Sedan Hay SUV%';
+PRINT '  ✓ Blog 2: Đã cập nhật ảnh';
+
+-- Blog 3: Bảo Dưỡng Xe
+UPDATE Blog
+SET image_url = 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=1200'
+WHERE title LIKE N'%Bảo Dưỡng%';
+PRINT '  ✓ Blog 3: Đã cập nhật ảnh';
+
+-- Blog 4: Xe Điện
+UPDATE Blog
+SET image_url = 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=1200'
+WHERE title LIKE N'%Xe Điện%';
+PRINT '  ✓ Blog 4: Đã cập nhật ảnh';
+
+-- Blog 5: 10 Mẹo Lái Xe An Toàn
+UPDATE Blog
+SET image_url = 'https://images.unsplash.com/photo-1591768575648-ddc7c5ca5059?w=1200'
+WHERE title LIKE N'%10 Mẹo%';
+PRINT '  ✓ Blog 5: Đã cập nhật ảnh';
+
+-- Blog 6: Vay Mua Xe Trả Góp
+UPDATE Blog
+SET image_url = 'https://images.unsplash.com/photo-1554224311-beee0c59a1de?w=1200'
+WHERE title LIKE N'%Vay Mua Xe%';
+PRINT '  ✓ Blog 6: Đã cập nhật ảnh';
+
+-- Kiểm tra kết quả
+SELECT
+    blog_id,
+    title,
+    image_url,
+    created_at
+FROM Blog
+ORDER BY created_at DESC;
+
+-- Đếm số blog có ảnh
+DECLARE @blogCount INT;
+SELECT @blogCount = COUNT(*) FROM Blog WHERE image_url IS NOT NULL;
 PRINT '✅ Đã insert 6 blogs';
 
 -- Thống kê

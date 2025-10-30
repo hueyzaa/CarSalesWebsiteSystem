@@ -19,20 +19,22 @@
 
         /* Page Header */
         .page-header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
-            padding: 60px 0;
-            margin-bottom: 40px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 2rem 0;
+            margin-bottom: 2rem;
             border-bottom: 2px solid #ffd700;
         }
 
         .page-header h1 {
-            color: #ffd700;
+            color: #f8f9fa;
             font-weight: 700;
-            margin-bottom: 15px;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
         }
 
-        .page-header p {
+        .page-header .subtitle {
             color: #888;
+            font-size: 1rem;
             margin: 0;
         }
 
@@ -59,34 +61,37 @@
         .empty-state {
             background: #1a1a1a;
             border: 1px solid #333;
-            border-radius: 20px;
-            padding: 80px 40px;
+            border-radius: 15px;
+            padding: 60px 40px;
             text-align: center;
         }
 
         .empty-state i {
-            color: #333;
-            margin-bottom: 30px;
+            color: #444;
+            margin-bottom: 25px;
         }
 
         .empty-state h3 {
             color: #f8f9fa;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+            font-size: 1.5rem;
         }
 
         .empty-state p {
-            color: #666;
-            margin-bottom: 30px;
+            color: #888;
+            margin-bottom: 25px;
         }
 
         .btn-explore {
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             border: none;
             color: #1a1a1a;
-            padding: 12px 40px;
+            padding: 12px 30px;
             font-weight: 600;
-            border-radius: 50px;
+            border-radius: 25px;
             transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn-explore:hover {
@@ -102,7 +107,7 @@
             border: 1px solid #333;
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin-bottom: 30px;
         }
 
         .table {
@@ -117,30 +122,33 @@
 
         .table thead th {
             color: #ffd700;
-            font-weight: 700;
+            font-weight: 600;
             padding: 15px;
             border: none;
+            font-size: 0.95rem;
         }
 
         .table tbody tr {
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid #2a2a2a;
             transition: all 0.3s;
         }
 
         .table tbody tr:hover {
-            background: #252525;
+            background: #222;
         }
 
         .table tbody td {
             padding: 15px;
             border: none;
+            vertical-align: middle;
         }
 
         /* Status Badges */
         .badge {
-            padding: 8px 12px;
+            padding: 6px 12px;
             font-size: 0.85rem;
-            font-weight: 600;
+            font-weight: 500;
+            border-radius: 20px;
         }
 
         .badge.bg-warning {
@@ -169,103 +177,63 @@
             border-radius: 8px;
             transition: all 0.3s;
             font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn-detail:hover {
             background: #ffd700;
             color: #1a1a1a;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
-        }
-
-        /* Summary Cards */
-        .summary-card {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            transition: all 0.3s;
-            height: 100%;
-        }
-
-        .summary-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .summary-card.pending {
-            border-color: #f39c12;
-        }
-
-        .summary-card.pending:hover {
-            box-shadow: 0 10px 30px rgba(243, 156, 18, 0.3);
-        }
-
-        .summary-card.completed {
-            border-color: #2ecc71;
-        }
-
-        .summary-card.completed:hover {
-            box-shadow: 0 10px 30px rgba(46, 204, 113, 0.3);
-        }
-
-        .summary-card.cancelled {
-            border-color: #e74c3c;
-        }
-
-        .summary-card.cancelled:hover {
-            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.3);
-        }
-
-        .summary-card i {
-            margin-bottom: 15px;
-        }
-
-        .summary-card h5 {
-            color: #e0e0e0;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-        .summary-card h2 {
-            font-weight: 700;
-            margin: 0;
-        }
-
-        .text-warning {
-            color: #f39c12 !important;
-        }
-
-        .text-success {
-            color: #2ecc71 !important;
-        }
-
-        .text-danger {
-            color: #e74c3c !important;
         }
 
         footer {
             margin-top: auto;
         }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .page-header .subtitle {
+                font-size: 0.9rem;
+            }
+
+            .table thead th {
+                font-size: 0.85rem;
+                padding: 12px 8px;
+            }
+
+            .table tbody td {
+                padding: 12px 8px;
+                font-size: 0.9rem;
+            }
+
+            .empty-state {
+                padding: 40px 20px;
+            }
+
+            .empty-state h3 {
+                font-size: 1.3rem;
+            }
+        }
     </style>
 </head>
 <body>
-<!-- Navbar -->
 <jsp:include page="header.jsp" />
 
 <!-- Page Header -->
 <div class="page-header">
-    <div class="container text-center">
-        <h1>
-            <i class="fas fa-receipt"></i> Đơn Hàng Của Tôi
-        </h1>
-        <p>Xem và quản lý các đơn hàng của bạn</p>
+    <div class="container">
+        <h1><i class="fas fa-receipt"></i> Đơn Hàng Của Tôi</h1>
+        <p class="subtitle">Xem và quản lý các đơn hàng của bạn</p>
     </div>
 </div>
 
 <!-- Main Content -->
-<div class="container my-5">
+<div class="container my-4">
     <!-- Messages -->
     <c:if test="${not empty sessionScope.success}">
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -285,26 +253,26 @@
     <!-- No Orders -->
     <c:if test="${empty orders}">
         <div class="empty-state">
-            <i class="fas fa-inbox fa-5x"></i>
-            <h3>Chưa Có Đơn Hàng Nào</h3>
+            <i class="fas fa-inbox fa-4x"></i>
+            <h3>Chưa có đơn hàng nào</h3>
             <p>Bạn chưa đặt hàng sản phẩm nào</p>
-            <a href="${pageContext.request.contextPath}/cars" class="btn btn-explore">
-                <i class="fas fa-search"></i> Khám Phá Xe
+            <a href="${pageContext.request.contextPath}/cars" class="btn-explore">
+                <i class="fas fa-car"></i> Khám phá xe
             </a>
         </div>
     </c:if>
 
     <!-- Orders List -->
     <c:if test="${not empty orders}">
-        <div class="orders-card mb-4">
+        <div class="orders-card">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead>
                     <tr>
-                        <th><i class="fas fa-hashtag"></i> Mã Đơn Hàng</th>
-                        <th><i class="fas fa-info-circle"></i> Trạng Thái</th>
-                        <th><i class="fas fa-calendar"></i> Ngày Đặt</th>
-                        <th class="text-center"><i class="fas fa-cog"></i> Thao Tác</th>
+                        <th>Mã đơn hàng</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày đặt</th>
+                        <th class="text-center">Thao tác</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -315,34 +283,33 @@
                                 <c:choose>
                                     <c:when test="${order.status == 'PENDING'}">
                                         <span class="badge bg-warning">
-                                            <i class="fas fa-clock"></i> Chờ Xử Lý
+                                            <i class="fas fa-clock"></i> Chờ xử lý
                                         </span>
                                     </c:when>
                                     <c:when test="${order.status == 'APPROVED'}">
                                         <span class="badge bg-info">
-                                            <i class="fas fa-check"></i> Đã Duyệt
+                                            <i class="fas fa-check"></i> Đã duyệt
                                         </span>
                                     </c:when>
                                     <c:when test="${order.status == 'COMPLETED'}">
                                         <span class="badge bg-success">
-                                            <i class="fas fa-check-double"></i> Hoàn Thành
+                                            <i class="fas fa-check-double"></i> Hoàn thành
                                         </span>
                                     </c:when>
                                     <c:otherwise>
                                         <span class="badge bg-danger">
-                                            <i class="fas fa-times"></i> Đã Hủy
+                                            <i class="fas fa-times"></i> Đã hủy
                                         </span>
                                     </c:otherwise>
                                 </c:choose>
                             </td>
                             <td>
-                                <i class="far fa-calendar-alt text-muted"></i>
                                 <fmt:formatDate value="${order.createdAt}" pattern="dd/MM/yyyy HH:mm" />
                             </td>
                             <td class="text-center">
                                 <a href="${pageContext.request.contextPath}/order-detail?id=${order.orderId}"
-                                   class="btn btn-detail">
-                                    <i class="fas fa-eye"></i> Chi Tiết
+                                   class="btn-detail">
+                                    <i class="fas fa-eye"></i> Chi tiết
                                 </a>
                             </td>
                         </tr>
@@ -351,59 +318,9 @@
                 </table>
             </div>
         </div>
-
-        <!-- Order Summary -->
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="summary-card pending">
-                    <i class="fas fa-clock fa-3x text-warning"></i>
-                    <h5>Chờ Xử Lý</h5>
-                    <h2 class="text-warning">
-                        <c:set var="pending" value="0" />
-                        <c:forEach var="order" items="${orders}">
-                            <c:if test="${order.status == 'PENDING'}">
-                                <c:set var="pending" value="${pending + 1}" />
-                            </c:if>
-                        </c:forEach>
-                            ${pending}
-                    </h2>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="summary-card completed">
-                    <i class="fas fa-check-circle fa-3x text-success"></i>
-                    <h5>Hoàn Thành</h5>
-                    <h2 class="text-success">
-                        <c:set var="completed" value="0" />
-                        <c:forEach var="order" items="${orders}">
-                            <c:if test="${order.status == 'COMPLETED'}">
-                                <c:set var="completed" value="${completed + 1}" />
-                            </c:if>
-                        </c:forEach>
-                            ${completed}
-                    </h2>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="summary-card cancelled">
-                    <i class="fas fa-times-circle fa-3x text-danger"></i>
-                    <h5>Đã Hủy</h5>
-                    <h2 class="text-danger">
-                        <c:set var="cancelled" value="0" />
-                        <c:forEach var="order" items="${orders}">
-                            <c:if test="${order.status == 'CANCELLED'}">
-                                <c:set var="cancelled" value="${cancelled + 1}" />
-                            </c:if>
-                        </c:forEach>
-                            ${cancelled}
-                    </h2>
-                </div>
-            </div>
-        </div>
     </c:if>
 </div>
 
-<!-- Footer -->
 <jsp:include page="footer.jsp" />
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

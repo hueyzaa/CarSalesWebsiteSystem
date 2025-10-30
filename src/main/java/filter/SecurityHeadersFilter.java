@@ -8,9 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-/**
- * Security headers filter
- */
 @WebFilter("/*")
 public class SecurityHeadersFilter implements Filter {
     private static final Logger logger = LoggerFactory.getLogger(SecurityHeadersFilter.class);
@@ -21,25 +18,32 @@ public class SecurityHeadersFilter implements Filter {
 
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        // Prevent clickjacking
         httpResponse.setHeader("X-Frame-Options", "DENY");
-
-        // Prevent MIME sniffing
         httpResponse.setHeader("X-Content-Type-Options", "nosniff");
-
-        // Enable XSS protection
         httpResponse.setHeader("X-XSS-Protection", "1; mode=block");
+        httpResponse.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+        httpResponse.setHeader("Permissions-Policy",
+                "geolocation=(), microphone=(), camera=()");
 
-        // Strict Transport Security (HTTPS only)
-        // httpResponse.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-
-        // Content Security Policy
         httpResponse.setHeader("Content-Security-Policy",
                 "default-src 'self'; " +
-                        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
-                        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
-                        "img-src 'self' data: https:; " +
-                        "font-src 'self' https://fonts.gstatic.com;");
+                        "script-src 'self' 'unsafe-inline' 'unsafe-eval' " +
+                        "https://cdn.jsdelivr.net " +
+                        "https://cdnjs.cloudflare.com " +
+                        "https://code.jquery.com; " +
+                        "style-src 'self' 'unsafe-inline' " +
+                        "https://cdn.jsdelivr.net " +
+                        "https://cdnjs.cloudflare.com " +
+                        "https://fonts.googleapis.com; " +
+                        "img-src 'self' data: https: blob:; " +
+                        "font-src 'self' " +
+                        "https://fonts.gstatic.com " +
+                        "https://cdn.jsdelivr.net " +
+                        "https://cdnjs.cloudflare.com; " +
+                        "connect-src 'self'; " +
+                        "frame-ancestors 'none'; " +
+                        "base-uri 'self'; " +
+                        "form-action 'self' https://sandbox.vnpayment.vn;");
 
         chain.doFilter(request, response);
     }

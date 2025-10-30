@@ -152,6 +152,18 @@
             font-size: 0.9rem;
         }
 
+        /* Stock info - NEW */
+        .stock-info {
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+
+        .stock-info.low-stock {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
         .cart-item-price {
             color: #f8f9fa;
             font-size: 1.3rem;
@@ -205,11 +217,17 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s;
+            cursor: pointer;
         }
 
-        .btn-quantity:hover {
+        .btn-quantity:hover:not(:disabled) {
             background: #ffd700;
             color: #1a1a1a;
+        }
+
+        .btn-quantity:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
 
         .btn-remove {
@@ -239,28 +257,31 @@
         .cart-summary h4 {
             color: #ffd700;
             font-weight: 700;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #333;
+            margin-bottom: 20px;
         }
 
         .summary-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 15px;
-            color: #888;
+            padding: 15px 0;
+            border-bottom: 1px solid #333;
+            color: #e0e0e0;
+        }
+
+        .summary-row:last-child {
+            border-bottom: none;
         }
 
         .summary-row.total {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #f8f9fa;
-            padding-top: 15px;
             border-top: 2px solid #ffd700;
+            padding-top: 20px;
+            margin-top: 10px;
         }
 
-        .summary-row.total .amount {
+        .summary-row.total span {
             color: #ffd700;
+            font-size: 1.4rem;
+            font-weight: 700;
         }
 
         .btn-checkout {
@@ -400,18 +421,26 @@
                                     <i class="fas fa-tag"></i> ${item.car.brandName}<br>
                                     <i class="fas fa-calendar"></i> Năm: ${item.car.year}
                                 </p>
+                                <!-- Stock info - NEW -->
+                                <div class="stock-info ${item.car.stock < 10 ? 'low-stock' : ''}">
+                                    <i class="fas fa-warehouse"></i> Còn lại: ${item.car.stock} xe
+                                    <c:if test="${item.car.stock < 10}">
+                                        <i class="fas fa-exclamation-triangle"></i> Sắp hết hàng!
+                                    </c:if>
+                                </div>
                             </div>
 
                             <div class="cart-item-quantity">
-                                <form method="post" action="${pageContext.request.contextPath}/cart" class="d-flex gap-2">
+                                <form method="post" action="${pageContext.request.contextPath}/cart" class="d-flex gap-2 qty-form">
                                     <input type="hidden" name="action" value="update">
                                     <input type="hidden" name="cartItemId" value="${item.id}">
-                                    <button type="button" class="btn-quantity" onclick="decreaseQuantity(this)">
-                                        <i class="fas fa-minus">-</i>
+                                    <button type="button" class="btn-quantity minus-btn">
+                                        <i class="fas fa-minus"></i>
                                     </button>
-                                    <input type="number" name="quantity" value="${item.quantity}" min="1" max="10" class="quantity-input" readonly>
-                                    <button type="button" class="btn-quantity" onclick="increaseQuantity(this)">
-                                        <i class="fas fa-plus">+</i>
+                                    <input type="number" name="quantity" value="${item.quantity}"
+                                           min="1" max="${item.car.stock}" class="quantity-input" readonly>
+                                    <button type="button" class="btn-quantity plus-btn">
+                                        <i class="fas fa-plus"></i>
                                     </button>
                                     <button type="submit" class="btn btn-quantity" style="width: auto; padding: 0 15px;">
                                         <i class="fas fa-check"></i> Cập Nhật
@@ -420,7 +449,7 @@
                             </div>
 
                             <div class="cart-item-price">
-                                <fmt:formatNumber value="${item.car.price}" type="currency" currencySymbol="₫"/>
+                                <fmt:formatNumber value="${item.car.price}" pattern="#,##0" /> ₫
                             </div>
 
                             <div>
@@ -444,7 +473,7 @@
                     <div class="summary-row">
                         <span>Tạm tính:</span>
                         <span class="amount">
-                            <fmt:formatNumber value="${total}" type="currency" currencySymbol="₫"/>
+                            <fmt:formatNumber value="${total}" pattern="#,##0" /> ₫
                         </span>
                     </div>
 
@@ -456,7 +485,7 @@
                     <div class="summary-row total">
                         <span>Tổng cộng:</span>
                         <span class="amount">
-                            <fmt:formatNumber value="${total}" type="currency" currencySymbol="₫"/>
+                            <fmt:formatNumber value="${total}" pattern="#,##0" /> ₫
                         </span>
                     </div>
 
@@ -478,23 +507,78 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function increaseQuantity(btn) {
-        const input = btn.previousElementSibling;
-        const currentValue = parseInt(input.value);
-        const maxValue = parseInt(input.max);
-        if (currentValue < maxValue) {
-            input.value = currentValue + 1;
-        }
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle all quantity forms
+        const qtyForms = document.querySelectorAll('.qty-form');
 
-    function decreaseQuantity(btn) {
-        const input = btn.nextElementSibling;
-        const currentValue = parseInt(input.value);
-        const minValue = parseInt(input.min);
-        if (currentValue > minValue) {
-            input.value = currentValue - 1;
+        qtyForms.forEach(form => {
+            const input = form.querySelector('.quantity-input');
+            const minusBtn = form.querySelector('.minus-btn');
+            const plusBtn = form.querySelector('.plus-btn');
+            const maxStock = parseInt(input.getAttribute('max'));
+
+            // Update button states on load
+            updateButtonStates(input, minusBtn, plusBtn, maxStock);
+
+            // Handle minus button
+            minusBtn.addEventListener('click', function() {
+                let value = parseInt(input.value) || 1;
+                if (value > 1) {
+                    input.value = value - 1;
+                    updateButtonStates(input, minusBtn, plusBtn, maxStock);
+                }
+            });
+
+            // Handle plus button
+            plusBtn.addEventListener('click', function() {
+                let value = parseInt(input.value) || 1;
+                if (value < maxStock) {
+                    input.value = value + 1;
+                    updateButtonStates(input, minusBtn, plusBtn, maxStock);
+                } else {
+                    alert(`Chỉ còn ${maxStock} xe trong kho!`);
+                }
+            });
+
+            // Validate on form submit
+            form.addEventListener('submit', function(e) {
+                const quantity = parseInt(input.value);
+
+                if (quantity > maxStock) {
+                    e.preventDefault();
+                    alert(`Số lượng không được vượt quá ${maxStock} xe trong kho!`);
+                    input.value = maxStock;
+                    return false;
+                }
+
+                if (quantity < 1) {
+                    e.preventDefault();
+                    alert('Số lượng phải lớn hơn 0!');
+                    input.value = 1;
+                    return false;
+                }
+            });
+        });
+
+        // Update button states based on current value
+        function updateButtonStates(input, minusBtn, plusBtn, maxStock) {
+            const value = parseInt(input.value) || 1;
+
+            // Disable minus button if at minimum
+            minusBtn.disabled = value <= 1;
+
+            // Disable plus button if at maximum stock
+            plusBtn.disabled = value >= maxStock;
         }
-    }
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    });
 </script>
 </body>
 </html>

@@ -20,15 +20,16 @@
 
         .page-header {
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            padding: 40px 0;
-            margin-bottom: 30px;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
             border-bottom: 2px solid #ffd700;
         }
 
         .page-header h1 {
             color: #f8f9fa;
             font-weight: 700;
-            margin-bottom: 10px;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
         }
 
         .breadcrumb {
@@ -50,7 +51,7 @@
             background: #1a1a1a;
             border: 1px solid #333;
             border-radius: 15px;
-            padding: 30px;
+            padding: 25px;
             margin-bottom: 20px;
         }
 
@@ -58,73 +59,73 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            padding-bottom: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
             border-bottom: 2px solid #333;
         }
 
         .order-id {
             color: #ffd700;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 700;
         }
 
         .status-badge {
-            padding: 10px 25px;
-            border-radius: 25px;
-            font-weight: 700;
-            font-size: 1rem;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
         }
 
         .status-badge.pending {
-            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            background: #ff9800;
             color: white;
         }
 
         .status-badge.approved {
-            background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+            background: #2196f3;
             color: white;
         }
 
         .status-badge.completed {
-            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            background: #4caf50;
             color: white;
         }
 
         .status-badge.cancelled {
-            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            background: #f44336;
             color: white;
         }
 
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
         }
 
         .info-item {
-            padding: 15px;
+            padding: 12px;
             background: #0f0f0f;
             border-radius: 10px;
         }
 
         .info-label {
             color: #888;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin-bottom: 5px;
         }
 
         .info-value {
             color: #f8f9fa;
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
         }
 
         .section-title {
             color: #ffd700;
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 2px solid #333;
         }
@@ -133,23 +134,23 @@
             background: #1a1a1a;
             border: 1px solid #333;
             border-radius: 15px;
-            padding: 25px;
+            padding: 20px;
             margin-bottom: 20px;
         }
 
         .order-item {
             display: flex;
-            gap: 20px;
-            padding: 20px;
+            gap: 15px;
+            padding: 15px;
             background: #0f0f0f;
             border-radius: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             border: 1px solid #333;
         }
 
         .item-image {
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             object-fit: cover;
             border-radius: 10px;
             border: 2px solid #333;
@@ -161,21 +162,21 @@
 
         .item-brand {
             color: #ffd700;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             font-weight: 600;
             margin-bottom: 5px;
         }
 
         .item-name {
             color: #f8f9fa;
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin-bottom: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
 
         .item-specs {
             color: #888;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .item-specs i {
@@ -189,7 +190,7 @@
 
         .item-price {
             color: #888;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .item-quantity {
@@ -200,16 +201,16 @@
 
         .item-subtotal {
             color: #f8f9fa;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 700;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .payment-summary {
             background: #1a1a1a;
             border: 1px solid #333;
             border-radius: 15px;
-            padding: 25px;
+            padding: 20px;
             margin-bottom: 20px;
             position: sticky;
             top: 20px;
@@ -218,7 +219,7 @@
         .summary-row {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
+            padding: 10px 0;
             border-bottom: 1px solid #333;
         }
 
@@ -228,7 +229,7 @@
 
         .summary-label {
             color: #888;
-            font-weight: 600;
+            font-weight: 500;
         }
 
         .summary-value {
@@ -238,7 +239,7 @@
 
         .summary-value.total {
             color: #ffd700;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
         }
 
         .summary-value.paid {
@@ -253,7 +254,7 @@
             background: #1a1a1a;
             border: 1px solid #333;
             border-radius: 15px;
-            padding: 25px;
+            padding: 20px;
             margin-bottom: 20px;
         }
 
@@ -261,7 +262,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px;
+            padding: 12px;
             background: #0f0f0f;
             border-radius: 10px;
             margin-bottom: 10px;
@@ -273,14 +274,13 @@
         }
 
         .transaction-info i {
-            color: #4caf50;
-            margin-right: 10px;
+            margin-right: 8px;
         }
 
         .transaction-type {
             color: #ffd700;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         .transaction-status {
@@ -290,13 +290,13 @@
 
         .transaction-date {
             color: #888;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             margin-top: 5px;
         }
 
         .transaction-amount {
             color: #4caf50;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 700;
             text-align: right;
         }
@@ -305,6 +305,24 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+        }
+
+        .btn-retry-payment {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border: none;
+            color: #1a1a1a;
+            font-weight: 600;
+            padding: 12px 30px;
+            border-radius: 10px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-retry-payment:hover {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+            color: #000;
         }
 
         .btn-cancel-order {
@@ -332,11 +350,15 @@
             border-radius: 10px;
             transition: all 0.3s;
             width: 100%;
+            text-decoration: none;
+            display: block;
+            text-align: center;
         }
 
         .btn-back:hover {
             background: #444;
             border-color: #666;
+            color: #fff;
         }
 
         .alert {
@@ -373,6 +395,24 @@
         footer {
             margin-top: auto;
         }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .order-item {
+                flex-direction: column;
+            }
+
+            .item-pricing {
+                text-align: left;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -382,9 +422,9 @@
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/">Trang Chủ</a></li>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/orders">Đơn Hàng</a></li>
-                <li class="breadcrumb-item active">Chi Tiết #${order.orderId}</li>
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/">Trang chủ</a></li>
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/orders">Đơn hàng</a></li>
+                <li class="breadcrumb-item active">Chi tiết #${order.orderId}</li>
             </ol>
         </nav>
         <h1><i class="fas fa-file-invoice"></i> Chi Tiết Đơn Hàng</h1>
@@ -411,7 +451,7 @@
     <div class="order-info-card">
         <div class="order-header">
             <div class="order-id">
-                <i class="fas fa-receipt"></i> Đơn Hàng #${order.orderId}
+                <i class="fas fa-receipt"></i> Đơn hàng #${order.orderId}
             </div>
             <span class="status-badge ${order.statusColor}">
                 ${order.statusDisplay}
@@ -468,7 +508,7 @@
                                 <br>
                                 <small style="color: #888; font-size: 0.85rem;">
                                     Còn lại: <strong style="color: #ff9800;">
-                                    <fmt:formatNumber value="${order.remainingAmount}" type="currency" currencySymbol="₫"/>
+                                    <fmt:formatNumber value="${order.remainingAmount}" pattern="#,##0" /> ₫
                                 </strong>
                                 </small>
                             </c:if>
@@ -488,7 +528,7 @@
         <div class="col-lg-8">
             <div class="order-items">
                 <h3 class="section-title">
-                    <i class="fas fa-car"></i> Sản Phẩm
+                    <i class="fas fa-car"></i> Sản phẩm
                 </h3>
 
                 <c:forEach var="detail" items="${order.orderDetails}">
@@ -498,7 +538,7 @@
                                 <img src="${detail.car.imageUrl}" alt="${detail.car.name}" class="item-image">
                             </c:when>
                             <c:otherwise>
-                                <img src="https://via.placeholder.com/120?text=No+Image" alt="No Image" class="item-image">
+                                <img src="https://via.placeholder.com/100?text=No+Image" alt="No Image" class="item-image">
                             </c:otherwise>
                         </c:choose>
 
@@ -517,11 +557,11 @@
 
                         <div class="item-pricing">
                             <div class="item-price">
-                                <fmt:formatNumber value="${detail.price}" type="currency" currencySymbol="₫"/>
+                                <fmt:formatNumber value="${detail.price}" pattern="#,##0" /> ₫
                             </div>
                             <div class="item-quantity">× ${detail.quantity}</div>
                             <div class="item-subtotal">
-                                <fmt:formatNumber value="${detail.subtotal}" type="currency" currencySymbol="₫"/>
+                                <fmt:formatNumber value="${detail.subtotal}" pattern="#,##0" /> ₫
                             </div>
                         </div>
                     </div>
@@ -531,7 +571,7 @@
             <c:if test="${not empty order.transactions}">
                 <div class="transactions-section">
                     <h3 class="section-title">
-                        <i class="fas fa-history"></i> Lịch Sử Giao Dịch
+                        <i class="fas fa-history"></i> Lịch sử giao dịch
                     </h3>
 
                     <c:forEach var="transaction" items="${order.transactions}">
@@ -578,11 +618,11 @@
                             <div class="transaction-amount">
                                 <c:choose>
                                     <c:when test="${transaction.paymentStatus == 'PAID'}">
-                                        <fmt:formatNumber value="${transaction.amount}" type="currency" currencySymbol="₫"/>
+                                        <fmt:formatNumber value="${transaction.amount}" pattern="#,##0" /> ₫
                                     </c:when>
                                     <c:otherwise>
                                         <span style="color: #888;">
-                                            <fmt:formatNumber value="${transaction.amount}" type="currency" currencySymbol="₫"/>
+                                            <fmt:formatNumber value="${transaction.amount}" pattern="#,##0" /> ₫
                                         </span>
                                     </c:otherwise>
                                 </c:choose>
@@ -595,7 +635,7 @@
             <c:if test="${not empty order.notes}">
                 <div class="order-items">
                     <h3 class="section-title">
-                        <i class="fas fa-sticky-note"></i> Ghi Chú
+                        <i class="fas fa-sticky-note"></i> Ghi chú
                     </h3>
                     <div style="padding: 15px; background: #0f0f0f; border-radius: 10px; color: #e0e0e0; white-space: pre-line;">
                             ${order.notes}
@@ -607,7 +647,7 @@
         <div class="col-lg-4">
             <div class="payment-summary">
                 <h3 class="section-title">
-                    <i class="fas fa-calculator"></i> Thanh Toán
+                    <i class="fas fa-calculator"></i> Thanh toán
                 </h3>
 
                 <div class="summary-row">
@@ -624,7 +664,7 @@
                     <div class="summary-row">
                         <span class="summary-label">Số tiền đặt cọc (10%):</span>
                         <span class="summary-value" style="color: #2196f3;">
-                            <fmt:formatNumber value="${order.depositAmount}" type="currency" currencySymbol="₫"/>
+                            <fmt:formatNumber value="${order.depositAmount}" pattern="#,##0" /> ₫
                         </span>
                     </div>
                 </c:if>
@@ -633,7 +673,7 @@
                     <div class="summary-row">
                         <span class="summary-label">Đã thanh toán:</span>
                         <span class="summary-value paid">
-                            -<fmt:formatNumber value="${order.paidAmount}" type="currency" currencySymbol="₫"/>
+                            -<fmt:formatNumber value="${order.paidAmount}" pattern="#,##0" /> ₫
                         </span>
                     </div>
                 </c:if>
@@ -648,13 +688,13 @@
                             </c:choose>
                         </span>
                         <span class="summary-value remaining">
-                            <fmt:formatNumber value="${order.remainingAmount}" type="currency" currencySymbol="₫"/>
+                            <fmt:formatNumber value="${order.remainingAmount}" pattern="#,##0" /> ₫
                         </span>
                     </div>
                 </c:if>
 
                 <div class="summary-row" style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #444;">
-                    <span class="summary-label" style="font-size: 1.2rem;">
+                    <span class="summary-label" style="font-size: 1.1rem;">
                         <c:choose>
                             <c:when test="${order.fullyPaid}">
                                 <i class="fas fa-check-circle" style="color: #4caf50;"></i> Đã thanh toán:
@@ -670,13 +710,13 @@
                     <span class="summary-value total">
                         <c:choose>
                             <c:when test="${order.fullyPaid}">
-                                <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
+                                <fmt:formatNumber value="${order.totalAmount}" pattern="#,##0" /> ₫
                             </c:when>
                             <c:when test="${order.remainingAmount != null && order.remainingAmount > 0}">
-                                <fmt:formatNumber value="${order.remainingAmount}" type="currency" currencySymbol="₫"/>
+                                <fmt:formatNumber value="${order.remainingAmount}" pattern="#,##0" /> ₫
                             </c:when>
                             <c:otherwise>
-                                <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
+                                <fmt:formatNumber value="${order.totalAmount}" pattern="#,##0" /> ₫
                             </c:otherwise>
                         </c:choose>
                     </span>
@@ -696,7 +736,7 @@
                             <strong>Đã đặt cọc thành công!</strong><br>
                             Vui lòng mang theo CMND/CCCD và thanh toán số tiền còn lại
                             <strong style="color: #ff9800;">
-                                (<fmt:formatNumber value="${order.remainingAmount}" type="currency" currencySymbol="₫"/>)
+                                (<fmt:formatNumber value="${order.remainingAmount}" pattern="#,##0" /> ₫)
                             </strong>
                             khi đến showroom nhận xe.
                         </div>
@@ -706,27 +746,44 @@
                             <i class="fas fa-store"></i>
                             Vui lòng đến showroom để thanh toán
                             <strong style="color: #ff9800;">
-                                <fmt:formatNumber value="${order.totalAmount}" type="currency" currencySymbol="₫"/>
+                                <fmt:formatNumber value="${order.totalAmount}" pattern="#,##0" /> ₫
                             </strong>
                             và nhận xe. Chúng tôi sẽ liên hệ với bạn sớm!
+                        </div>
+                    </c:when>
+                    <c:when test="${order.status == 'PENDING' && order.paidAmount == 0 && order.paymentType == 'DEPOSIT'}">
+                        <div class="alert alert-warning mt-3" style="background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.3); color: #ff9800;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Thanh toán chưa hoàn tất!</strong><br>
+                            Vui lòng nhấn nút "Thanh toán lại" bên dưới để hoàn tất đơn hàng.
                         </div>
                     </c:when>
                 </c:choose>
 
                 <div class="action-buttons mt-4">
+                    <!-- Retry payment button for unpaid DEPOSIT orders only -->
+                    <c:if test="${order.status == 'PENDING' && order.paidAmount == 0 && order.paymentType == 'DEPOSIT'}">
+                        <form method="post" action="${pageContext.request.contextPath}/checkout">
+                            <input type="hidden" name="retryOrderId" value="${order.orderId}">
+                            <button type="submit" class="btn btn-retry-payment">
+                                <i class="fas fa-credit-card"></i> Thanh toán lại
+                            </button>
+                        </form>
+                    </c:if>
+
                     <!-- Only allow cancel if order is PENDING and not yet paid -->
                     <c:if test="${order.canBeCancelled()}">
                         <form method="post" action="${pageContext.request.contextPath}/order-cancel">
                             <input type="hidden" name="orderId" value="${order.orderId}">
                             <button type="submit" class="btn btn-cancel-order"
                                     onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
-                                <i class="fas fa-times"></i> Hủy Đơn Hàng
+                                <i class="fas fa-times"></i> Hủy đơn hàng
                             </button>
                         </form>
                     </c:if>
 
                     <a href="${pageContext.request.contextPath}/orders" class="btn btn-back">
-                        <i class="fas fa-arrow-left"></i> Quay Lại Danh Sách
+                        <i class="fas fa-arrow-left"></i> Quay lại danh sách
                     </a>
                 </div>
             </div>

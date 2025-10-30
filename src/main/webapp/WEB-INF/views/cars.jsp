@@ -654,7 +654,7 @@
                                     </div>
 
                                     <div class="car-price">
-                                        <fmt:formatNumber value="${car.price}" type="currency" currencySymbol="₫"/>
+                                        <fmt:formatNumber value="${car.price}" pattern="#,##0" /> ₫
                                     </div>
 
                                     <a href="${pageContext.request.contextPath}/car-detail?id=${car.id}" class="btn btn-view">

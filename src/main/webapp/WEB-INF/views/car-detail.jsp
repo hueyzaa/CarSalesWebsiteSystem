@@ -547,7 +547,7 @@
                 <div class="price-section">
                     <div class="price-label">Giá Xe</div>
                     <p class="price">
-                        <fmt:formatNumber value="${car.price}" type="currency" currencySymbol="₫"/>
+                        <fmt:formatNumber value="${car.price}" pattern="#,##0" /> ₫
                     </p>
                 </div>
 

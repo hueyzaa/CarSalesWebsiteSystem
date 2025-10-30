@@ -195,6 +195,7 @@ CREATE TABLE Blog (
                       content NVARCHAR(MAX),
                       author_id INT,
                       created_at DATETIME DEFAULT GETDATE(),
+                      image_url NVARCHAR(500) NULL,
                       FOREIGN KEY (author_id) REFERENCES AppUsers(user_id)
 );
 GO

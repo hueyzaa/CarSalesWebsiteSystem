@@ -3,79 +3,49 @@ package model;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * User model - Base user entity from AppUsers table
+ */
 public class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    // Core fields from AppUsers table
     private int userId;
-    private String name;
     private String email;
     private String passwordHash;
-    private String role;
-    private String oauthProvider;
+    private String role; // ADMIN, STAFF, CUSTOMER
+    private boolean isActive;
     private Date createdAt;
-    private String status;
+    private Date lastLogin;
 
-    // Additional fields for JSP display
+    // Additional fields from vw_AllUsers (from Customers/Staff tables)
+    private String name;
     private String phone;
     private String address;
 
     // Constructors
     public User() {}
 
-    public User(int userId, String name, String email, String role, String status) {
+    public User(int userId, String email, String role) {
         this.userId = userId;
-        this.name = name;
         this.email = email;
-        this.role = role;
-        this.status = status;
-    }
-
-    public User(String name, String email, String passwordHash, String role) {
-        this.name = name;
-        this.email = email;
-        this.passwordHash = passwordHash;
         this.role = role;
     }
 
-    // Primary Getters and Setters
+    public User(int userId, String email, String name, String role) {
+        this.userId = userId;
+        this.email = email;
+        this.name = name;
+        this.role = role;
+    }
+
+    // Getters and Setters
     public int getUserId() {
         return userId;
     }
 
     public void setUserId(int userId) {
         this.userId = userId;
-    }
-
-    // Alias methods for consistency with other models
-    public int getId() {
-        return userId;
-    }
-
-    public void setId(int userId) {
-        this.userId = userId;
-    }
-    public String getStatus(){
-        return status;
-    }
-    public void setStatus(String status){
-        this.status = status;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    // Alias for fullname used in JSPs
-    public String getFullname() {
-        return name;
-    }
-
-    public void setFullname(String name) {
-        this.name = name;
     }
 
     public String getEmail() {
@@ -102,12 +72,12 @@ public class User implements Serializable {
         this.role = role;
     }
 
-    public String getOauthProvider() {
-        return oauthProvider;
+    public boolean isActive() {
+        return isActive;
     }
 
-    public void setOauthProvider(String oauthProvider) {
-        this.oauthProvider = oauthProvider;
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
     public Date getCreatedAt() {
@@ -116,6 +86,22 @@ public class User implements Serializable {
 
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Date getLastLogin() {
+        return lastLogin;
+    }
+
+    public void setLastLogin(Date lastLogin) {
+        this.lastLogin = lastLogin;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getPhone() {
@@ -135,6 +121,25 @@ public class User implements Serializable {
     }
 
     // Convenience methods
+    public String getDisplayName() {
+        if (name != null && !name.trim().isEmpty()) {
+            return name;
+        }
+        return email != null ? email : "Unknown";
+    }
+
+    public String getInitials() {
+        if (name == null || name.trim().isEmpty()) {
+            return email != null && !email.isEmpty() ?
+                    email.substring(0, 1).toUpperCase() : "?";
+        }
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length >= 2) {
+            return (parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1)).toUpperCase();
+        }
+        return name.substring(0, Math.min(2, name.length())).toUpperCase();
+    }
+
     public boolean isAdmin() {
         return "ADMIN".equalsIgnoreCase(role);
     }
@@ -147,41 +152,43 @@ public class User implements Serializable {
         return "CUSTOMER".equalsIgnoreCase(role);
     }
 
-    public boolean isGuest() {
-        return "GUEST".equalsIgnoreCase(role);
+    public String getRoleBadge() {
+        if (isAdmin()) return "badge-danger";
+        if (isStaff()) return "badge-warning";
+        if (isCustomer()) return "badge-info";
+        return "badge-secondary";
     }
 
-    public boolean hasRole(String checkRole) {
-        return role != null && role.equalsIgnoreCase(checkRole);
+    public String getRoleDisplay() {
+        if (isAdmin()) return "Quản trị viên";
+        if (isStaff()) return "Nhân viên";
+        if (isCustomer()) return "Khách hàng";
+        return role;
     }
 
-    public boolean isOAuthUser() {
-        return oauthProvider != null && !oauthProvider.trim().isEmpty();
+    public String getRoleIcon() {
+        if (isAdmin()) return "bi-shield-fill";
+        if (isStaff()) return "bi-person-badge";
+        if (isCustomer()) return "bi-person";
+        return "bi-question-circle";
     }
 
-    public String getDisplayName() {
-        return name != null ? name : email;
+    public String getStatusBadge() {
+        return isActive ? "badge-success" : "badge-secondary";
     }
 
-    public String getInitials() {
-        if (name == null || name.trim().isEmpty()) {
-            return email != null && !email.isEmpty() ? email.substring(0, 1).toUpperCase() : "?";
-        }
-        String[] parts = name.trim().split("\\s+");
-        if (parts.length >= 2) {
-            return (parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1)).toUpperCase();
-        }
-        return name.substring(0, Math.min(2, name.length())).toUpperCase();
+    public String getStatusDisplay() {
+        return isActive ? "Hoạt động" : "Vô hiệu hóa";
     }
 
     @Override
     public String toString() {
         return "User{" +
                 "userId=" + userId +
-                ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
                 ", role='" + role + '\'' +
-                ", oauthProvider='" + oauthProvider + '\'' +
+                ", name='" + name + '\'' +
+                ", isActive=" + isActive +
                 '}';
     }
 

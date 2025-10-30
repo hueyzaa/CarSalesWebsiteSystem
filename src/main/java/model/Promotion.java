@@ -9,8 +9,8 @@ public class Promotion {
     private String description;
     private Date startDate;
     private Date endDate;
-    private double discountPercentage;  // Discount mặc định
-    private double discountAmount;      // Discount mặc định
+    private double discountPercentage;
+    private double discountAmount;
 
     private boolean claimedByUser;
     private boolean usedByUser;

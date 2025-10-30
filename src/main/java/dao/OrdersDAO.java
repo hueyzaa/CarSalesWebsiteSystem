@@ -4,7 +4,6 @@ import model.Order;
 import model.CartItem;
 import model.Promotion;
 import util.DBContext;
-import exception.DatabaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +40,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting orders for userId: {}", userId, e);
-            throw new DatabaseException("Failed to retrieve orders", e);
+            throw new RuntimeException("Failed to retrieve orders", e);
         }
     }
 
@@ -71,7 +70,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting order: {}", orderId, e);
-            throw new DatabaseException("Failed to retrieve order", e);
+            throw new RuntimeException("Failed to retrieve order", e);
         }
     }
 
@@ -160,7 +159,7 @@ public class OrdersDAO {
         } catch (SQLException e) {
             rollback(conn);
             logger.error("Error creating order for userId: {}", userId, e);
-            throw new DatabaseException("Failed to create order", e);
+            throw new RuntimeException("Failed to create order", e);
 
         } finally {
             closeConnection(conn);
@@ -298,7 +297,7 @@ public class OrdersDAO {
         } catch (SQLException e) {
             rollback(conn);
             logger.error("Error creating order with promotion for userId: {}", userId, e);
-            throw new DatabaseException("Failed to create order", e);
+            throw new RuntimeException("Failed to create order", e);
 
         } finally {
             closeConnection(conn);
@@ -341,7 +340,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting order promotion for order {}", orderId, e);
-            throw new DatabaseException("Failed to retrieve order promotion", e);
+            throw new RuntimeException("Failed to retrieve order promotion", e);
         }
     }
 
@@ -380,7 +379,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error calculating order promotion discount for order {}", orderId, e);
-            throw new DatabaseException("Failed to calculate promotion discount", e);
+            throw new RuntimeException("Failed to calculate promotion discount", e);
         }
     }
 
@@ -412,7 +411,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating order status for orderId: {}", orderId, e);
-            throw new DatabaseException("Failed to update order status", e);
+            throw new RuntimeException("Failed to update order status", e);
         }
     }
 
@@ -449,7 +448,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating order payment info for orderId: {}", orderId, e);
-            throw new DatabaseException("Failed to update order payment info", e);
+            throw new RuntimeException("Failed to update order payment info", e);
         }
     }
 
@@ -496,7 +495,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating order notes for orderId: {}", orderId, e);
-            throw new DatabaseException("Failed to update order notes", e);
+            throw new RuntimeException("Failed to update order notes", e);
         }
     }
 
@@ -516,7 +515,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating order notes for orderId: {}", orderId, e);
-            throw new DatabaseException("Failed to update order notes", e);
+            throw new RuntimeException("Failed to update order notes", e);
         }
     }
 
@@ -564,7 +563,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting all orders", e);
-            throw new DatabaseException("Failed to retrieve all orders", e);
+            throw new RuntimeException("Failed to retrieve all orders", e);
         }
     }
 
@@ -594,7 +593,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting orders by status: {}", status, e);
-            throw new DatabaseException("Failed to retrieve orders by status", e);
+            throw new RuntimeException("Failed to retrieve orders by status", e);
         }
     }
 
@@ -624,7 +623,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting orders by payment type: {}", paymentType, e);
-            throw new DatabaseException("Failed to retrieve orders by payment type", e);
+            throw new RuntimeException("Failed to retrieve orders by payment type", e);
         }
     }
 
@@ -652,7 +651,7 @@ public class OrdersDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting pending showroom orders", e);
-            throw new DatabaseException("Failed to retrieve pending showroom orders", e);
+            throw new RuntimeException("Failed to retrieve pending showroom orders", e);
         }
     }
 

@@ -3,7 +3,6 @@ package dao;
 import model.Car;
 import model.CarImage;
 import util.DBContext;
-import exception.DatabaseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +41,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting all cars", e);
-            throw new DatabaseException("Failed to retrieve cars", e);
+            throw new RuntimeException("Failed to retrieve cars", e);
         }
     }
 
@@ -74,7 +73,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting available cars", e);
-            throw new DatabaseException("Failed to retrieve available cars", e);
+            throw new RuntimeException("Failed to retrieve available cars", e);
         }
     }
 
@@ -108,7 +107,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting car by ID: {}", carId, e);
-            throw new DatabaseException("Failed to retrieve car", e);
+            throw new RuntimeException("Failed to retrieve car", e);
         }
     }
 
@@ -155,7 +154,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error searching cars with keyword: {}", keyword, e);
-            throw new DatabaseException("Failed to search cars", e);
+            throw new RuntimeException("Failed to search cars", e);
         }
     }
 
@@ -190,7 +189,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting cars by brand: {}", brandId, e);
-            throw new DatabaseException("Failed to retrieve cars by brand", e);
+            throw new RuntimeException("Failed to retrieve cars by brand", e);
         }
     }
 
@@ -226,7 +225,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting cars by price range: {}-{}", minPrice, maxPrice, e);
-            throw new DatabaseException("Failed to retrieve cars by price range", e);
+            throw new RuntimeException("Failed to retrieve cars by price range", e);
         }
     }
 
@@ -266,7 +265,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error adding car: {}", car, e);
-            throw new DatabaseException("Failed to add car", e);
+            throw new RuntimeException("Failed to add car", e);
         }
     }
 
@@ -294,7 +293,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting car images for carId: {}", carId, e);
-            throw new DatabaseException("Failed to retrieve car images", e);
+            throw new RuntimeException("Failed to retrieve car images", e);
         }
     }
 
@@ -368,7 +367,7 @@ public class CarDAO {
         } catch (SQLException e) {
             rollback(conn);
             logger.error("Error adding car images for carId: {}", carId, e);
-            throw new DatabaseException("Failed to add car images", e);
+            throw new RuntimeException("Failed to add car images", e);
 
         } finally {
             closeConnection(conn);
@@ -405,7 +404,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating car: {}", car, e);
-            throw new DatabaseException("Failed to update car", e);
+            throw new RuntimeException("Failed to update car", e);
         }
     }
 
@@ -429,7 +428,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error deleting car with ID: {}", carId, e);
-            throw new DatabaseException("Failed to delete car", e);
+            throw new RuntimeException("Failed to delete car", e);
         }
     }
 
@@ -455,7 +454,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating car status for ID: {}", carId, e);
-            throw new DatabaseException("Failed to update car status", e);
+            throw new RuntimeException("Failed to update car status", e);
         }
     }
 
@@ -481,7 +480,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating car stock for ID: {}", carId, e);
-            throw new DatabaseException("Failed to update car stock", e);
+            throw new RuntimeException("Failed to update car stock", e);
         }
     }
     /**
@@ -508,7 +507,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error increasing stock for car ID: {}", carId, e);
-            throw new DatabaseException("Failed to increase car stock", e);
+            throw new RuntimeException("Failed to increase car stock", e);
         }
     }
 
@@ -537,7 +536,7 @@ public class CarDAO {
 
         } catch (SQLException e) {
             logger.error("Error decreasing stock for car ID: {}", carId, e);
-            throw new DatabaseException("Failed to decrease car stock", e);
+            throw new RuntimeException("Failed to decrease car stock", e);
         }
     }
 

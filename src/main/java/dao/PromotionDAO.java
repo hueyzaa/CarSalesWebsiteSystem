@@ -2,7 +2,6 @@ package dao;
 
 import model.Promotion;
 import model.Car;
-import exception.DatabaseException;
 import util.DBContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,7 @@ public class PromotionDAO {
     /**
      * Get all promotions from database
      */
-    public List<Promotion> getAllPromotions() throws DatabaseException {
+    public List<Promotion> getAllPromotions() {
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT promotion_id, title, description, start_date, end_date, " +
                 "discount_percentage, discount_amount " +
@@ -38,14 +37,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving all promotions", e);
-            throw new DatabaseException("Không thể lấy danh sách khuyến mãi", e);
+            throw new RuntimeException("Không thể lấy danh sách khuyến mãi", e);
         }
     }
 
     /**
      * Get only active promotions (current date between start_date and end_date)
      */
-    public List<Promotion> getAllActivePromotions() throws DatabaseException {
+    public List<Promotion> getAllActivePromotions() {
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT promotion_id, title, description, start_date, end_date, " +
                 "discount_percentage, discount_amount " +
@@ -67,7 +66,7 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving active promotions", e);
-            throw new DatabaseException("Không thể lấy danh sách khuyến mãi đang hoạt động", e);
+            throw new RuntimeException("Không thể lấy danh sách khuyến mãi đang hoạt động", e);
         }
     }
 
@@ -75,7 +74,7 @@ public class PromotionDAO {
      * Get all active promotions with user claim status
      * @param userId User ID to check claim status, null for guest users
      */
-    public List<Promotion> getAllActivePromotionsWithUserStatus(Integer userId) throws DatabaseException {
+    public List<Promotion> getAllActivePromotionsWithUserStatus(Integer userId) {
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT p.promotion_id, p.title, p.description, p.start_date, p.end_date, " +
                 "p.discount_percentage, p.discount_amount" +
@@ -114,14 +113,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving active promotions with user status", e);
-            throw new DatabaseException("Không thể lấy danh sách khuyến mãi", e);
+            throw new RuntimeException("Không thể lấy danh sách khuyến mãi", e);
         }
     }
 
     /**
      * Get promotion by ID
      */
-    public Promotion getPromotionById(int promotionId) throws DatabaseException {
+    public Promotion getPromotionById(int promotionId) {
         String sql = "SELECT promotion_id, title, description, start_date, end_date, " +
                 "discount_percentage, discount_amount " +
                 "FROM Promotion " +
@@ -145,14 +144,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving promotion by ID: {}", promotionId, e);
-            throw new DatabaseException("Không thể lấy thông tin khuyến mãi", e);
+            throw new RuntimeException("Không thể lấy thông tin khuyến mãi", e);
         }
     }
 
     /**
      * Get promotions for a specific car
      */
-    public List<Promotion> getPromotionsByCar(int carId) throws DatabaseException {
+    public List<Promotion> getPromotionsByCar(int carId){
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT p.promotion_id, p.title, p.description, p.start_date, p.end_date, " +
                 "p.discount_percentage, p.discount_amount " +
@@ -179,14 +178,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving promotions for car: {}", carId, e);
-            throw new DatabaseException("Không thể lấy danh sách khuyến mãi cho xe", e);
+            throw new RuntimeException("Không thể lấy danh sách khuyến mãi cho xe", e);
         }
     }
 
     /**
      * Create new promotion
      */
-    public int createPromotion(Promotion promotion) throws DatabaseException {
+    public int createPromotion(Promotion promotion){
         String sql = "INSERT INTO Promotion (title, description, start_date, end_date, " +
                 "discount_percentage, discount_amount) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
@@ -204,7 +203,7 @@ public class PromotionDAO {
             int affectedRows = stmt.executeUpdate();
 
             if (affectedRows == 0) {
-                throw new DatabaseException("Tạo khuyến mãi thất bại, không có dòng nào bị ảnh hưởng");
+                throw new RuntimeException("Tạo khuyến mãi thất bại, không có dòng nào bị ảnh hưởng");
             }
 
             try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
@@ -213,20 +212,20 @@ public class PromotionDAO {
                     logger.info("Created promotion with ID: {}", promotionId);
                     return promotionId;
                 } else {
-                    throw new DatabaseException("Tạo khuyến mãi thất bại, không lấy được ID");
+                    throw new RuntimeException("Tạo khuyến mãi thất bại, không lấy được ID");
                 }
             }
 
         } catch (SQLException e) {
             logger.error("Error creating promotion", e);
-            throw new DatabaseException("Không thể tạo khuyến mãi", e);
+            throw new RuntimeException("Không thể tạo khuyến mãi", e);
         }
     }
 
     /**
      * Update promotion
      */
-    public boolean updatePromotion(Promotion promotion) throws DatabaseException {
+    public boolean updatePromotion(Promotion promotion) {
         String sql = "UPDATE Promotion " +
                 "SET title = ?, description = ?, start_date = ?, end_date = ?, " +
                 "discount_percentage = ?, discount_amount = ? " +
@@ -251,14 +250,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error updating promotion: {}", promotion.getPromotionId(), e);
-            throw new DatabaseException("Không thể cập nhật khuyến mãi", e);
+            throw new RuntimeException("Không thể cập nhật khuyến mãi", e);
         }
     }
 
     /**
      * Delete promotion
      */
-    public boolean deletePromotion(int promotionId) throws DatabaseException {
+    public boolean deletePromotion(int promotionId) {
         String sql = "DELETE FROM Promotion WHERE promotion_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -274,14 +273,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error deleting promotion: {}", promotionId, e);
-            throw new DatabaseException("Không thể xóa khuyến mãi", e);
+            throw new RuntimeException("Không thể xóa khuyến mãi", e);
         }
     }
 
     /**
      * Add car to promotion with specific discount
      */
-    public boolean addCarToPromotion(int carId, int promotionId, double discountPercentage, double discountAmount) throws DatabaseException {
+    public boolean addCarToPromotion(int carId, int promotionId, double discountPercentage, double discountAmount) {
         String sql = "INSERT INTO CarPromotion (car_id, promotion_id, discount_percentage, discount_amount) " +
                 "VALUES (?, ?, ?, ?)";
 
@@ -302,21 +301,21 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error adding car {} to promotion {}", carId, promotionId, e);
-            throw new DatabaseException("Không thể thêm xe vào khuyến mãi", e);
+            throw new RuntimeException("Không thể thêm xe vào khuyến mãi", e);
         }
     }
 
     /**
      * Add car to promotion (using default promotion discount)
      */
-    public boolean addCarToPromotion(int carId, int promotionId) throws DatabaseException {
+    public boolean addCarToPromotion(int carId, int promotionId) {
         return addCarToPromotion(carId, promotionId, 0, 0);
     }
 
     /**
      * Remove car from promotion
      */
-    public boolean removeCarFromPromotion(int carId, int promotionId) throws DatabaseException {
+    public boolean removeCarFromPromotion(int carId, int promotionId) {
         String sql = "DELETE FROM CarPromotion WHERE car_id = ? AND promotion_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -333,19 +332,18 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error removing car {} from promotion {}", carId, promotionId, e);
-            throw new DatabaseException("Không thể xóa xe khỏi khuyến mãi", e);
+            throw new RuntimeException("Không thể xóa xe khỏi khuyến mãi", e);
         }
     }
 
     /**
      * Get all cars in a promotion (returns full Car objects with individual discounts)
-     * ✅ CẬP NHẬT: Load discount riêng của từng xe
      */
-    public List<Car> getCarsInPromotion(int promotionId) throws DatabaseException {
+    public List<Car> getCarsInPromotion(int promotionId)  {
         List<Car> cars = new ArrayList<>();
         String sql = "SELECT c.car_id, c.brand_id, c.model, c.price, c.status, " +
                 "c.description, c.year, c.color, c.stock, b.brand_name, " +
-                "cp.discount_percentage, cp.discount_amount, " +  // ✅ Load discount riêng
+                "cp.discount_percentage, cp.discount_amount, " +
                 "(SELECT TOP 1 image_url FROM CarImage WHERE car_id = c.car_id AND is_primary = 1) as image_url " +
                 "FROM Car c " +
                 "INNER JOIN CarPromotion cp ON c.car_id = cp.car_id " +
@@ -371,8 +369,6 @@ public class PromotionDAO {
                     car.setColor(rs.getString("color"));
                     car.setStock(rs.getInt("stock"));
                     car.setImageUrl(rs.getString("image_url"));
-
-                    // ✅ Set discount riêng của xe này
                     car.setDiscountPercentage(rs.getDouble("discount_percentage"));
                     car.setDiscountAmount(rs.getDouble("discount_amount"));
 
@@ -385,14 +381,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving cars in promotion: {}", promotionId, e);
-            throw new DatabaseException("Không thể lấy danh sách xe trong khuyến mãi", e);
+            throw new RuntimeException("Không thể lấy danh sách xe trong khuyến mãi", e);
         }
     }
 
     /**
      * Get car IDs in a promotion
      */
-    public List<Integer> getCarIdsInPromotion(int promotionId) throws DatabaseException {
+    public List<Integer> getCarIdsInPromotion(int promotionId) {
         List<Integer> carIds = new ArrayList<>();
         String sql = "SELECT car_id FROM CarPromotion WHERE promotion_id = ?";
 
@@ -412,7 +408,7 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving car IDs in promotion: {}", promotionId, e);
-            throw new DatabaseException("Không thể lấy danh sách xe trong khuyến mãi", e);
+            throw new RuntimeException("Không thể lấy danh sách xe trong khuyến mãi", e);
         }
     }
 
@@ -423,7 +419,7 @@ public class PromotionDAO {
     /**
      * Claim promotion for user
      */
-    public boolean claimPromotion(int userId, int promotionId) throws DatabaseException {
+    public boolean claimPromotion(int userId, int promotionId) {
         String checkSql = "SELECT COUNT(*) FROM Promotion " +
                 "WHERE promotion_id = ? AND GETDATE() BETWEEN start_date AND end_date";
 
@@ -436,7 +432,7 @@ public class PromotionDAO {
                 checkStmt.setInt(1, promotionId);
                 try (ResultSet rs = checkStmt.executeQuery()) {
                     if (rs.next() && rs.getInt(1) == 0) {
-                        throw new DatabaseException("Khuyến mãi không còn hiệu lực");
+                        throw new RuntimeException("Khuyến mãi không còn hiệu lực");
                     }
                 }
             }
@@ -457,18 +453,18 @@ public class PromotionDAO {
             if (e.getMessage().contains("UNIQUE") || e.getMessage().contains("duplicate") ||
                     e.getMessage().contains("UQ_UserPromotion")) {
                 logger.warn("User {} already claimed promotion {}", userId, promotionId);
-                throw new DatabaseException("Bạn đã nhận khuyến mãi này rồi!");
+                throw new RuntimeException("Bạn đã nhận khuyến mãi này rồi!");
             }
 
             logger.error("Error claiming promotion", e);
-            throw new DatabaseException("Không thể nhận khuyến mãi", e);
+            throw new RuntimeException("Không thể nhận khuyến mãi", e);
         }
     }
 
     /**
      * Check if user has claimed a promotion
      */
-    public boolean hasUserClaimedPromotion(int userId, int promotionId) throws DatabaseException {
+    public boolean hasUserClaimedPromotion(int userId, int promotionId)  {
         String sql = "SELECT COUNT(*) FROM UserPromotion WHERE user_id = ? AND promotion_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -487,14 +483,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error checking user promotion claim", e);
-            throw new DatabaseException("Không thể kiểm tra trạng thái khuyến mãi", e);
+            throw new RuntimeException("Không thể kiểm tra trạng thái khuyến mãi", e);
         }
     }
 
     /**
      * Get user's claimed promotions
      */
-    public List<Promotion> getUserClaimedPromotions(int userId) throws DatabaseException {
+    public List<Promotion> getUserClaimedPromotions(int userId)  {
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT p.promotion_id, p.title, p.description, p.start_date, p.end_date, " +
                 "p.discount_percentage, p.discount_amount, " +
@@ -524,14 +520,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving user claimed promotions", e);
-            throw new DatabaseException("Không thể lấy danh sách khuyến mãi đã nhận", e);
+            throw new RuntimeException("Không thể lấy danh sách khuyến mãi đã nhận", e);
         }
     }
 
     /**
      * Get user's available (claimed but not used) promotions for a specific car
      */
-    public List<Promotion> getUserAvailablePromotionsForCar(int userId, int carId) throws DatabaseException {
+    public List<Promotion> getUserAvailablePromotionsForCar(int userId, int carId)  {
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT p.promotion_id, p.title, p.description, p.start_date, p.end_date, " +
                 "p.discount_percentage, p.discount_amount, " +
@@ -568,14 +564,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error retrieving user available promotions for car", e);
-            throw new DatabaseException("Không thể lấy danh sách khuyến mãi khả dụng", e);
+            throw new RuntimeException("Không thể lấy danh sách khuyến mãi khả dụng", e);
         }
     }
 
     /**
      * Mark promotion as used
      */
-    public boolean markPromotionAsUsed(int userId, int promotionId, int orderId) throws DatabaseException {
+    public boolean markPromotionAsUsed(int userId, int promotionId, int orderId) {
         String sql = "UPDATE UserPromotion " +
                 "SET is_used = 1, used_at = GETDATE(), order_id = ? " +
                 "WHERE user_id = ? AND promotion_id = ? AND is_used = 0";
@@ -595,14 +591,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error marking promotion as used", e);
-            throw new DatabaseException("Không thể cập nhật trạng thái khuyến mãi", e);
+            throw new RuntimeException("Không thể cập nhật trạng thái khuyến mãi", e);
         }
     }
 
     /**
      * Get promotion statistics for admin
      */
-    public int getTotalClaimsForPromotion(int promotionId) throws DatabaseException {
+    public int getTotalClaimsForPromotion(int promotionId)  {
         String sql = "SELECT COUNT(*) FROM UserPromotion WHERE promotion_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -620,14 +616,14 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting total claims for promotion", e);
-            throw new DatabaseException("Không thể lấy thống kê khuyến mãi", e);
+            throw new RuntimeException("Không thể lấy thống kê khuyến mãi", e);
         }
     }
 
     /**
      * Get used claims count for promotion
      */
-    public int getUsedClaimsForPromotion(int promotionId) throws DatabaseException {
+    public int getUsedClaimsForPromotion(int promotionId)  {
         String sql = "SELECT COUNT(*) FROM UserPromotion WHERE promotion_id = ? AND is_used = 1";
 
         try (Connection conn = DBContext.getConnection();
@@ -645,13 +641,9 @@ public class PromotionDAO {
 
         } catch (SQLException e) {
             logger.error("Error getting used claims for promotion", e);
-            throw new DatabaseException("Không thể lấy thống kê khuyến mãi", e);
+            throw new RuntimeException("Không thể lấy thống kê khuyến mãi", e);
         }
     }
-
-    // =============================================
-    // HELPER METHODS
-    // =============================================
 
     /**
      * Map ResultSet to Promotion object
