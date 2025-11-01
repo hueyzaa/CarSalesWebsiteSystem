@@ -15,22 +15,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-/**
- * CarsServlet - Display and filter car listings
- * Accessible by everyone (Guest/Customer/Staff/Admin)
- */
 @WebServlet("/cars")
 public class CarsServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(CarsServlet.class);
+
     private CarDAO carDAO;
     private BrandDAO brandDAO;
 
     @Override
-    public void init() throws ServletException {
-        super.init();
+    public void init() {
         carDAO = new CarDAO();
         brandDAO = new BrandDAO();
         logger.info("CarsServlet initialized");
@@ -42,85 +38,80 @@ public class CarsServlet extends HttpServlet {
 
         try {
             // Get filter parameters
-            String searchKeyword = request.getParameter("search");
-            String keyword = request.getParameter("keyword");
-            String brandParam = request.getParameter("brand");
-            String minPriceStr = request.getParameter("minPrice");
-            String maxPriceStr = request.getParameter("maxPrice");
-            String sortBy = request.getParameter("sort");
-
-            String finalKeyword = searchKeyword != null ? searchKeyword : keyword;
+            FilterParams params = extractFilterParams(request);
 
             // Get filtered cars
-            List<Car> carList = getFilteredCars(finalKeyword, brandParam, minPriceStr, maxPriceStr, request);
+            List<Car> carList = getFilteredCars(params, request);
 
             // Apply sorting
-            if (sortBy != null && !sortBy.isEmpty()) {
-                carList = applySorting(carList, sortBy);
-                request.setAttribute("sortBy", sortBy);
+            if (params.sortBy != null && !params.sortBy.isEmpty()) {
+                carList = applySorting(carList, params.sortBy);
+                request.setAttribute("sortBy", params.sortBy);
             }
 
             // Load brands for filter
             List<Brand> brandList = brandDAO.getAllBrands();
 
             // Set attributes
-            request.setAttribute("carList", carList);
-            request.setAttribute("brandList", brandList);
-            request.setAttribute("totalCars", carList.size());
-
-            // Set user info
+            setCarListAttributes(request, carList, brandList);
             setUserAttributes(request);
 
             logger.info("Loaded {} cars with filters - keyword: {}, brand: {}, sort: {}",
-                    carList.size(), finalKeyword, brandParam, sortBy);
+                    carList.size(), params.keyword, params.brandId, params.sortBy);
 
-            request.getRequestDispatcher("/WEB-INF/views/cars.jsp")
-                    .forward(request, response);
+            forward(request, response, "/WEB-INF/views/cars.jsp");
 
         } catch (RuntimeException e) {
             logger.error("Database error in CarsServlet", e);
-            request.setAttribute("error", "Không thể tải danh sách xe. Vui lòng thử lại sau.");
-            request.getRequestDispatcher("/WEB-INF/views/error.jsp")
-                    .forward(request, response);
+            forwardToError(request, response, "Không thể tải danh sách xe. Vui lòng thử lại sau.");
         } catch (Exception e) {
             logger.error("Unexpected error in CarsServlet", e);
-            request.setAttribute("error", "Đã xảy ra lỗi không mong muốn.");
-            request.getRequestDispatcher("/WEB-INF/views/error.jsp")
-                    .forward(request, response);
+            forwardToError(request, response, "Đã xảy ra lỗi không mong muốn.");
         }
     }
 
-    /**
-     * Get filtered cars based on parameters
-     */
-    private List<Car> getFilteredCars(String keyword, String brandParam,
-                                      String minPriceStr, String maxPriceStr,
-                                      HttpServletRequest request) {
+    // ============ FILTER LOGIC ============
+
+    private FilterParams extractFilterParams(HttpServletRequest request) {
+        FilterParams params = new FilterParams();
+
+        String searchKeyword = request.getParameter("search");
+        String keyword = request.getParameter("keyword");
+        params.keyword = searchKeyword != null ? searchKeyword : keyword;
+
+        params.brandParam = request.getParameter("brand");
+        params.minPriceStr = request.getParameter("minPrice");
+        params.maxPriceStr = request.getParameter("maxPrice");
+        params.sortBy = request.getParameter("sort");
+
+        return params;
+    }
+
+    private List<Car> getFilteredCars(FilterParams params, HttpServletRequest request) {
         // Search by keyword
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            request.setAttribute("searchKeyword", keyword.trim());
-            logger.debug("Searching cars with keyword: {}", keyword);
-            return carDAO.searchCars(keyword.trim());
+        if (isNotEmpty(params.keyword)) {
+            request.setAttribute("searchKeyword", params.keyword.trim());
+            logger.debug("Searching cars with keyword: {}", params.keyword);
+            return carDAO.searchCars(params.keyword.trim());
         }
 
         // Filter by brand
-        if (brandParam != null && !brandParam.trim().isEmpty()) {
+        if (isNotEmpty(params.brandParam)) {
             try {
-                int brandId = Integer.parseInt(brandParam);
-                request.setAttribute("selectedBrand", brandId);
-                logger.debug("Filtering cars by brand ID: {}", brandId);
-                return carDAO.getCarsByBrand(brandId);
+                params.brandId = Integer.parseInt(params.brandParam);
+                request.setAttribute("selectedBrand", params.brandId);
+                logger.debug("Filtering cars by brand ID: {}", params.brandId);
+                return carDAO.getCarsByBrand(params.brandId);
             } catch (NumberFormatException e) {
-                logger.warn("Invalid brand ID format: {}", brandParam);
+                logger.warn("Invalid brand ID format: {}", params.brandParam);
             }
         }
 
         // Filter by price range
-        if (minPriceStr != null && maxPriceStr != null
-                && !minPriceStr.trim().isEmpty() && !maxPriceStr.trim().isEmpty()) {
+        if (isNotEmpty(params.minPriceStr) && isNotEmpty(params.maxPriceStr)) {
             try {
-                double minPrice = Double.parseDouble(minPriceStr);
-                double maxPrice = Double.parseDouble(maxPriceStr);
+                double minPrice = Double.parseDouble(params.minPriceStr);
+                double maxPrice = Double.parseDouble(params.maxPriceStr);
 
                 if (minPrice >= 0 && maxPrice >= minPrice) {
                     request.setAttribute("minPrice", minPrice);
@@ -131,7 +122,7 @@ public class CarsServlet extends HttpServlet {
                     logger.warn("Invalid price range: {} - {}", minPrice, maxPrice);
                 }
             } catch (NumberFormatException e) {
-                logger.warn("Invalid price format: {} - {}", minPriceStr, maxPriceStr);
+                logger.warn("Invalid price format: {} - {}", params.minPriceStr, params.maxPriceStr);
             }
         }
 
@@ -140,56 +131,45 @@ public class CarsServlet extends HttpServlet {
         return carDAO.getAllCars();
     }
 
-    /**
-     * Apply sorting to car list
-     */
+    // ============ SORTING LOGIC ============
+
     private List<Car> applySorting(List<Car> carList, String sortBy) {
         if (carList == null || carList.isEmpty()) {
             return carList;
         }
 
-        switch (sortBy) {
-            case "price_asc":
-                carList.sort((c1, c2) -> Double.compare(c1.getPrice(), c2.getPrice()));
-                logger.debug("Sorted by price ascending");
-                break;
-
-            case "price_desc":
-                carList.sort((c1, c2) -> Double.compare(c2.getPrice(), c1.getPrice()));
-                logger.debug("Sorted by price descending");
-                break;
-
-            case "name_asc":
-                carList.sort((c1, c2) -> c1.getName().compareToIgnoreCase(c2.getName()));
-                logger.debug("Sorted by name ascending");
-                break;
-
-            case "name_desc":
-                carList.sort((c1, c2) -> c2.getName().compareToIgnoreCase(c1.getName()));
-                logger.debug("Sorted by name descending");
-                break;
-
-            case "year_desc":
-                carList.sort((c1, c2) -> Integer.compare(c2.getYear(), c1.getYear()));
-                logger.debug("Sorted by year descending");
-                break;
-
-            case "newest":
-                carList.sort((c1, c2) -> Integer.compare(c2.getId(), c1.getId()));
-                logger.debug("Sorted by newest");
-                break;
-
-            default:
-                logger.debug("Unknown sort type: {}", sortBy);
-                break;
+        Comparator<Car> comparator = getComparator(sortBy);
+        if (comparator != null) {
+            carList.sort(comparator);
+            logger.debug("Sorted by: {}", sortBy);
+        } else {
+            logger.debug("Unknown sort type: {}", sortBy);
         }
 
         return carList;
     }
 
-    /**
-     * Set user-related attributes
-     */
+    private Comparator<Car> getComparator(String sortBy) {
+        return switch (sortBy) {
+            case "price_asc" -> Comparator.comparingDouble(Car::getPrice);
+            case "price_desc" -> Comparator.comparingDouble(Car::getPrice).reversed();
+            case "name_asc" -> Comparator.comparing(Car::getName, String.CASE_INSENSITIVE_ORDER);
+            case "name_desc" -> Comparator.comparing(Car::getName, String.CASE_INSENSITIVE_ORDER).reversed();
+            case "year_desc" -> Comparator.comparingInt(Car::getYear).reversed();
+            case "newest" -> Comparator.comparingInt(Car::getId).reversed();
+            default -> null;
+        };
+    }
+
+    // ============ ATTRIBUTE SETTERS ============
+
+    private void setCarListAttributes(HttpServletRequest request, List<Car> carList,
+                                      List<Brand> brandList) {
+        request.setAttribute("carList", carList);
+        request.setAttribute("brandList", brandList);
+        request.setAttribute("totalCars", carList.size());
+    }
+
     private void setUserAttributes(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
@@ -211,9 +191,32 @@ public class CarsServlet extends HttpServlet {
         }
     }
 
-    @Override
-    public void destroy() {
-        super.destroy();
-        logger.info("CarsServlet destroyed");
+    // ============ UTILITY METHODS ============
+
+    private boolean isNotEmpty(String str) {
+        return str != null && !str.trim().isEmpty();
+    }
+
+    private void forward(HttpServletRequest request, HttpServletResponse response, String path)
+            throws ServletException, IOException {
+        request.getRequestDispatcher(path).forward(request, response);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void forwardToError(HttpServletRequest request, HttpServletResponse response,
+                                String message) throws ServletException, IOException {
+        request.setAttribute("error", message);
+        forward(request, response, "/WEB-INF/views/error.jsp");
+    }
+
+    // ============ INNER CLASS ============
+
+    private static class FilterParams {
+        String keyword;
+        String brandParam;
+        Integer brandId;
+        String minPriceStr;
+        String maxPriceStr;
+        String sortBy;
     }
 }

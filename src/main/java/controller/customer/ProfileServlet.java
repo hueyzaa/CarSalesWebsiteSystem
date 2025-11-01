@@ -80,7 +80,7 @@ public class ProfileServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
 
         HttpSession session = request.getSession(false);
 
@@ -98,7 +98,7 @@ public class ProfileServlet extends HttpServlet {
 
             // Validate inputs
             String name = ValidationUtil.validateString(request.getParameter("name"), "Tên", 100);
-            String email = ValidationUtil.validateEmail(request.getParameter("email"));
+
             String phone = validateOptional(request.getParameter("phone"), ValidationUtil::validatePhone);
             String address = validateOptional(request.getParameter("address"),
                     s -> ValidationUtil.validateString(s, "Địa chỉ", 255));

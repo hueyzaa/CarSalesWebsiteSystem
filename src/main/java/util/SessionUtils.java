@@ -11,9 +11,6 @@ import org.slf4j.LoggerFactory;
 /**
  * SessionUtils - Utility class for session management and user authentication
  * Provides methods to extract user information from session objects
- * UPDATED: Removed loyalty_points method
- *
- * @version 2.1
  */
 public class SessionUtils {
     private static final Logger logger = LoggerFactory.getLogger(SessionUtils.class);
@@ -26,9 +23,6 @@ public class SessionUtils {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
-    // =============================================
-    // USER ID METHODS
-    // =============================================
 
     /**
      * Get user ID from session object
@@ -65,9 +59,6 @@ public class SessionUtils {
         return getUserId(userObject);
     }
 
-    // =============================================
-    // USER ROLE METHODS
-    // =============================================
 
     /**
      * Get user role from session object
@@ -104,9 +95,6 @@ public class SessionUtils {
         return getUserRole(userObject);
     }
 
-    // =============================================
-    // USER EMAIL METHODS
-    // =============================================
 
     /**
      * Get user email from session object
@@ -176,9 +164,6 @@ public class SessionUtils {
         return getUserName(userObject);
     }
 
-    // =============================================
-    // USER OBJECT METHODS
-    // =============================================
 
     /**
      * Get Customer object from session
@@ -234,9 +219,6 @@ public class SessionUtils {
         return null;
     }
 
-    // =============================================
-    // ROLE CHECK METHODS
-    // =============================================
 
     /**
      * Check if user is logged in
@@ -300,9 +282,6 @@ public class SessionUtils {
         return role.equalsIgnoreCase(getUserRole(session));
     }
 
-    // =============================================
-    // SESSION MANAGEMENT METHODS
-    // =============================================
 
     /**
      * Set user in session with additional attributes
@@ -390,9 +369,6 @@ public class SessionUtils {
         }
     }
 
-    // =============================================
-    // SECURITY METHODS
-    // =============================================
 
     /**
      * Prevent session fixation attack
@@ -431,9 +407,6 @@ public class SessionUtils {
         }
     }
 
-    // =============================================
-    // CUSTOMER-SPECIFIC METHODS
-    // =============================================
 
     /**
      * Check if customer account is active

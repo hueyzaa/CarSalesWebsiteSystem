@@ -17,19 +17,15 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * CartServlet - Handle shopping cart operations
- * Accessible by logged-in users (Customer/Staff/Admin)
- */
 @WebServlet("/cart")
 public class CartServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(CartServlet.class);
+
     private CartDAO cartDAO;
     private CarDAO carDAO;
 
     @Override
-    public void init() throws ServletException {
-        super.init();
+    public void init() {
         cartDAO = new CartDAO();
         carDAO = new CarDAO();
         logger.info("CartServlet initialized");
@@ -39,83 +35,193 @@ public class CartServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-
-        if (!SessionUtils.isLoggedIn(session)) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        Integer userId = validateUser(request, response);
+        if (userId == null) return;
 
         try {
-            Integer userId = SessionUtils.getUserId(session);
             List<CartItem> cartItems = cartDAO.getCartItemsByUserId(userId);
-
             double total = calculateTotal(cartItems);
 
-            request.setAttribute("cartItems", cartItems);
-            request.setAttribute("total", total);
-            session.setAttribute("cartCount", cartItems != null ? cartItems.size() : 0);
-
-            logger.debug("Cart loaded for user {} with {} items", userId,
-                    cartItems != null ? cartItems.size() : 0);
-
-            request.getRequestDispatcher("/WEB-INF/views/cart.jsp")
-                    .forward(request, response);
+            setCartAttributes(request, request.getSession(), cartItems, total);
+            forward(request, response, "/WEB-INF/views/cart.jsp");
 
         } catch (Exception e) {
             logger.error("Error loading cart", e);
-            request.setAttribute("error", "Lỗi khi tải giỏ hàng: " + e.getMessage());
-            request.getRequestDispatcher("/WEB-INF/views/error.jsp")
-                    .forward(request, response);
+            forwardToError(request, response, "Lỗi khi tải giỏ hàng: " + e.getMessage());
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
 
-        HttpSession session = request.getSession(false);
-
-        if (!SessionUtils.isLoggedIn(session)) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        Integer userId = validateUser(request, response);
+        if (userId == null) return;
 
         try {
-            Integer userId = SessionUtils.getUserId(session);
             String action = request.getParameter("action");
-
-            switch (action != null ? action : "") {
-                case "add":
-                    handleAddToCart(request, response, session, userId);
-                    break;
-                case "update":
-                    handleUpdateQuantity(request, response, session, userId);
-                    break;
-                case "remove":
-                    handleRemoveItem(request, response, session);
-                    break;
-                case "clear":
-                    handleClearCart(request, response, session, userId);
-                    break;
-                default:
-                    response.sendRedirect(request.getContextPath() + "/cart");
-            }
+            handleAction(action, request, response, userId);
 
         } catch (NumberFormatException e) {
             logger.error("Invalid number format in cart operation", e);
-            session.setAttribute("error", "Dữ liệu không hợp lệ!");
-            response.sendRedirect(request.getContextPath() + "/cart");
+            redirectWithError(response, request.getSession(), "/cart", "Dữ liệu không hợp lệ!");
         } catch (Exception e) {
             logger.error("Error in cart operation", e);
-            session.setAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/cart");
+            redirectWithError(response, request.getSession(), "/cart",
+                    "Đã xảy ra lỗi: " + e.getMessage());
         }
     }
 
-    /**
-     * Calculate cart total
-     */
+    // ============ USER VALIDATION ============
+
+    private Integer validateUser(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+
+        if (!SessionUtils.isLoggedIn(session)) {
+            redirect(response, request.getContextPath() + "/login");
+            return null;
+        }
+
+        return SessionUtils.getUserId(session);
+    }
+
+    // ============ ACTION HANDLERS ============
+
+    private void handleAction(String action, HttpServletRequest request,
+                              HttpServletResponse response, Integer userId) throws IOException {
+
+        switch (action != null ? action : "") {
+            case "add":
+                handleAddToCart(request, response, userId);
+                break;
+            case "update":
+                handleUpdateQuantity(request, response, userId);
+                break;
+            case "remove":
+                handleRemoveItem(request, response);
+                break;
+            case "clear":
+                handleClearCart(request, response, userId);
+                break;
+            default:
+                redirect(response, request.getContextPath() + "/cart");
+        }
+    }
+
+    private void handleAddToCart(HttpServletRequest request, HttpServletResponse response,
+                                 Integer userId) throws IOException {
+        HttpSession session = request.getSession();
+
+        int carId = Integer.parseInt(request.getParameter("carId"));
+        int quantity = Integer.parseInt(request.getParameter("quantity"));
+
+        Car car = carDAO.getCarById(carId);
+        if (car == null) {
+            logger.warn("Attempted to add non-existent car {}", carId);
+            redirectWithError(response, session, "/cars", "Xe không tồn tại!");
+            return;
+        }
+
+        if (quantity <= 0) {
+            redirectWithError(response, session, "/car-detail?id=" + carId,
+                    "Số lượng phải lớn hơn 0!");
+            return;
+        }
+
+        if (car.getStock() < quantity) {
+            logger.warn("Insufficient stock for car {}: requested {}, available {}",
+                    carId, quantity, car.getStock());
+            redirectWithError(response, session, "/car-detail?id=" + carId,
+                    String.format("Số lượng xe không đủ! Chỉ còn %d xe trong kho.", car.getStock()));
+            return;
+        }
+
+        if (cartDAO.addToCart(userId, carId, quantity)) {
+            logger.info("User {} added car {} (qty: {}) to cart", userId, carId, quantity);
+            redirectWithSuccess(response, session, "/cart", "Đã thêm vào giỏ hàng!");
+        } else {
+            logger.warn("Failed to add car {} to cart for user {}", carId, userId);
+            redirectWithError(response, session, "/cart",
+                    "Không thể thêm vào giỏ hàng! Vui lòng kiểm tra lại số lượng.");
+        }
+    }
+
+    private void handleUpdateQuantity(HttpServletRequest request, HttpServletResponse response,
+                                      Integer userId) throws IOException {
+        HttpSession session = request.getSession();
+
+        int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
+        int quantity = Integer.parseInt(request.getParameter("quantity"));
+
+        if (quantity <= 0) {
+            redirectWithError(response, session, "/cart", "Số lượng phải lớn hơn 0!");
+            return;
+        }
+
+        CartItem targetItem = findCartItem(userId, cartItemId);
+        if (targetItem == null) {
+            logger.warn("Cart item {} not found for user {}", cartItemId, userId);
+            redirectWithError(response, session, "/cart", "Không tìm thấy sản phẩm trong giỏ hàng!");
+            return;
+        }
+
+        int availableStock = targetItem.getCar().getStock();
+        if (quantity > availableStock) {
+            logger.warn("Insufficient stock for cart update: requested {}, available {}",
+                    quantity, availableStock);
+            redirectWithError(response, session, "/cart",
+                    String.format("Số lượng không đủ! Chỉ còn %d xe trong kho.", availableStock));
+            return;
+        }
+
+        if (cartDAO.updateCartItem(cartItemId, quantity)) {
+            logger.info("User {} updated cart item {} to quantity {}", userId, cartItemId, quantity);
+            redirectWithSuccess(response, session, "/cart", "Đã cập nhật số lượng!");
+        } else {
+            logger.warn("Failed to update cart item {} for user {}", cartItemId, userId);
+            redirectWithError(response, session, "/cart", "Không thể cập nhật số lượng!");
+        }
+    }
+
+    private void handleRemoveItem(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession();
+
+        int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
+
+        if (cartDAO.removeCartItem(cartItemId)) {
+            logger.info("Removed cart item {}", cartItemId);
+            redirectWithSuccess(response, session, "/cart", "Đã xóa khỏi giỏ hàng!");
+        } else {
+            logger.warn("Failed to remove cart item {}", cartItemId);
+            redirectWithError(response, session, "/cart", "Không thể xóa sản phẩm!");
+        }
+    }
+
+    private void handleClearCart(HttpServletRequest request, HttpServletResponse response,
+                                 Integer userId) throws IOException {
+        HttpSession session = request.getSession();
+
+        if (cartDAO.clearCart(userId)) {
+            logger.info("Cleared cart for user {}", userId);
+            redirectWithSuccess(response, session, "/cart", "Đã xóa tất cả sản phẩm!");
+        } else {
+            logger.warn("Failed to clear cart for user {}", userId);
+            redirectWithError(response, session, "/cart", "Không thể xóa giỏ hàng!");
+        }
+    }
+
+    // ============ HELPER METHODS ============
+
+    private CartItem findCartItem(Integer userId, int cartItemId) {
+        List<CartItem> cartItems = cartDAO.getCartItemsByUserId(userId);
+        return cartItems.stream()
+                .filter(item -> item.getId() == cartItemId)
+                .findFirst()
+                .orElse(null);
+    }
+
     private double calculateTotal(List<CartItem> cartItems) {
         if (cartItems == null || cartItems.isEmpty()) {
             return 0;
@@ -125,140 +231,46 @@ public class CartServlet extends HttpServlet {
                 .sum();
     }
 
-    /**
-     * Handle add to cart with stock validation
-     */
-    private void handleAddToCart(HttpServletRequest request, HttpServletResponse response,
-                                 HttpSession session, Integer userId) throws IOException {
-        int carId = Integer.parseInt(request.getParameter("carId"));
-        int quantity = Integer.parseInt(request.getParameter("quantity"));
+    private void setCartAttributes(HttpServletRequest request, HttpSession session,
+                                   List<CartItem> cartItems, double total) {
+        request.setAttribute("cartItems", cartItems);
+        request.setAttribute("total", total);
 
-        Car car = carDAO.getCarById(carId);
-        if (car == null) {
-            logger.warn("Attempted to add non-existent car {} to cart", carId);
-            session.setAttribute("error", "Xe không tồn tại!");
-            response.sendRedirect(request.getContextPath() + "/cars");
-            return;
-        }
+        int cartCount = cartItems != null ? cartItems.size() : 0;
+        session.setAttribute("cartCount", cartCount);
 
-        if (quantity <= 0) {
-            session.setAttribute("error", "Số lượng phải lớn hơn 0!");
-            response.sendRedirect(request.getContextPath() + "/car-detail?id=" + carId);
-            return;
-        }
-
-        if (car.getStock() < quantity) {
-            logger.warn("Insufficient stock for car {}: requested {}, available {}",
-                    carId, quantity, car.getStock());
-            session.setAttribute("error",
-                    String.format("Số lượng xe không đủ! Chỉ còn %d xe trong kho.", car.getStock()));
-            response.sendRedirect(request.getContextPath() + "/car-detail?id=" + carId);
-            return;
-        }
-
-        boolean success = cartDAO.addToCart(userId, carId, quantity);
-
-        if (success) {
-            logger.info("User {} added car {} (qty: {}) to cart", userId, carId, quantity);
-            session.setAttribute("success", "Đã thêm vào giỏ hàng!");
-        } else {
-            logger.warn("Failed to add car {} to cart for user {}", carId, userId);
-            session.setAttribute("error", "Không thể thêm vào giỏ hàng! Vui lòng kiểm tra lại số lượng.");
-        }
-
-        response.sendRedirect(request.getContextPath() + "/cart");
+        logger.debug("Cart loaded with {} items", cartCount);
     }
 
-    /**
-     * Handle update quantity with stock validation
-     */
-    private void handleUpdateQuantity(HttpServletRequest request, HttpServletResponse response,
-                                      HttpSession session, Integer userId) throws IOException {
-        int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
-        int quantity = Integer.parseInt(request.getParameter("quantity"));
+    // ============ UTILITY METHODS ============
 
-        if (quantity <= 0) {
-            session.setAttribute("error", "Số lượng phải lớn hơn 0!");
-            response.sendRedirect(request.getContextPath() + "/cart");
-            return;
-        }
-
-        List<CartItem> cartItems = cartDAO.getCartItemsByUserId(userId);
-        CartItem targetItem = cartItems.stream()
-                .filter(item -> item.getId() == cartItemId)
-                .findFirst()
-                .orElse(null);
-
-        if (targetItem == null) {
-            logger.warn("Cart item {} not found for user {}", cartItemId, userId);
-            session.setAttribute("error", "Không tìm thấy sản phẩm trong giỏ hàng!");
-            response.sendRedirect(request.getContextPath() + "/cart");
-            return;
-        }
-
-        int availableStock = targetItem.getCar().getStock();
-        if (quantity > availableStock) {
-            logger.warn("Insufficient stock for cart update: requested {}, available {}",
-                    quantity, availableStock);
-            session.setAttribute("error",
-                    String.format("Số lượng không đủ! Chỉ còn %d xe trong kho.", availableStock));
-            response.sendRedirect(request.getContextPath() + "/cart");
-            return;
-        }
-
-        boolean success = cartDAO.updateCartItem(cartItemId, quantity);
-
-        if (success) {
-            logger.info("User {} updated cart item {} to quantity {}", userId, cartItemId, quantity);
-            session.setAttribute("success", "Đã cập nhật số lượng!");
-        } else {
-            logger.warn("Failed to update cart item {} for user {}", cartItemId, userId);
-            session.setAttribute("error", "Không thể cập nhật số lượng!");
-        }
-
-        response.sendRedirect(request.getContextPath() + "/cart");
+    private void redirect(HttpServletResponse response, String url) throws IOException {
+        response.sendRedirect(url);
     }
 
-    /**
-     * Handle remove item from cart
-     */
-    private void handleRemoveItem(HttpServletRequest request, HttpServletResponse response,
-                                  HttpSession session) throws IOException {
-        int cartItemId = Integer.parseInt(request.getParameter("cartItemId"));
-        boolean success = cartDAO.removeCartItem(cartItemId);
-
-        if (success) {
-            logger.info("Removed cart item {}", cartItemId);
-            session.setAttribute("success", "Đã xóa khỏi giỏ hàng!");
-        } else {
-            logger.warn("Failed to remove cart item {}", cartItemId);
-            session.setAttribute("error", "Không thể xóa sản phẩm!");
-        }
-
-        response.sendRedirect(request.getContextPath() + "/cart");
+    @SuppressWarnings("SameParameterValue")
+    private void redirectWithSuccess(HttpServletResponse response, HttpSession session,
+                                     String path, String message) throws IOException {
+        session.setAttribute("success", message);
+        redirect(response, session.getServletContext().getContextPath() + path);
     }
 
-    /**
-     * Handle clear all cart
-     */
-    private void handleClearCart(HttpServletRequest request, HttpServletResponse response,
-                                 HttpSession session, Integer userId) throws IOException {
-        boolean success = cartDAO.clearCart(userId);
-
-        if (success) {
-            logger.info("Cleared cart for user {}", userId);
-            session.setAttribute("success", "Đã xóa tất cả sản phẩm!");
-        } else {
-            logger.warn("Failed to clear cart for user {}", userId);
-            session.setAttribute("error", "Không thể xóa giỏ hàng!");
-        }
-
-        response.sendRedirect(request.getContextPath() + "/cart");
+    @SuppressWarnings("SameParameterValue")
+    private void redirectWithError(HttpServletResponse response, HttpSession session,
+                                   String path, String message) throws IOException {
+        session.setAttribute("error", message);
+        redirect(response, session.getServletContext().getContextPath() + path);
     }
 
-    @Override
-    public void destroy() {
-        super.destroy();
-        logger.info("CartServlet destroyed");
+    @SuppressWarnings("SameParameterValue")
+    private void forwardToError(HttpServletRequest request, HttpServletResponse response,
+                                String message) throws ServletException, IOException {
+        request.setAttribute("error", message);
+        forward(request, response, "/WEB-INF/views/error.jsp");
+    }
+
+    private void forward(HttpServletRequest request, HttpServletResponse response, String path)
+            throws ServletException, IOException {
+        request.getRequestDispatcher(path).forward(request, response);
     }
 }

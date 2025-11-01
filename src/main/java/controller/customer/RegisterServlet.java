@@ -98,7 +98,7 @@ public class RegisterServlet extends HttpServlet {
         }
     }
 
-    // ==================== VALIDATION ====================
+    // VALIDATION
 
     @FunctionalInterface
     private interface Validator {
@@ -117,7 +117,7 @@ public class RegisterServlet extends HttpServlet {
         return password;
     }
 
-    // ==================== CSRF ====================
+    // CSRF
 
     private void setCSRFToken(HttpServletRequest request) {
         String token = UUID.randomUUID().toString();
@@ -140,7 +140,7 @@ public class RegisterServlet extends HttpServlet {
         }
     }
 
-    // ==================== ERROR HANDLING ====================
+    // ERROR HANDLING
 
     private void handleError(HttpServletRequest request, HttpServletResponse response, String error)
             throws ServletException, IOException {

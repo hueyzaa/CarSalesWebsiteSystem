@@ -15,22 +15,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
-/**
- * CarDetailServlet - Display detailed car information
- * Accessible by everyone (Guest/Customer/Staff/Admin)
- * Shows personalized promotions for logged-in customers
- */
 @WebServlet("/car-detail")
 public class CarDetailServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(CarDetailServlet.class);
+    private static final int MAX_RELATED_CARS = 4;
+
     private CarDAO carDAO;
     private PromotionService promotionService;
 
     @Override
-    public void init() throws ServletException {
-        super.init();
+    public void init() {
         carDAO = new CarDAO();
         promotionService = new PromotionService();
         logger.info("CarDetailServlet initialized");
@@ -39,190 +36,224 @@ public class CarDetailServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         try {
-            String idParam = request.getParameter("id");
-
-            if (idParam == null || idParam.trim().isEmpty()) {
-                logger.warn("Car ID parameter missing");
-                redirectWithError(request, response, "/cars", "Không tìm thấy thông tin xe!");
+            Integer carId = getCarId(request);
+            if (carId == null) {
+                redirectWithError(request, response, "/cars",
+                        "Không tìm thấy thông tin xe!");
                 return;
             }
-
-            int carId = Integer.parseInt(idParam);
-            logger.info("Loading car detail for car ID: {}", carId);
 
             Car car = carDAO.getCarById(carId);
-
             if (car == null) {
-                logger.warn("Car not found with ID: {}", carId);
-                redirectWithError(request, response, "/cars", "Xe không tồn tại!");
+                redirectWithError(request, response, "/cars",
+                        "Xe không tồn tại!");
                 return;
             }
 
-            HttpSession session = request.getSession(false);
-            Integer userId = SessionUtils.getUserId(session);
-            boolean isCustomer = SessionUtils.isCustomer(session);
-            boolean isLoggedIn = SessionUtils.isLoggedIn(session);
-
-            logger.debug("User: {}, IsCustomer: {}", isLoggedIn ? userId : "Guest", isCustomer);
-
-            // Get promotions and calculate best discount
-            List<Promotion> activePromotions = promotionService.getActivePromotionsForCar(carId, userId);
-            DiscountInfo discountInfo = calculateBestDiscount(car, activePromotions);
-
-            // Set car and promotion attributes
-            request.setAttribute("car", car);
-            request.setAttribute("activePromotions", activePromotions);
-            request.setAttribute("bestPromotion", discountInfo.bestPromotion);
-            request.setAttribute("bestDiscountPercentage", discountInfo.discountPercentage);
-            request.setAttribute("bestDiscountAmount", discountInfo.discountAmount);
-            request.setAttribute("isLoggedIn", isLoggedIn);
-            request.setAttribute("isCustomer", isCustomer);
-
-            // Set discounted price if applicable
-            if (discountInfo.discountedPrice > 0) {
-                request.setAttribute("discountedPrice", discountInfo.discountedPrice);
-                request.setAttribute("savings", discountInfo.savings);
-                logger.info("Best discount for car {}: {}% = {:,.0f}₫ off",
-                        carId, discountInfo.discountPercentage, discountInfo.savings);
-            }
-
-            // Load related cars
-            loadRelatedCars(request, car, carId);
-
-            request.getRequestDispatcher("/WEB-INF/views/car-detail.jsp")
-                    .forward(request, response);
+            setupCarDetailPage(request, response, car);
 
         } catch (NumberFormatException e) {
-            logger.error("Invalid car ID format: {}", request.getParameter("id"), e);
-            redirectWithError(request, response, "/cars", "ID xe không hợp lệ!");
-        } catch (RuntimeException e) {
-            logger.error("Database error loading car detail", e);
-            handleError(request, response, "Không thể tải thông tin xe. Vui lòng thử lại sau!");
+            logger.error("Invalid car ID: {}", request.getParameter("id"));
+            redirectWithError(request, response, "/cars",
+                    "ID xe không hợp lệ!");
         } catch (Exception e) {
-            logger.error("Unexpected error loading car detail", e);
-            handleError(request, response, "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau!");
+            logger.error("Error loading car detail", e);
+            forwardToError(request, response,
+                    "Không thể tải thông tin xe. Vui lòng thử lại sau!");
         }
     }
 
-    /**
-     * Calculate best discount from available promotions
-     */
-    private DiscountInfo calculateBestDiscount(Car car, List<Promotion> activePromotions) {
-        DiscountInfo info = new DiscountInfo();
+    // ============ MAIN LOGIC ============
 
-        if (activePromotions == null || activePromotions.isEmpty()) {
-            logger.debug("No active promotions for car {}", car.getId());
-            return info;
+    private void setupCarDetailPage(HttpServletRequest request, HttpServletResponse response,
+                                    Car car) throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        Integer userId = SessionUtils.getUserId(session);
+
+        // Get promotions and calculate best discount
+        List<Promotion> promotions = promotionService.getActivePromotionsForCar(
+                car.getId(), userId);
+        DiscountInfo discount = calculateBestDiscount(car, promotions);
+
+        // Set attributes
+        setCarAttributes(request, car, promotions, discount);
+        setUserAttributes(request, session);
+        loadRelatedCars(request, car);
+
+        forward(request, response, "/WEB-INF/views/car-detail.jsp");
+    }
+
+    private void setCarAttributes(HttpServletRequest request, Car car,
+                                  List<Promotion> promotions, DiscountInfo discount) {
+        request.setAttribute("car", car);
+        request.setAttribute("activePromotions", promotions);
+        request.setAttribute("bestPromotion", discount.bestPromotion);
+        request.setAttribute("bestDiscountPercentage", discount.discountPercentage);
+        request.setAttribute("bestDiscountAmount", discount.discountAmount);
+
+        if (discount.hasDiscount()) {
+            request.setAttribute("discountedPrice", discount.discountedPrice);
+            request.setAttribute("savings", discount.savings);
+            logger.info("Best discount for car {}: {}% = {} VND off",
+                    car.getId(),
+                    discount.discountPercentage,
+                    String.format("%,.0f", discount.savings));
+        }
+    }
+
+    private void setUserAttributes(HttpServletRequest request, HttpSession session) {
+        request.setAttribute("isLoggedIn", SessionUtils.isLoggedIn(session));
+        request.setAttribute("isCustomer", SessionUtils.isCustomer(session));
+    }
+
+    // ============ DISCOUNT CALCULATION ============
+
+    private DiscountInfo calculateBestDiscount(Car car, List<Promotion> promotions) {
+        DiscountInfo best = new DiscountInfo();
+
+        if (promotions == null || promotions.isEmpty()) {
+            return best;
         }
 
-        logger.info("Found {} active promotions for car {}", activePromotions.size(), car.getId());
+        logger.info("Found {} active promotions for car {}", promotions.size(), car.getId());
 
-        for (Promotion promo : activePromotions) {
-            try {
-                Car carWithDiscount = promotionService.getCarWithPromotionInfo(
-                        car.getId(), promo.getPromotionId());
-
-                if (carWithDiscount == null) continue;
-
-                double discountPercent = carWithDiscount.getDiscountPercentage() > 0
-                        ? carWithDiscount.getDiscountPercentage()
-                        : promo.getDiscountPercentage();
-
-                double discountAmount = carWithDiscount.getDiscountAmount() > 0
-                        ? carWithDiscount.getDiscountAmount()
-                        : promo.getDiscountAmount();
-
-                // Calculate actual discount value
-                double actualDiscount = (discountPercent > 0)
-                        ? car.getPrice() * (discountPercent / 100)
-                        : discountAmount;
-
-                double currentBest = (info.discountPercentage > 0)
-                        ? car.getPrice() * (info.discountPercentage / 100)
-                        : info.discountAmount;
-
-                // Update if this is better
-                if (actualDiscount > currentBest) {
-                    info.discountPercentage = discountPercent;
-                    info.discountAmount = discountAmount;
-                    info.bestPromotion = promo;
-
-                    if (discountPercent > 0) {
-                        info.discountedPrice = car.getPrice() * (1 - discountPercent / 100);
-                        info.savings = car.getPrice() - info.discountedPrice;
-                    } else {
-                        info.discountedPrice = car.getPrice() - discountAmount;
-                        info.savings = discountAmount;
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("Error calculating discount for promotion {}",
-                        promo.getPromotionId(), e);
+        for (Promotion promo : promotions) {
+            DiscountInfo current = calculatePromotionDiscount(car, promo);
+            if (current.isBetterThan(best, car.getPrice())) {
+                best = current;
             }
         }
 
-        return info;
+        return best;
     }
 
-    /**
-     * Load related cars (same brand)
-     */
-    private void loadRelatedCars(HttpServletRequest request, Car car, int currentCarId) {
+    private DiscountInfo calculatePromotionDiscount(Car car, Promotion promo) {
+        try {
+            Car carWithPromo = promotionService.getCarWithPromotionInfo(
+                    car.getId(), promo.getPromotionId());
+
+            if (carWithPromo == null) {
+                return new DiscountInfo();
+            }
+
+            double discountPercent = getEffectiveValue(
+                    carWithPromo.getDiscountPercentage(),
+                    promo.getDiscountPercentage());
+
+            double discountAmount = getEffectiveValue(
+                    carWithPromo.getDiscountAmount(),
+                    promo.getDiscountAmount());
+
+            return DiscountInfo.create(car.getPrice(), discountPercent,
+                    discountAmount, promo);
+
+        } catch (Exception e) {
+            logger.error("Error calculating discount for promotion {}",
+                    promo.getPromotionId(), e);
+            return new DiscountInfo();
+        }
+    }
+
+    private double getEffectiveValue(double carValue, double promoValue) {
+        return carValue > 0 ? carValue : promoValue;
+    }
+
+    // ============ RELATED CARS ============
+
+    private void loadRelatedCars(HttpServletRequest request, Car car) {
         try {
             List<Car> relatedCars = carDAO.getCarsByBrand(car.getBrandId());
+            relatedCars.removeIf(c -> c.getId() == car.getId());
 
-            // Remove current car
-            relatedCars.removeIf(c -> c.getId() == currentCarId);
-
-            // Limit to 4
-            if (relatedCars.size() > 4) {
-                relatedCars = relatedCars.subList(0, 4);
+            if (relatedCars.size() > MAX_RELATED_CARS) {
+                relatedCars = relatedCars.subList(0, MAX_RELATED_CARS);
             }
 
             request.setAttribute("relatedCars", relatedCars);
-            logger.debug("Loaded {} related cars for car {}", relatedCars.size(), currentCarId);
+            logger.debug("Loaded {} related cars", relatedCars.size());
 
         } catch (Exception e) {
             logger.error("Error loading related cars", e);
-            request.setAttribute("relatedCars", null);
+            request.setAttribute("relatedCars", Collections.emptyList());
         }
     }
 
-    /**
-     * Redirect with error message
-     */
+    // ============ UTILITY METHODS ============
+
+    private Integer getCarId(HttpServletRequest request) {
+        String param = request.getParameter("id");
+        if (param == null || param.trim().isEmpty()) {
+            return null;
+        }
+
+        try {
+            return Integer.parseInt(param);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
     private void redirectWithError(HttpServletRequest request, HttpServletResponse response,
-                                   String path, String errorMessage) throws IOException {
-        request.getSession().setAttribute("error", errorMessage);
+                                   String path, String message) throws IOException {
+        HttpSession session = request.getSession();
+        session.setAttribute("error", message);
+        logger.warn("Redirecting with error: {}", message);
         response.sendRedirect(request.getContextPath() + path);
     }
 
-    /**
-     * Handle error and forward to error page
-     */
-    private void handleError(HttpServletRequest request, HttpServletResponse response,
-                             String errorMessage) throws ServletException, IOException {
-        request.setAttribute("error", errorMessage);
-        request.getRequestDispatcher("/WEB-INF/views/error.jsp")
-                .forward(request, response);
+    @SuppressWarnings("SameParameterValue")
+    private void forwardToError(HttpServletRequest request, HttpServletResponse response,
+                                String message) throws ServletException, IOException {
+        request.setAttribute("error", message);
+        forward(request, response, "/WEB-INF/views/error.jsp");
     }
 
-    /**
-     * Helper class to hold discount information
-     */
+    private void forward(HttpServletRequest request, HttpServletResponse response, String path)
+            throws ServletException, IOException {
+        request.getRequestDispatcher(path).forward(request, response);
+    }
+
+    // ============ INNER CLASS ============
+
     private static class DiscountInfo {
-        double discountPercentage = 0;
-        double discountAmount = 0;
-        double discountedPrice = 0;
-        double savings = 0;
-        Promotion bestPromotion = null;
-    }
+        double discountPercentage;
+        double discountAmount;
+        double discountedPrice;
+        double savings;
+        Promotion bestPromotion;
 
-    @Override
-    public void destroy() {
-        super.destroy();
-        logger.info("CarDetailServlet destroyed");
+        static DiscountInfo create(double carPrice, double discountPercent,
+                                   double discountAmount, Promotion promo) {
+            DiscountInfo info = new DiscountInfo();
+            info.discountPercentage = discountPercent;
+            info.discountAmount = discountAmount;
+            info.bestPromotion = promo;
+
+            if (discountPercent > 0) {
+                info.savings = carPrice * (discountPercent / 100);
+                info.discountedPrice = carPrice - info.savings;
+            } else {
+                info.savings = discountAmount;
+                info.discountedPrice = carPrice - discountAmount;
+            }
+
+            return info;
+        }
+
+        boolean hasDiscount() {
+            return discountedPrice > 0;
+        }
+
+        double getActualSavings(double carPrice) {
+            return (discountPercentage > 0)
+                    ? carPrice * (discountPercentage / 100)
+                    : discountAmount;
+        }
+
+        boolean isBetterThan(DiscountInfo other, double carPrice) {
+            return this.getActualSavings(carPrice) > other.getActualSavings(carPrice);
+        }
     }
 }

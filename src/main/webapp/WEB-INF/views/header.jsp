@@ -2,27 +2,36 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
 <style>
-    /* Navbar */
+    /* ===================================
+       NAVBAR STYLES
+       =================================== */
     .navbar {
         background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
         padding: 15px 0;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
         border-bottom: 1px solid #333;
     }
 
     .navbar-brand {
         font-size: 1.5rem;
-        font-weight: bold;
+        font-weight: 700;
         color: #f8f9fa !important;
         text-transform: uppercase;
         letter-spacing: 1px;
+        transition: color 0.3s ease;
+    }
+
+    .navbar-brand:hover {
+        color: #ffd700 !important;
     }
 
     .navbar-brand i {
         color: #ffd700;
     }
 
-    /* Search Box */
+    /* ===================================
+       SEARCH BOX
+       =================================== */
     .search-navbar {
         position: relative;
         max-width: 600px;
@@ -38,7 +47,7 @@
         color: #f0f0f0;
         font-size: 0.95rem;
         font-weight: 400;
-        transition: all 0.3s;
+        transition: all 0.3s ease;
     }
 
     .search-navbar input::placeholder {
@@ -54,7 +63,9 @@
         color: #ffffff;
     }
 
-    /* Cart Button */
+    /* ===================================
+       CART BUTTON
+       =================================== */
     .cart-btn-nav {
         position: relative;
         background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
@@ -65,10 +76,11 @@
         font-weight: 600;
         font-size: 0.9rem;
         margin-left: 15px;
-        transition: all 0.3s;
+        transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        text-decoration: none;
     }
 
     .cart-btn-nav:hover {
@@ -92,16 +104,18 @@
         align-items: center;
         justify-content: center;
         font-size: 11px;
-        font-weight: bold;
+        font-weight: 700;
     }
 
-    /* Nav Links */
+    /* ===================================
+       NAV LINKS
+       =================================== */
     .nav-link {
         color: #e0e0e0 !important;
         margin: 0 10px;
         font-weight: 500;
         font-size: 0.95rem;
-        transition: all 0.3s;
+        transition: all 0.3s ease;
     }
 
     .nav-link:hover {
@@ -109,16 +123,24 @@
         text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
     }
 
-    /* Dropdown */
+    .nav-link i {
+        margin-right: 5px;
+    }
+
+    /* ===================================
+       DROPDOWN MENU
+       =================================== */
     .dropdown-menu {
         background: #2a2a2a;
         border: 1px solid #444;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .dropdown-item {
         color: #e0e0e0;
-        transition: all 0.3s;
+        transition: all 0.3s ease;
         font-size: 0.9rem;
+        padding: 0.6rem 1.2rem;
     }
 
     .dropdown-item:hover {
@@ -126,11 +148,20 @@
         color: #ffd700;
     }
 
-    .dropdown-divider {
-        border-color: #444;
+    .dropdown-item i {
+        margin-right: 8px;
+        width: 16px;
+        text-align: center;
     }
 
-    /* Responsive */
+    .dropdown-divider {
+        border-color: #444;
+        margin: 0.5rem 0;
+    }
+
+    /* ===================================
+       RESPONSIVE
+       =================================== */
     @media (max-width: 991px) {
         .cart-btn-nav {
             width: 100%;
@@ -138,106 +169,201 @@
             margin-left: 0;
             margin-top: 10px;
         }
+
+        .search-navbar {
+            margin-bottom: 1rem;
+        }
+
+        .navbar-brand {
+            font-size: 1.3rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .navbar {
+            padding: 10px 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.2rem;
+        }
+
+        .search-navbar input {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+        }
     }
 </style>
 
-<nav class="navbar navbar-expand-lg navbar-dark">
+<!-- ========================================
+NAVIGATION BAR
+======================================== -->
+<nav class="navbar navbar-expand-lg navbar-dark" role="navigation">
     <div class="container-fluid px-4">
-        <a class="navbar-brand" href="${pageContext.request.contextPath}/">
-            <i class="fas fa-car"></i> Car Showroom
+        <!-- Brand Logo -->
+        <a class="navbar-brand"
+           href="${pageContext.request.contextPath}/"
+           title="Về trang chủ"
+           aria-label="Car Showroom - Trang chủ">
+            <i class="fas fa-car" aria-hidden="true"></i> Car Showroom
         </a>
 
+        <!-- Desktop Navigation Links -->
         <ul class="navbar-nav me-auto mb-0 d-none d-lg-flex">
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/cars">
-                    <i class="fas fa-car"></i> Xem Xe
+                <a class="nav-link"
+                   href="${pageContext.request.contextPath}/cars"
+                   title="Xem danh sách xe"
+                   aria-label="Xem danh sách xe">
+                    <i class="fas fa-car" aria-hidden="true"></i> Xem Xe
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/promotions">
-                    <i class="fas fa-gift"></i> Khuyến Mãi
+                <a class="nav-link"
+                   href="${pageContext.request.contextPath}/promotions"
+                   title="Xem khuyến mãi"
+                   aria-label="Xem khuyến mãi">
+                    <i class="fas fa-gift" aria-hidden="true"></i> Khuyến Mãi
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/blog">
-                    <i class="fas fa-newspaper"></i> Tin Tức
+                <a class="nav-link"
+                   href="${pageContext.request.contextPath}/blog"
+                   title="Xem tin tức"
+                   aria-label="Xem tin tức">
+                    <i class="fas fa-newspaper" aria-hidden="true"></i> Tin Tức
                 </a>
             </li>
         </ul>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <!-- Mobile Toggle Button - FIXED: Added title and aria-label -->
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarNav"
+                aria-controls="navbarNav"
+                aria-expanded="false"
+                aria-label="Toggle navigation menu"
+                title="Menu">
             <span class="navbar-toggler-icon"></span>
         </button>
 
+        <!-- Collapsible Content -->
         <div class="collapse navbar-collapse" id="navbarNav">
+            <!-- Mobile Navigation Links -->
             <ul class="navbar-nav d-lg-none mb-3">
                 <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/cars">
-                        <i class="fas fa-car"></i> Xem Xe
+                    <a class="nav-link"
+                       href="${pageContext.request.contextPath}/cars"
+                       title="Xem danh sách xe"
+                       aria-label="Xem danh sách xe">
+                        <i class="fas fa-car" aria-hidden="true"></i> Xem Xe
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/promotions">
-                        <i class="fas fa-gift"></i> Khuyến Mãi
+                    <a class="nav-link"
+                       href="${pageContext.request.contextPath}/promotions"
+                       title="Xem khuyến mãi"
+                       aria-label="Xem khuyến mãi">
+                        <i class="fas fa-gift" aria-hidden="true"></i> Khuyến Mãi
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="${pageContext.request.contextPath}/blog">
-                        <i class="fas fa-newspaper"></i> Tin Tức
+                    <a class="nav-link"
+                       href="${pageContext.request.contextPath}/blog"
+                       title="Xem tin tức"
+                       aria-label="Xem tin tức">
+                        <i class="fas fa-newspaper" aria-hidden="true"></i> Tin Tức
                     </a>
                 </li>
             </ul>
 
-            <form action="${pageContext.request.contextPath}/cars" method="get" class="d-flex search-navbar mx-auto">
+            <!-- Search Form -->
+            <form action="${pageContext.request.contextPath}/cars"
+                  method="get"
+                  class="d-flex search-navbar mx-auto"
+                  role="search">
                 <input type="text"
                        name="search"
                        class="form-control"
-                       placeholder="Tìm kiếm xe...">
+                       placeholder="Tìm kiếm xe..."
+                       aria-label="Tìm kiếm xe"
+                       title="Nhập tên xe để tìm kiếm">
             </form>
 
+            <!-- Right Side Menu -->
             <div class="d-flex align-items-center mt-3 mt-lg-0">
-                <a href="${pageContext.request.contextPath}/cart" class="cart-btn-nav">
-                    <i class="fas fa-shopping-cart"></i>
+                <!-- Cart Button -->
+                <a href="${pageContext.request.contextPath}/cart"
+                   class="cart-btn-nav"
+                   title="Xem giỏ hàng"
+                   aria-label="Giỏ hàng">
+                    <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                     <span>Giỏ Hàng</span>
-                    <span class="cart-badge-nav" id="cartBadge">0</span>
+                    <span class="cart-badge-nav"
+                          id="cartBadge"
+                          aria-label="Số lượng sản phẩm trong giỏ">0</span>
                 </a>
 
+                <!-- User Menu -->
                 <ul class="navbar-nav ms-3 mb-0">
                     <c:choose>
+                        <%-- User is logged in --%>
                         <c:when test="${not empty sessionScope.user}">
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-user"></i> ${sessionScope.user.name}
+                                <a class="nav-link dropdown-toggle"
+                                   href="#"
+                                   id="userDropdown"
+                                   role="button"
+                                   data-bs-toggle="dropdown"
+                                   aria-expanded="false"
+                                   title="Menu người dùng"
+                                   aria-label="Menu người dùng ${sessionScope.user.name}">
+                                    <i class="fas fa-user" aria-hidden="true"></i> ${sessionScope.user.name}
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end">
+                                <ul class="dropdown-menu dropdown-menu-end"
+                                    aria-labelledby="userDropdown">
                                     <li>
-                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/profile">
-                                            <i class="fas fa-user-circle"></i> Hồ Sơ
+                                        <a class="dropdown-item"
+                                           href="${pageContext.request.contextPath}/profile"
+                                           title="Xem hồ sơ cá nhân">
+                                            <i class="fas fa-user-circle" aria-hidden="true"></i> Hồ Sơ
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/orders">
-                                            <i class="fas fa-receipt"></i> Đơn Hàng
+                                        <a class="dropdown-item"
+                                           href="${pageContext.request.contextPath}/orders"
+                                           title="Xem đơn hàng của tôi">
+                                            <i class="fas fa-receipt" aria-hidden="true"></i> Đơn Hàng
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/my-promotions">
-                                            <i class="fas fa-gift"></i> Khuyến Mãi Của Tôi
+                                        <a class="dropdown-item"
+                                           href="${pageContext.request.contextPath}/my-promotions"
+                                           title="Xem khuyến mãi của tôi">
+                                            <i class="fas fa-gift" aria-hidden="true"></i> Khuyến Mãi Của Tôi
                                         </a>
                                     </li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
-                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/logout">
-                                            <i class="fas fa-sign-out-alt"></i> Đăng Xuất
+                                        <a class="dropdown-item"
+                                           href="${pageContext.request.contextPath}/logout"
+                                           title="Đăng xuất khỏi tài khoản">
+                                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Đăng Xuất
                                         </a>
                                     </li>
                                 </ul>
                             </li>
                         </c:when>
+
+                        <%-- User is not logged in --%>
                         <c:otherwise>
                             <li class="nav-item">
-                                <a class="nav-link" href="${pageContext.request.contextPath}/login">
-                                    <i class="fas fa-sign-in-alt"></i> Đăng Nhập
+                                <a class="nav-link"
+                                   href="${pageContext.request.contextPath}/login"
+                                   title="Đăng nhập vào tài khoản"
+                                   aria-label="Đăng nhập">
+                                    <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Đăng Nhập
                                 </a>
                             </li>
                         </c:otherwise>
@@ -248,14 +374,28 @@
     </div>
 </nav>
 
+<!-- ========================================
+CART BADGE UPDATE SCRIPT
+======================================== -->
 <script>
+    /**
+     * Update cart badge count on page load
+     * Shows/hides badge based on cart count
+     */
     document.addEventListener('DOMContentLoaded', function() {
+        // Get cart count from session
         const cartCount = ${sessionScope.cartCount != null ? sessionScope.cartCount : 0};
         const badge = document.getElementById('cartBadge');
-        if (badge && cartCount > 0) {
-            badge.textContent = cartCount;
-        } else if (badge) {
-            badge.style.display = 'none';
+
+        if (badge) {
+            if (cartCount > 0) {
+                // Show badge with count
+                badge.textContent = cartCount;
+                badge.style.display = 'flex';
+            } else {
+                // Hide badge when cart is empty
+                badge.style.display = 'none';
+            }
         }
     });
 </script>

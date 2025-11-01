@@ -1,9 +1,6 @@
 package controller.customer;
 
 import dao.UserDAO;
-import model.Customer;
-import model.Staff;
-import model.Admin;
 import filter.RateLimitFilter;
 import util.ValidationUtil;
 import util.SessionUtils;
@@ -22,7 +19,6 @@ import java.util.UUID;
 /**
  * LoginServlet - Handle user authentication
  * Supports Customer/Staff/Admin login with role-based redirect
- * UPDATED: Removed loyalty_points, position, department storage in session
  */
 @WebServlet("/login")
 public class LoginServlet extends HttpServlet {
@@ -30,8 +26,7 @@ public class LoginServlet extends HttpServlet {
     private UserDAO userDAO;
 
     @Override
-    public void init() throws ServletException {
-        super.init();
+    public void init() {
         userDAO = new UserDAO();
         logger.info("LoginServlet initialized");
     }
@@ -42,12 +37,12 @@ public class LoginServlet extends HttpServlet {
 
         if (SessionUtils.isLoggedIn(request.getSession(false))) {
             logger.debug("User already logged in, redirecting to home");
-            response.sendRedirect(request.getContextPath() + "/home");
+            redirect(response, request.getContextPath() + "/home");
             return;
         }
 
         setCSRFToken(request);
-        request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+        forward(request, response, "/WEB-INF/views/login.jsp");
     }
 
     @Override
@@ -62,7 +57,7 @@ public class LoginServlet extends HttpServlet {
             String email = ValidationUtil.validateEmail(request.getParameter("email"));
             String password = request.getParameter("password");
 
-            if (password == null || password.trim().isEmpty()) {
+            if (isEmpty(password)) {
                 throw new IllegalArgumentException("Mật khẩu không được để trống");
             }
 
@@ -89,18 +84,13 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Handle successful login
-     * UPDATED: Removed storage of loyalty_points, position, department
-     */
+    // ============ LOGIN LOGIC ============
+
     private void handleSuccessfulLogin(HttpServletRequest request, HttpServletResponse response,
                                        Object userObject, String email) throws IOException {
         HttpSession session = request.getSession();
 
-        // Set user in session (this handles all user types)
         SessionUtils.setUser(session, userObject);
-
-        // Prevent session fixation
         SessionUtils.preventSessionFixation(request);
 
         String role = SessionUtils.getUserRole(userObject);
@@ -108,48 +98,33 @@ public class LoginServlet extends HttpServlet {
 
         logger.info("User logged in: {} (role: {}, ID: {})", email, role, userId);
 
-        // Handle redirect
-        String redirectUrl = (String) session.getAttribute("redirectAfterLogin");
-
-        if (redirectUrl != null && !redirectUrl.isEmpty()) {
-            session.removeAttribute("redirectAfterLogin");
-            session.removeAttribute("loginMessage");
+        String redirectUrl = getSavedRedirectUrl(session);
+        if (isNotEmpty(redirectUrl)) {
+            clearRedirectAttributes(session);
             logger.info("Redirecting to saved URL: {}", redirectUrl);
-            response.sendRedirect(redirectUrl);
-            return;
+            redirect(response, redirectUrl);
+        } else {
+            redirect(response, request.getContextPath() + getDefaultRedirectByRole(role));
         }
-
-        // Role-based default redirect
-        response.sendRedirect(request.getContextPath() + getDefaultRedirectByRole(role));
     }
 
-    /**
-     * Get default redirect URL based on role
-     */
     private String getDefaultRedirectByRole(String role) {
-        switch (role) {
-            case "ADMIN":
-                return "/admin/dashboard";
-            case "STAFF":
-                return "/staff/dashboard";
-            case "CUSTOMER":
-            default:
-                return "/home";
-        }
+        return switch (role) {
+            case "ADMIN" -> "/admin/dashboard";
+            case "STAFF" -> "/staff/dashboard";
+            default -> "/home";
+        };
     }
 
-    /**
-     * Set CSRF token in session and request
-     */
+    // ============ CSRF PROTECTION ============
+
     private void setCSRFToken(HttpServletRequest request) {
         String csrfToken = UUID.randomUUID().toString();
-        request.getSession().setAttribute("csrfToken", csrfToken);
+        HttpSession session = request.getSession();
+        session.setAttribute("csrfToken", csrfToken);
         request.setAttribute("csrfToken", csrfToken);
     }
 
-    /**
-     * Validate CSRF token
-     */
     private void validateCsrfToken(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
 
@@ -166,20 +141,42 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Handle error and redisplay login form
-     */
+    // ============ HELPER METHODS ============
+
+    private String getSavedRedirectUrl(HttpSession session) {
+        return (String) session.getAttribute("redirectAfterLogin");
+    }
+
+    private void clearRedirectAttributes(HttpSession session) {
+        session.removeAttribute("redirectAfterLogin");
+        session.removeAttribute("loginMessage");
+    }
+
     private void handleError(HttpServletRequest request, HttpServletResponse response,
                              String errorMessage) throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
         request.setAttribute("email", request.getParameter("email"));
         setCSRFToken(request);
-        request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+        forward(request, response, "/WEB-INF/views/login.jsp");
     }
 
-    @Override
-    public void destroy() {
-        super.destroy();
-        logger.info("LoginServlet destroyed");
+    // ============ UTILITY METHODS ============
+
+    private boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+
+    private boolean isNotEmpty(String str) {
+        return str != null && !str.trim().isEmpty();
+    }
+
+    private void redirect(HttpServletResponse response, String url) throws IOException {
+        response.sendRedirect(url);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void forward(HttpServletRequest request, HttpServletResponse response, String path)
+            throws ServletException, IOException {
+        request.getRequestDispatcher(path).forward(request, response);
     }
 }

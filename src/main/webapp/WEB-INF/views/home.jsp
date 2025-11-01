@@ -6,22 +6,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Car Showroom - Khám phá thế giới xe hơi đẳng cấp">
     <title>Trang Chủ - Car Showroom</title>
+
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
+        /* ===================================
+           GLOBAL STYLES
+           =================================== */
         body {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             background-color: #0f0f0f;
+            color: #fff;
         }
 
-        /* Hero Section */
+        /* ===================================
+           HERO SECTION
+           =================================== */
         .hero-section {
             position: relative;
             height: 600px;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
             url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920') center/cover;
             display: flex;
             align-items: center;
@@ -29,14 +40,14 @@
             color: white;
             text-align: center;
             margin-bottom: 50px;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.5);
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.5);
         }
 
         .hero-content h1 {
             font-size: 3.5rem;
             font-weight: 700;
             margin-bottom: 20px;
-            text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
             background: linear-gradient(135deg, #fff 0%, #ffd700 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -46,7 +57,7 @@
         .hero-content p {
             font-size: 1.3rem;
             margin-bottom: 30px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
             color: #e0e0e0;
         }
 
@@ -57,7 +68,7 @@
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             color: #1a1a1a;
             border: none;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             font-weight: 600;
         }
 
@@ -68,80 +79,9 @@
             color: #000;
         }
 
-        /* Car Cards - Updated to match reference image */
-        .car-card {
-            background: linear-gradient(145deg, #1f1f1f 0%, #1a1a1a 100%);
-            border: 1px solid #2a2a2a;
-            border-radius: 20px;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            height: 100%;
-        }
-
-        .car-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 20px 50px rgba(255, 215, 0, 0.25);
-            border-color: rgba(255, 215, 0, 0.5);
-        }
-
-        .car-card img {
-            height: 200px;
-            object-fit: cover;
-            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
-        }
-
-        .car-card:hover img {
-            transform: scale(1.15);
-        }
-
-        .car-card .card-body {
-            padding: 1.5rem 1.25rem;
-            background: transparent;
-        }
-
-        .car-card .card-title {
-            color: #ffffff;
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            line-height: 1.3;
-        }
-
-        .car-card .text-primary {
-            color: #ffd700 !important;
-        }
-
-        .car-card .small {
-            color: #ffd700 !important;
-            font-size: 0.75rem !important;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            margin-bottom: 0.5rem;
-        }
-
-        .car-card .btn-primary {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            border: none;
-            border-radius: 10px;
-            color: #000000;
-            font-weight: 700;
-            padding: 0.85rem;
-            transition: all 0.3s ease;
-        }
-
-        .car-card .btn-primary:hover {
-            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
-            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
-            color: #000000;
-            transform: translateY(-2px);
-        }
-
-        .car-card .card-text {
-            font-size: 1.25rem !important;
-            margin-bottom: 1rem !important;
-        }
-
+        /* ===================================
+           SECTION TITLE
+           =================================== */
         .section-title {
             text-align: center;
             margin-bottom: 40px;
@@ -163,10 +103,90 @@
             color: #ffd700;
         }
 
+        /* ===================================
+           CAR CARDS
+           =================================== */
+        .car-card {
+            background: linear-gradient(145deg, #1f1f1f 0%, #1a1a1a 100%);
+            border: 1px solid #2a2a2a;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+        }
+
+        .car-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(255, 215, 0, 0.25);
+            border-color: rgba(255, 215, 0, 0.5);
+        }
+
+        .car-card-img {
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+        }
+
+        .car-card:hover .car-card-img {
+            transform: scale(1.15);
+        }
+
+        .car-card .card-body {
+            padding: 1.5rem 1.25rem;
+            background: transparent;
+        }
+
+        .car-card .card-title {
+            color: #ffffff;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+        }
+
+        .car-card .text-primary {
+            color: #ffd700 !important;
+        }
+
+        .car-card .brand-label {
+            color: #ffd700 !important;
+            font-size: 0.75rem !important;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .car-card .card-text {
+            font-size: 1.25rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .car-card .btn-primary {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border: none;
+            border-radius: 10px;
+            color: #000000;
+            font-weight: 700;
+            padding: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .car-card .btn-primary:hover {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.5);
+            color: #000000;
+            transform: translateY(-2px);
+        }
+
+        /* ===================================
+           VIEW ALL BUTTON
+           =================================== */
         .btn-outline-primary {
             border-color: #ffd700;
             color: #ffd700;
             font-weight: 600;
+            transition: all 0.3s ease;
         }
 
         .btn-outline-primary:hover {
@@ -176,17 +196,73 @@
             box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
         }
 
+        /* ===================================
+           EMPTY STATE
+           =================================== */
+        .empty-state {
+            color: #888;
+            padding: 5rem 0;
+        }
+
+        .empty-state i {
+            color: #555;
+        }
+
+        /* ===================================
+           FOOTER
+           =================================== */
         footer {
             margin-top: auto;
+        }
+
+        /* ===================================
+           RESPONSIVE
+           =================================== */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-content p {
+                font-size: 1.1rem;
+            }
+
+            .section-title h2 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero-section {
+                height: 400px;
+            }
+
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+
+            .hero-content p {
+                font-size: 1rem;
+            }
+
+            .btn-explore {
+                padding: 12px 30px;
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-<!-- Header -->
+
+<!-- ========================================
+     HEADER
+     ======================================== -->
 <jsp:include page="header.jsp" />
 
-<!-- Hero Section -->
-<div class="hero-section">
+<!-- ========================================
+     HERO SECTION
+     ======================================== -->
+<section class="hero-section">
     <div class="hero-content">
         <h1>Khám phá thế giới xe hơi đẳng cấp</h1>
         <p>Tận hưởng trải nghiệm lái xe tuyệt vời với những mẫu xe mới nhất.</p>
@@ -194,12 +270,15 @@
             Khám Phá Ngay
         </a>
     </div>
-</div>
+</section>
 
-<!-- Main Content -->
-<div class="container">
+<!-- ========================================
+     MAIN CONTENT
+     ======================================== -->
+<main class="container">
     <!-- Featured Cars Section -->
-    <div class="mb-5">
+    <section class="mb-5">
+        <!-- Section Title -->
         <div class="section-title">
             <h2>
                 <i class="fas fa-star text-warning"></i> Xe Nổi Bật
@@ -207,68 +286,101 @@
             <p>Khám phá những mẫu xe được yêu thích nhất</p>
         </div>
 
+        <!-- Car Grid -->
         <div class="row g-4">
             <c:choose>
+                <%-- Display cars if available --%>
                 <c:when test="${not empty cars}">
                     <c:forEach var="car" items="${cars}" begin="0" end="7">
                         <div class="col-lg-3 col-md-4 col-sm-6">
-                            <div class="card car-card shadow-sm">
-                                <c:set var="mainImage" value=""/>
+                            <article class="card car-card shadow-sm">
+                                    <%-- Find main image --%>
+                                <c:set var="mainImage" value="" />
                                 <c:forEach var="img" items="${car.images}">
                                     <c:if test="${img.mainImage}">
-                                        <c:set var="mainImage" value="${img.imageURL}"/>
+                                        <c:set var="mainImage" value="${img.imageURL}" />
                                     </c:if>
                                 </c:forEach>
 
+                                    <%-- Display image with fallback --%>
                                 <c:choose>
                                     <c:when test="${not empty mainImage}">
-                                        <img src="${mainImage}" class="card-img-top" alt="${car.name}">
+                                        <img src="${mainImage}"
+                                             class="card-img-top car-card-img"
+                                             alt="${car.name}"
+                                             loading="lazy">
                                     </c:when>
                                     <c:when test="${not empty car.imageUrl}">
-                                        <img src="${car.imageUrl}" class="card-img-top" alt="${car.name}">
+                                        <img src="${car.imageUrl}"
+                                             class="card-img-top car-card-img"
+                                             alt="${car.name}"
+                                             loading="lazy">
                                     </c:when>
                                     <c:otherwise>
-                                        <img src="https://via.placeholder.com/300x200?text=No+Image" class="card-img-top" alt="${car.name}">
+                                        <img src="https://via.placeholder.com/300x200?text=No+Image"
+                                             class="card-img-top car-card-img"
+                                             alt="${car.name}"
+                                             loading="lazy">
                                     </c:otherwise>
                                 </c:choose>
 
+                                    <%-- Card Body --%>
                                 <div class="card-body">
-                                    <h6 class="text-primary text-uppercase small mb-2">
+                                        <%-- Brand Name --%>
+                                    <h6 class="text-primary text-uppercase brand-label">
                                             ${car.brandName}
                                     </h6>
-                                    <h5 class="card-title fw-bold">${car.name}</h5>
+
+                                        <%-- Car Name --%>
+                                    <h5 class="card-title">${car.name}</h5>
+
+                                        <%-- Price --%>
                                     <p class="card-text text-primary fw-bold fs-5">
                                         <fmt:formatNumber value="${car.price}" pattern="#,##0" /> ₫
                                     </p>
+
+                                        <%-- View Details Button --%>
                                     <a href="${pageContext.request.contextPath}/car-detail?id=${car.id}"
-                                       class="btn btn-primary w-100">
+                                       class="btn btn-primary w-100"
+                                       aria-label="Xem chi tiết ${car.name}">
                                         <i class="fas fa-eye"></i> Xem Chi Tiết
                                     </a>
                                 </div>
-                            </div>
+                            </article>
                         </div>
                     </c:forEach>
                 </c:when>
+
+                <%-- Empty state --%>
                 <c:otherwise>
-                    <div class="col-12 text-center py-5">
-                        <i class="fas fa-car-crash fa-4x text-muted mb-3"></i>
-                        <h3 style="color: #888;">Hiện chưa có xe nào để hiển thị</h3>
+                    <div class="col-12">
+                        <div class="text-center empty-state">
+                            <i class="fas fa-car-crash fa-4x mb-3"></i>
+                            <h3>Hiện chưa có xe nào để hiển thị</h3>
+                        </div>
                     </div>
                 </c:otherwise>
             </c:choose>
         </div>
 
+        <%-- View All Button --%>
         <div class="text-center mt-5">
-            <a href="${pageContext.request.contextPath}/cars" class="btn btn-outline-primary btn-lg px-5">
+            <a href="${pageContext.request.contextPath}/cars"
+               class="btn btn-outline-primary btn-lg px-5"
+               aria-label="Xem tất cả xe">
                 <i class="fas fa-th me-2"></i> Xem Tất Cả Xe
             </a>
         </div>
-    </div>
-</div>
+    </section>
+</main>
 
-<!-- Footer -->
+<!-- ========================================
+     FOOTER
+     ======================================== -->
 <jsp:include page="footer.jsp" />
 
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

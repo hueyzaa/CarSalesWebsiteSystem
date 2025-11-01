@@ -3,6 +3,10 @@ package model;
 import java.io.Serializable;
 import java.sql.Timestamp;
 
+/**
+ * Transaction model - Represents a payment transaction for an order
+ * Tracks payment type, status, and transaction details
+ */
 public class Transaction implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -13,20 +17,46 @@ public class Transaction implements Serializable {
     private String paymentStatus;  // PENDING, PAID, CANCELLED
     private Timestamp createdAt;
 
-    // Enums for type safety
+
+    /**
+     * Transaction type enumeration
+     */
     public enum TransactionType {
-        FULL, DEPOSIT, SHOWROOM
+        /** Full payment transaction */
+        FULL,
+        /** Deposit payment transaction */
+        DEPOSIT,
+        /** Showroom payment transaction */
+        SHOWROOM
     }
 
+    /**
+     * Payment status enumeration
+     */
     public enum PaymentStatus {
-        PENDING, PAID, CANCELLED
+        /** Payment is pending */
+        PENDING,
+        /** Payment is completed */
+        PAID,
+        /** Payment is cancelled */
+        CANCELLED
     }
 
-    // Constructors
+
+    /**
+     * Default constructor - sets status to PENDING
+     */
     public Transaction() {
         this.paymentStatus = PaymentStatus.PENDING.name();
     }
 
+    /**
+     * Constructor with basic fields - sets status to PENDING
+     *
+     * @param orderId Order ID
+     * @param amount Transaction amount
+     * @param type Transaction type (FULL, DEPOSIT, SHOWROOM)
+     */
     public Transaction(int orderId, double amount, String type) {
         this.orderId = orderId;
         this.amount = amount;
@@ -34,6 +64,14 @@ public class Transaction implements Serializable {
         this.paymentStatus = PaymentStatus.PENDING.name();
     }
 
+    /**
+     * Constructor with all fields
+     *
+     * @param orderId Order ID
+     * @param amount Transaction amount
+     * @param type Transaction type (FULL, DEPOSIT, SHOWROOM)
+     * @param paymentStatus Payment status (PENDING, PAID, CANCELLED)
+     */
     public Transaction(int orderId, double amount, String type, String paymentStatus) {
         this.orderId = orderId;
         this.amount = amount;
@@ -41,7 +79,7 @@ public class Transaction implements Serializable {
         this.paymentStatus = paymentStatus;
     }
 
-    // Getters and Setters
+
     public int getTransactionId() {
         return transactionId;
     }
@@ -90,37 +128,77 @@ public class Transaction implements Serializable {
         this.createdAt = createdAt;
     }
 
-    // Convenience methods for type checking
+
+    /**
+     * Check if transaction is full payment type
+     *
+     * @return true if type is FULL
+     */
     public boolean isFullPayment() {
         return "FULL".equalsIgnoreCase(type);
     }
 
+    /**
+     * Check if transaction is deposit type
+     *
+     * @return true if type is DEPOSIT
+     */
     public boolean isDeposit() {
         return "DEPOSIT".equalsIgnoreCase(type);
     }
 
+    /**
+     * Check if transaction is showroom payment type
+     *
+     * @return true if type is SHOWROOM
+     */
     public boolean isShowroom() {
         return "SHOWROOM".equalsIgnoreCase(type);
     }
 
-    // Payment status checking
+
+    /**
+     * Check if payment is pending
+     *
+     * @return true if status is PENDING
+     */
     public boolean isPending() {
         return "PENDING".equalsIgnoreCase(paymentStatus);
     }
 
+    /**
+     * Check if payment is completed
+     *
+     * @return true if status is PAID
+     */
     public boolean isPaid() {
         return "PAID".equalsIgnoreCase(paymentStatus);
     }
 
+    /**
+     * Check if payment is cancelled
+     *
+     * @return true if status is CANCELLED
+     */
     public boolean isCancelled() {
         return "CANCELLED".equalsIgnoreCase(paymentStatus);
     }
 
-    // Display methods
+
+    /**
+     * Get formatted amount string
+     *
+     * @return Amount formatted as "X,XXX ₫"
+     */
     public String getFormattedAmount() {
         return String.format("%,.0f ₫", amount);
     }
 
+    /**
+     * Get Vietnamese display text for transaction type
+     *
+     * @return Transaction type in Vietnamese
+     */
     public String getTypeDisplay() {
         if (isFullPayment()) {
             return "Thanh toán toàn bộ";
@@ -132,6 +210,11 @@ public class Transaction implements Serializable {
         return type;
     }
 
+    /**
+     * Get Vietnamese display text for payment status
+     *
+     * @return Payment status in Vietnamese
+     */
     public String getPaymentStatusDisplay() {
         if (isPending()) {
             return "Chờ thanh toán";
@@ -143,6 +226,12 @@ public class Transaction implements Serializable {
         return paymentStatus;
     }
 
+    /**
+     * Get Bootstrap color class for payment status
+     * Used for badge styling
+     *
+     * @return CSS color class (warning, success, danger)
+     */
     public String getPaymentStatusColor() {
         if (isPending()) {
             return "warning";
@@ -154,6 +243,7 @@ public class Transaction implements Serializable {
         return "secondary";
     }
 
+
     @Override
     public String toString() {
         return "Transaction{" +
@@ -164,5 +254,18 @@ public class Transaction implements Serializable {
                 ", paymentStatus='" + paymentStatus + '\'' +
                 ", createdAt=" + createdAt +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Transaction that = (Transaction) o;
+        return transactionId == that.transactionId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(transactionId);
     }
 }

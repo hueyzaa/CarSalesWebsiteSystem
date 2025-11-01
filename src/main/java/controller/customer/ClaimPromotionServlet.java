@@ -3,7 +3,6 @@ package controller.customer;
 import dao.PromotionDAO;
 import model.Customer;
 import util.SessionUtils;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,15 +23,14 @@ public class ClaimPromotionServlet extends HttpServlet {
     private PromotionDAO promotionDAO;
 
     @Override
-    public void init() throws ServletException {
-        super.init();
+    public void init() {
         promotionDAO = new PromotionDAO();
         logger.info("ClaimPromotionServlet initialized");
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
 
         HttpSession session = request.getSession(false);
 
@@ -45,7 +43,7 @@ public class ClaimPromotionServlet extends HttpServlet {
         if (!SessionUtils.isCustomer(session)) {
             logger.warn("Non-customer (role: {}) attempted to claim promotion",
                     SessionUtils.getUserRole(session));
-            redirectWithError(request, session, response, "/promotions",
+            redirectWithError(session, response, "/promotions",
                     "Chỉ khách hàng mới có thể nhận khuyến mãi!");
             return;
         }
@@ -54,9 +52,9 @@ public class ClaimPromotionServlet extends HttpServlet {
             Customer customer = SessionUtils.getCustomer(session);
 
             String promotionIdParam = request.getParameter("promotionId");
-            if (promotionIdParam == null || promotionIdParam.trim().isEmpty()) {
+            if (isEmpty(promotionIdParam)) {
                 logger.warn("Promotion ID missing in claim request");
-                redirectWithError(request, session, response, "/promotions",
+                redirectWithError(session, response, "/promotions",
                         "Không tìm thấy thông tin khuyến mãi!");
                 return;
             }
@@ -67,29 +65,25 @@ public class ClaimPromotionServlet extends HttpServlet {
             logger.info("Customer {} (ID: {}) claiming promotion {}",
                     customer.getEmail(), customerId, promotionId);
 
-            boolean success = promotionDAO.claimPromotion(customerId, promotionId);
-
-            if (success) {
-                session.setAttribute("successMessage",
-                        "Nhận khuyến mãi thành công! Bạn có thể sử dụng khi thanh toán.");
+            if (promotionDAO.claimPromotion(customerId, promotionId)) {
+                setSuccessMessage(session, "Nhận khuyến mãi thành công! Bạn có thể sử dụng khi thanh toán.");
                 logger.info("Customer {} successfully claimed promotion {}",
                         customer.getEmail(), promotionId);
             } else {
-                session.setAttribute("errorMessage",
-                        "Không thể nhận khuyến mãi. Vui lòng thử lại!");
+                setErrorMessage(session, "Không thể nhận khuyến mãi. Vui lòng thử lại!");
                 logger.warn("Failed to claim promotion {} for customer {}",
                         promotionId, customer.getEmail());
             }
 
         } catch (NumberFormatException e) {
             logger.error("Invalid promotion ID format", e);
-            session.setAttribute("errorMessage", "ID khuyến mãi không hợp lệ!");
+            setErrorMessage(session, "ID khuyến mãi không hợp lệ!");
         } catch (RuntimeException e) {
             logger.error("Database error claiming promotion", e);
-            session.setAttribute("errorMessage", e.getMessage());
+            setErrorMessage(session, e.getMessage());
         } catch (Exception e) {
             logger.error("Unexpected error claiming promotion", e);
-            session.setAttribute("errorMessage", "Đã xảy ra lỗi không mong muốn!");
+            setErrorMessage(session, "Đã xảy ra lỗi không mong muốn!");
         }
 
         redirectToSource(request, response);
@@ -97,56 +91,67 @@ public class ClaimPromotionServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         logger.warn("GET request to claim promotion, redirecting");
-        response.sendRedirect(request.getContextPath() + "/promotions");
+        redirect(response, request.getContextPath() + "/promotions");
     }
 
-    /**
-     * Save redirect URL and send to login
-     */
+    // ============ HELPER METHODS ============
+
     private void saveRedirectAndLogin(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession(true);
 
         String redirectUrl = request.getParameter("redirectUrl");
-        String savedUrl = (redirectUrl != null && !redirectUrl.trim().isEmpty())
+        String savedUrl = isNotEmpty(redirectUrl)
                 ? request.getContextPath() + "/" + redirectUrl
                 : request.getContextPath() + "/promotions";
 
         session.setAttribute("redirectAfterLogin", savedUrl);
         session.setAttribute("loginMessage", "Vui lòng đăng nhập để nhận khuyến mãi");
-        response.sendRedirect(request.getContextPath() + "/login");
+        redirect(response, request.getContextPath() + "/login");
     }
 
-    /**
-     * Redirect back to source page or default to promotions
-     */
     private void redirectToSource(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         String redirectUrl = request.getParameter("redirectUrl");
 
-        if (redirectUrl != null && !redirectUrl.trim().isEmpty()) {
+        if (isNotEmpty(redirectUrl)) {
             logger.debug("Redirecting to: {}", redirectUrl);
-            response.sendRedirect(request.getContextPath() + "/" + redirectUrl);
+            redirect(response, request.getContextPath() + "/" + redirectUrl);
         } else {
-            response.sendRedirect(request.getContextPath() + "/promotions");
+            redirect(response, request.getContextPath() + "/promotions");
         }
     }
 
-    /**
-     * Redirect with error message
-     */
-    private void redirectWithError(HttpServletRequest request, HttpSession session,
-                                   HttpServletResponse response, String path,
-                                   String errorMessage) throws IOException {
-        session.setAttribute("errorMessage", errorMessage);
-        response.sendRedirect(request.getContextPath() + path);
+    // ============ UTILITY METHODS ============
+
+    private boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
     }
 
-    @Override
-    public void destroy() {
-        super.destroy();
-        logger.info("ClaimPromotionServlet destroyed");
+    private boolean isNotEmpty(String str) {
+        return str != null && !str.trim().isEmpty();
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void setSuccessMessage(HttpSession session, String message) {
+        session.setAttribute("successMessage", message);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void setErrorMessage(HttpSession session, String message) {
+        session.setAttribute("errorMessage", message);
+    }
+
+    private void redirect(HttpServletResponse response, String url) throws IOException {
+        response.sendRedirect(url);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void redirectWithError(HttpSession session, HttpServletResponse response,
+                                   String path, String errorMessage) throws IOException {
+        setErrorMessage(session, errorMessage);
+        redirect(response, session.getServletContext().getContextPath() + path);
     }
 }

@@ -12,7 +12,6 @@ import java.util.List;
 
 /**
  * AdminDAO - Admin manages Staff accounts
- * UPDATED: Removed position, department, salary, notes, created_by fields
  */
 public class AdminDAO {
     private static final Logger logger = LoggerFactory.getLogger(AdminDAO.class);
