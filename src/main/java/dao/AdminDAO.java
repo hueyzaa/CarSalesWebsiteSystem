@@ -12,6 +12,7 @@ import java.util.List;
 
 /**
  * AdminDAO - Admin manages Staff accounts
+ * UPDATED: Added email_verified support
  */
 public class AdminDAO {
     private static final Logger logger = LoggerFactory.getLogger(AdminDAO.class);
@@ -294,7 +295,8 @@ public class AdminDAO {
     }
 
     /**
-     * Map ResultSet to Staff object - UPDATED: Removed unused fields
+     * Map ResultSet to Staff object
+     * UPDATED: Added email_verified mapping
      */
     private Staff mapStaffFromResultSet(ResultSet rs) throws SQLException {
         Staff staff = new Staff();
@@ -304,6 +306,7 @@ public class AdminDAO {
         staff.setPhone(rs.getString("phone"));
         staff.setAddress(rs.getString("address"));
         staff.setActive(rs.getBoolean("is_active"));
+        staff.setEmailVerified(rs.getBoolean("email_verified"));
         staff.setCreatedAt(rs.getTimestamp("created_at"));
         staff.setLastLogin(rs.getTimestamp("last_login"));
         staff.setTotalOrders(rs.getInt("total_orders"));

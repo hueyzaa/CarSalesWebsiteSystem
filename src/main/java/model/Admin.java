@@ -15,6 +15,7 @@ public class Admin implements Serializable {
     private int adminId; // FK to AppUsers.user_id
     private String email;
     private boolean isActive;
+    private boolean emailVerified;
     private Date createdAt;
     private Date lastLogin;
 
@@ -98,6 +99,14 @@ public class Admin implements Serializable {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 
     /**

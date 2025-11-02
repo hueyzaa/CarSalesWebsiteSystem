@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * UserDAO - Handles authentication and user management for separated tables
- * UPDATED: Removed loyalty_points, position, department, salary, etc.
+ * UPDATED: Added email_verified, oauth_id support, and email verification flow
  */
 public class UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(UserDAO.class);
@@ -24,7 +24,7 @@ public class UserDAO {
      * Authenticate user (login) - Returns appropriate user type
      */
     public Object login(String email, String password) {
-        String sql = "SELECT user_id, email, password_hash, role, is_active " +
+        String sql = "SELECT user_id, email, password_hash, role, is_active, email_verified " +
                 "FROM AppUsers WHERE email = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -46,6 +46,7 @@ public class UserDAO {
                     if (BCrypt.checkpw(password, storedHash)) {
                         int userId = rs.getInt("user_id");
                         String role = rs.getString("role");
+                        boolean emailVerified = rs.getBoolean("email_verified");
 
                         // Update last login
                         updateLastLogin(userId);
@@ -54,7 +55,8 @@ public class UserDAO {
                         Object user = getUserDetailsByRole(userId, role);
 
                         if (user != null) {
-                            logger.info("User logged in successfully: {} (role: {})", email, role);
+                            logger.info("User logged in successfully: {} (role: {}, email_verified: {})",
+                                    email, role, emailVerified);
                         }
 
                         return user;
@@ -93,9 +95,10 @@ public class UserDAO {
 
     /**
      * Get Admin details
+     * UPDATED: Added email_verified
      */
     private Admin getAdminDetails(int adminId) throws SQLException {
-        String sql = "SELECT u.user_id, u.email, u.is_active, u.created_at, u.last_login " +
+        String sql = "SELECT u.user_id, u.email, u.is_active, u.email_verified, u.created_at, u.last_login " +
                 "FROM AppUsers u WHERE u.user_id = ? AND u.role = 'ADMIN'";
 
         try (Connection conn = DBContext.getConnection();
@@ -109,6 +112,7 @@ public class UserDAO {
                     admin.setAdminId(rs.getInt("user_id"));
                     admin.setEmail(rs.getString("email"));
                     admin.setActive(rs.getBoolean("is_active"));
+                    admin.setEmailVerified(rs.getBoolean("email_verified"));
                     admin.setCreatedAt(rs.getTimestamp("created_at"));
                     admin.setLastLogin(rs.getTimestamp("last_login"));
                     return admin;
@@ -119,7 +123,8 @@ public class UserDAO {
     }
 
     /**
-     * Get Staff details - UPDATED: Removed position, department, salary, etc.
+     * Get Staff details
+     * UPDATED: Added email_verified
      */
     private Staff getStaffDetails(int staffId) throws SQLException {
         String sql = "SELECT * FROM vw_StaffManagement WHERE staff_id = ?";
@@ -138,6 +143,7 @@ public class UserDAO {
                     staff.setPhone(rs.getString("phone"));
                     staff.setAddress(rs.getString("address"));
                     staff.setActive(rs.getBoolean("is_active"));
+                    staff.setEmailVerified(rs.getBoolean("email_verified"));
                     staff.setCreatedAt(rs.getTimestamp("created_at"));
                     staff.setLastLogin(rs.getTimestamp("last_login"));
                     staff.setTotalOrders(rs.getInt("total_orders"));
@@ -150,7 +156,8 @@ public class UserDAO {
     }
 
     /**
-     * Get Customer details - UPDATED: Removed loyalty_points
+     * Get Customer details
+     * UPDATED: Added oauth_id and email_verified
      */
     private Customer getCustomerDetails(int customerId) throws SQLException {
         String sql = "SELECT * FROM vw_CustomerList WHERE customer_id = ?";
@@ -169,7 +176,9 @@ public class UserDAO {
                     customer.setPhone(rs.getString("phone"));
                     customer.setAddress(rs.getString("address"));
                     customer.setOauthProvider(rs.getString("oauth_provider"));
+                    customer.setOauthId(rs.getString("oauth_id"));
                     customer.setActive(rs.getBoolean("is_active"));
+                    customer.setEmailVerified(rs.getBoolean("email_verified"));
                     customer.setCreatedAt(rs.getTimestamp("created_at"));
                     customer.setLastLogin(rs.getTimestamp("last_login"));
                     customer.setTotalOrders(rs.getInt("total_orders"));
@@ -200,15 +209,20 @@ public class UserDAO {
 
     /**
      * Register new customer using stored procedure
+     * UPDATED: Added email verification parameters
      */
-    public boolean registerCustomer(String name, String email, String password,
-                                    String phone, String address, String oauthProvider) {
-        String sql = "{CALL sp_RegisterCustomer(?, ?, ?, ?, ?, ?)}";
+    public int registerCustomer(String name, String email, String password,
+                                String phone, String address, String oauthProvider,
+                                String oauthId, String verificationToken,
+                                String ipAddress, String userAgent) {
+        String sql = "{CALL sp_RegisterCustomer(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
 
         try (Connection conn = DBContext.getConnection();
              CallableStatement stmt = conn.prepareCall(sql)) {
 
-            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
+            String hashedPassword = (password != null && !password.isEmpty())
+                    ? BCrypt.hashpw(password, BCrypt.gensalt(12))
+                    : "";
 
             stmt.setString(1, email.toLowerCase().trim());
             stmt.setString(2, hashedPassword);
@@ -216,13 +230,18 @@ public class UserDAO {
             stmt.setString(4, phone);
             stmt.setString(5, address);
             stmt.setString(6, oauthProvider);
+            stmt.setString(7, oauthId);
+            stmt.setString(8, verificationToken);
+            stmt.setString(9, ipAddress);
+            stmt.setString(10, userAgent);
 
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 String result = rs.getString("Result");
                 if ("SUCCESS".equals(result)) {
-                    logger.info("Customer registered successfully: {}", email);
-                    return true;
+                    int customerId = rs.getInt("CustomerId");
+                    logger.info("Customer registered successfully: {} (ID: {})", email, customerId);
+                    return customerId;
                 } else {
                     logger.warn("Failed to register customer: {}", rs.getString("Message"));
                 }
@@ -233,7 +252,17 @@ public class UserDAO {
             throw new RuntimeException("Failed to register customer", e);
         }
 
-        return false;
+        return -1;
+    }
+
+    /**
+     * Register customer (backward compatibility - OLD VERSION)
+     */
+    public boolean registerCustomer(String name, String email, String password,
+                                    String phone, String address, String oauthProvider) {
+        int customerId = registerCustomer(name, email, password, phone, address,
+                oauthProvider, null, null, null, null);
+        return customerId > 0;
     }
 
     /**
@@ -279,9 +308,10 @@ public class UserDAO {
 
     /**
      * Get user by ID (returns base User object)
+     * UPDATED: Added email_verified
      */
     public User getUserById(int userId) {
-        String sql = "SELECT user_id, email, role, is_active, created_at, last_login " +
+        String sql = "SELECT user_id, email, role, is_active, email_verified, created_at, last_login " +
                 "FROM AppUsers WHERE user_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -296,6 +326,7 @@ public class UserDAO {
                     user.setEmail(rs.getString("email"));
                     user.setRole(rs.getString("role"));
                     user.setActive(rs.getBoolean("is_active"));
+                    user.setEmailVerified(rs.getBoolean("email_verified"));
                     user.setCreatedAt(rs.getTimestamp("created_at"));
                     user.setLastLogin(rs.getTimestamp("last_login"));
 
@@ -464,11 +495,12 @@ public class UserDAO {
 
     /**
      * Get all users from vw_AllUsers view
+     * UPDATED: Added email_verified and oauth_provider
      */
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT user_id, email, role, is_active, created_at, last_login, " +
-                "name, phone, address " +
+        String sql = "SELECT user_id, email, role, is_active, email_verified, created_at, last_login, " +
+                "name, phone, address, oauth_provider " +
                 "FROM vw_AllUsers " +
                 "WHERE role != 'ADMIN' " +
                 "ORDER BY created_at DESC";
@@ -492,14 +524,14 @@ public class UserDAO {
         return users;
     }
 
-
     /**
      * Get users by role
+     * UPDATED: Added email_verified and oauth_provider
      */
     public List<User> getUsersByRole(String role) {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT user_id, email, role, is_active, created_at, last_login, " +
-                "name, phone, address FROM vw_AllUsers WHERE role = ? ORDER BY name";
+        String sql = "SELECT user_id, email, role, is_active, email_verified, created_at, last_login, " +
+                "name, phone, address, oauth_provider FROM vw_AllUsers WHERE role = ? ORDER BY name";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -524,6 +556,7 @@ public class UserDAO {
 
     /**
      * Search users by keyword
+     * UPDATED: Added email_verified and oauth_provider
      */
     public List<User> searchUsers(String keyword) {
         List<User> users = new ArrayList<>();
@@ -532,8 +565,8 @@ public class UserDAO {
             return getAllUsers();
         }
 
-        String sql = "SELECT user_id, email, role, is_active, created_at, last_login, " +
-                "name, phone, address FROM vw_AllUsers " +
+        String sql = "SELECT user_id, email, role, is_active, email_verified, created_at, last_login, " +
+                "name, phone, address, oauth_provider FROM vw_AllUsers " +
                 "WHERE name LIKE ? OR email LIKE ? OR phone LIKE ? " +
                 "ORDER BY name";
 
@@ -604,6 +637,7 @@ public class UserDAO {
 
     /**
      * Map ResultSet to User object
+     * UPDATED: Added email_verified and oauth_provider
      */
     private User mapUserFromResultSet(ResultSet rs) throws SQLException {
         User user = new User();
@@ -611,11 +645,13 @@ public class UserDAO {
         user.setEmail(rs.getString("email"));
         user.setRole(rs.getString("role"));
         user.setActive(rs.getBoolean("is_active"));
+        user.setEmailVerified(rs.getBoolean("email_verified"));
         user.setCreatedAt(rs.getTimestamp("created_at"));
         user.setLastLogin(rs.getTimestamp("last_login"));
         user.setName(rs.getString("name"));
         user.setPhone(rs.getString("phone"));
         user.setAddress(rs.getString("address"));
+        user.setOauthProvider(rs.getString("oauth_provider"));
         return user;
     }
 

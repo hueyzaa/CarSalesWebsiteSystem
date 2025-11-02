@@ -14,6 +14,7 @@ public class Staff implements Serializable {
     private int staffId;
     private String email;
     private boolean isActive;
+    private boolean emailVerified;
     private Date createdAt;
     private Date lastLogin;
 
@@ -104,6 +105,14 @@ public class Staff implements Serializable {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 
     /**

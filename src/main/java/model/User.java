@@ -16,6 +16,7 @@ public class User implements Serializable {
     private String passwordHash;
     private String role;
     private boolean isActive;
+    private boolean emailVerified;
     private Date createdAt;
     private Date lastLogin;
 
@@ -23,7 +24,7 @@ public class User implements Serializable {
     private String name;
     private String phone;
     private String address;
-
+    private String oauthProvider;
 
     /**
      * Default constructor
@@ -32,10 +33,6 @@ public class User implements Serializable {
 
     /**
      * Constructor with basic fields
-     *
-     * @param userId User ID
-     * @param email User email
-     * @param role User role (ADMIN, STAFF, CUSTOMER)
      */
     public User(int userId, String email, String role) {
         this.userId = userId;
@@ -45,11 +42,6 @@ public class User implements Serializable {
 
     /**
      * Constructor with name field
-     *
-     * @param userId User ID
-     * @param email User email
-     * @param name User name
-     * @param role User role (ADMIN, STAFF, CUSTOMER)
      */
     public User(int userId, String email, String name, String role) {
         this.userId = userId;
@@ -58,6 +50,24 @@ public class User implements Serializable {
         this.role = role;
     }
 
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public String getOauthProvider() {
+        return oauthProvider;
+    }
+
+    public void setOauthProvider(String oauthProvider) {
+        this.oauthProvider = oauthProvider;
+    }
+
+    // ... (giữ nguyên các getter/setter cũ) ...
 
     public int getUserId() {
         return userId;
@@ -99,38 +109,18 @@ public class User implements Serializable {
         isActive = active;
     }
 
-    /**
-     * Gets created date (defensive copy)
-     *
-     * @return Copy of creation date
-     */
     public Date getCreatedAt() {
         return createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
-    /**
-     * Sets created date (defensive copy)
-     *
-     * @param createdAt Creation date
-     */
     public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
-    /**
-     * Gets last login date (defensive copy)
-     *
-     * @return Copy of last login date
-     */
     public Date getLastLogin() {
         return lastLogin != null ? new Date(lastLogin.getTime()) : null;
     }
 
-    /**
-     * Sets last login date (defensive copy)
-     *
-     * @param lastLogin Last login date
-     */
     public void setLastLogin(Date lastLogin) {
         this.lastLogin = lastLogin != null ? new Date(lastLogin.getTime()) : null;
     }
@@ -161,10 +151,35 @@ public class User implements Serializable {
 
 
     /**
-     * Gets display name (name if available, otherwise email)
-     *
-     * @return Display name
+     * Checks if user uses OAuth authentication
      */
+    public boolean isOAuthUser() {
+        return oauthProvider != null && !oauthProvider.trim().isEmpty();
+    }
+
+    /**
+     * Gets display text for email verification status
+     */
+    public String getEmailVerifiedDisplay() {
+        return emailVerified ? "Đã xác thực" : "Chưa xác thực";
+    }
+
+    /**
+     * Gets Bootstrap badge class for email verification status
+     */
+    public String getEmailVerifiedBadge() {
+        return emailVerified ? "badge-success" : "badge-warning";
+    }
+
+    /**
+     * Gets Bootstrap icon for email verification status
+     */
+    public String getEmailVerifiedIcon() {
+        return emailVerified ? "bi-check-circle-fill" : "bi-exclamation-circle-fill";
+    }
+
+    // ... (giữ nguyên các method cũ: getDisplayName, getInitials, isAdmin, etc.) ...
+
     public String getDisplayName() {
         if (name != null && !name.trim().isEmpty()) {
             return name;
@@ -172,11 +187,6 @@ public class User implements Serializable {
         return email != null ? email : "Unknown";
     }
 
-    /**
-     * Gets user initials for avatar display
-     *
-     * @return User initials (1-2 characters)
-     */
     public String getInitials() {
         if (name == null || name.trim().isEmpty()) {
             return email != null && !email.isEmpty() ?
@@ -189,40 +199,18 @@ public class User implements Serializable {
         return name.substring(0, Math.min(2, name.length())).toUpperCase();
     }
 
-
-    /**
-     * Checks if user is an admin
-     *
-     * @return true if user role is ADMIN
-     */
     public boolean isAdmin() {
         return "ADMIN".equalsIgnoreCase(role);
     }
 
-    /**
-     * Checks if user is a staff member
-     *
-     * @return true if user role is STAFF
-     */
     public boolean isStaff() {
         return "STAFF".equalsIgnoreCase(role);
     }
 
-    /**
-     * Checks if user is a customer
-     *
-     * @return true if user role is CUSTOMER
-     */
     public boolean isCustomer() {
         return "CUSTOMER".equalsIgnoreCase(role);
     }
 
-
-    /**
-     * Gets Bootstrap badge class for role
-     *
-     * @return CSS class for role badge
-     */
     public String getRoleBadge() {
         if (isAdmin()) return "badge-danger";
         if (isStaff()) return "badge-warning";
@@ -230,11 +218,6 @@ public class User implements Serializable {
         return "badge-secondary";
     }
 
-    /**
-     * Gets Vietnamese display text for role
-     *
-     * @return Role display text in Vietnamese
-     */
     public String getRoleDisplay() {
         if (isAdmin()) return "Quản trị viên";
         if (isStaff()) return "Nhân viên";
@@ -242,11 +225,6 @@ public class User implements Serializable {
         return role;
     }
 
-    /**
-     * Gets Bootstrap icon class for role
-     *
-     * @return Icon class for role
-     */
     public String getRoleIcon() {
         if (isAdmin()) return "bi-shield-fill";
         if (isStaff()) return "bi-person-badge";
@@ -254,24 +232,13 @@ public class User implements Serializable {
         return "bi-question-circle";
     }
 
-    /**
-     * Gets Bootstrap badge class for active status
-     *
-     * @return CSS class for status badge
-     */
     public String getStatusBadge() {
         return isActive ? "badge-success" : "badge-secondary";
     }
 
-    /**
-     * Gets Vietnamese display text for active status
-     *
-     * @return Status display text in Vietnamese
-     */
     public String getStatusDisplay() {
         return isActive ? "Hoạt động" : "Vô hiệu hóa";
     }
-
 
     @Override
     public String toString() {
@@ -280,6 +247,7 @@ public class User implements Serializable {
                 ", email='" + email + '\'' +
                 ", role='" + role + '\'' +
                 ", name='" + name + '\'' +
+                ", emailVerified=" + emailVerified +
                 ", isActive=" + isActive +
                 '}';
     }

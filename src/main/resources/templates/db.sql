@@ -1,8 +1,7 @@
 -- =============================================
--- UPDATED DATABASE SCHEMA - SIMPLIFIED VERSION
+-- COMPLETE DATABASE SCHEMA WITH AUTHENTICATION
 -- Car Sales Website System
--- Removed: position, department, hired_date, salary, created_by, notes from Staff
--- Removed: loyalty_points from Customers
+-- Features: Email Verification, Password Reset, OAuth Support
 -- =============================================
 
 --USE TestDB;
@@ -11,6 +10,7 @@
 -- =============================================
 -- DROP TABLES (in reverse dependency order)
 -- =============================================
+IF OBJECT_ID('EmailVerificationTokens', 'U') IS NOT NULL DROP TABLE EmailVerificationTokens;
 IF OBJECT_ID('UserPromotion', 'U') IS NOT NULL DROP TABLE UserPromotion;
 IF OBJECT_ID('CarImage', 'U') IS NOT NULL DROP TABLE CarImage;
 IF OBJECT_ID('Blog', 'U') IS NOT NULL DROP TABLE Blog;
@@ -38,6 +38,7 @@ CREATE TABLE AppUsers (
                           password_hash NVARCHAR(255) NOT NULL,
                           role NVARCHAR(20) CHECK (role IN ('CUSTOMER','STAFF','ADMIN')) DEFAULT 'CUSTOMER' NOT NULL,
                           is_active BIT DEFAULT 1 NOT NULL,
+                          email_verified BIT DEFAULT 0 NOT NULL,
                           created_at DATETIME DEFAULT GETDATE(),
                           last_login DATETIME NULL
 );
@@ -58,7 +59,28 @@ CREATE TABLE Customers (
                            phone NVARCHAR(20) NULL,
                            address NVARCHAR(255) NULL,
                            oauth_provider NVARCHAR(50) NULL,
+                           oauth_id NVARCHAR(255) NULL,
                            CONSTRAINT FK_Customers_AppUsers FOREIGN KEY (customer_id) REFERENCES AppUsers(user_id) ON DELETE CASCADE
+);
+GO
+
+-- =============================================
+-- EMAIL VERIFICATION & PASSWORD RESET TOKENS
+-- =============================================
+
+CREATE TABLE EmailVerificationTokens (
+                                         token_id INT IDENTITY(1,1) PRIMARY KEY,
+                                         user_id INT NOT NULL,
+                                         token NVARCHAR(256) UNIQUE NOT NULL,
+                                         token_type NVARCHAR(50) CHECK (token_type IN ('EMAIL_VERIFICATION', 'PASSWORD_RESET')) NOT NULL,
+                                         expiry_date DATETIME NOT NULL,
+                                         is_used BIT DEFAULT 0 NOT NULL,
+                                         created_at DATETIME DEFAULT GETDATE() NOT NULL,
+                                         used_at DATETIME NULL,
+                                         ip_address NVARCHAR(50) NULL,
+                                         user_agent NVARCHAR(500) NULL,
+                                         CONSTRAINT FK_EmailVerificationTokens_User FOREIGN KEY (user_id)
+                                             REFERENCES AppUsers(user_id) ON DELETE CASCADE
 );
 GO
 
@@ -239,6 +261,16 @@ GO
 CREATE NONCLUSTERED INDEX IX_AppUsers_Email ON AppUsers(email);
 CREATE NONCLUSTERED INDEX IX_AppUsers_Role ON AppUsers(role);
 CREATE NONCLUSTERED INDEX IX_AppUsers_IsActive ON AppUsers(is_active);
+CREATE NONCLUSTERED INDEX IX_AppUsers_EmailVerified ON AppUsers(email_verified) INCLUDE (email, is_active);
+
+-- Customers Indexes
+CREATE NONCLUSTERED INDEX IX_Customers_OAuth ON Customers(oauth_provider, oauth_id);
+
+-- EmailVerificationTokens Indexes
+CREATE NONCLUSTERED INDEX IX_EmailVerificationTokens_Token ON EmailVerificationTokens(token) INCLUDE (token_type, expiry_date, is_used);
+CREATE NONCLUSTERED INDEX IX_EmailVerificationTokens_UserId ON EmailVerificationTokens(user_id);
+CREATE NONCLUSTERED INDEX IX_EmailVerificationTokens_ExpiryDate ON EmailVerificationTokens(expiry_date) WHERE is_used = 0;
+CREATE NONCLUSTERED INDEX IX_EmailVerificationTokens_TokenType ON EmailVerificationTokens(token_type, is_used);
 
 -- Orders Indexes
 CREATE NONCLUSTERED INDEX IX_Orders_UserId ON Orders(user_id);
@@ -408,11 +440,13 @@ SELECT
     u.email,
     u.role,
     u.is_active,
+    u.email_verified,
     u.created_at,
     u.last_login,
     CAST(NULL AS NVARCHAR(100)) AS name,
     CAST(NULL AS NVARCHAR(20)) AS phone,
-    CAST(NULL AS NVARCHAR(255)) AS address
+    CAST(NULL AS NVARCHAR(255)) AS address,
+    CAST(NULL AS NVARCHAR(50)) AS oauth_provider
 FROM AppUsers u
 WHERE u.role = 'ADMIN'
 
@@ -423,11 +457,13 @@ SELECT
     u.email,
     u.role,
     u.is_active,
+    u.email_verified,
     u.created_at,
     u.last_login,
     s.name,
     s.phone,
-    s.address
+    s.address,
+    CAST(NULL AS NVARCHAR(50)) AS oauth_provider
 FROM AppUsers u
          INNER JOIN Staff s ON u.user_id = s.staff_id
 
@@ -438,11 +474,13 @@ SELECT
     u.email,
     u.role,
     u.is_active,
+    u.email_verified,
     u.created_at,
     u.last_login,
     c.name,
     c.phone,
-    c.address
+    c.address,
+    c.oauth_provider
 FROM AppUsers u
          INNER JOIN Customers c ON u.user_id = c.customer_id;
 GO
@@ -458,6 +496,7 @@ SELECT
     s.phone,
     s.address,
     u.is_active,
+    u.email_verified,
     u.created_at,
     u.last_login,
     (SELECT COUNT(*) FROM Orders WHERE user_id = s.staff_id) AS total_orders,
@@ -477,7 +516,9 @@ SELECT
     c.phone,
     c.address,
     c.oauth_provider,
+    c.oauth_id,
     u.is_active,
+    u.email_verified,
     u.created_at,
     u.last_login,
     (SELECT COUNT(*) FROM Orders WHERE user_id = c.customer_id) AS total_orders,
@@ -487,6 +528,39 @@ SELECT
      WHERE o.user_id = c.customer_id) AS total_spent
 FROM Customers c
          INNER JOIN AppUsers u ON c.customer_id = u.user_id;
+GO
+
+IF OBJECT_ID('vw_EmailVerificationTokens', 'V') IS NOT NULL DROP VIEW vw_EmailVerificationTokens;
+GO
+
+CREATE VIEW vw_EmailVerificationTokens AS
+SELECT
+    evt.token_id,
+    evt.user_id,
+    u.email,
+    CASE
+        WHEN u.role = 'CUSTOMER' THEN c.name
+        WHEN u.role = 'STAFF' THEN s.name
+        ELSE NULL
+        END AS user_name,
+    u.role,
+    evt.token_type,
+    evt.created_at,
+    evt.expiry_date,
+    evt.is_used,
+    evt.used_at,
+    CASE
+        WHEN evt.is_used = 1 THEN 'USED'
+        WHEN evt.expiry_date < GETDATE() THEN 'EXPIRED'
+        ELSE 'ACTIVE'
+        END AS token_status,
+    DATEDIFF(HOUR, GETDATE(), evt.expiry_date) AS hours_until_expiry,
+    evt.ip_address,
+    evt.user_agent
+FROM EmailVerificationTokens evt
+         INNER JOIN AppUsers u ON evt.user_id = u.user_id
+         LEFT JOIN Customers c ON u.user_id = c.customer_id
+         LEFT JOIN Staff s ON u.user_id = s.staff_id;
 GO
 
 IF OBJECT_ID('vw_PendingShowroomOrders', 'V') IS NOT NULL DROP VIEW vw_PendingShowroomOrders;
@@ -671,9 +745,336 @@ FROM Car c
 GO
 
 -- =============================================
--- STORED PROCEDURES
+-- STORED PROCEDURES - AUTHENTICATION
 -- =============================================
 
+-- SP: Generate Email Verification Token
+IF OBJECT_ID('sp_GenerateEmailVerificationToken', 'P') IS NOT NULL DROP PROCEDURE sp_GenerateEmailVerificationToken;
+GO
+
+CREATE PROCEDURE sp_GenerateEmailVerificationToken
+    @UserId INT,
+    @Token NVARCHAR(256),
+    @ExpiryHours INT = 24,
+    @IpAddress NVARCHAR(50) = NULL,
+    @UserAgent NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+BEGIN TRY
+BEGIN TRANSACTION;
+
+        IF NOT EXISTS (SELECT 1 FROM AppUsers WHERE user_id = @UserId)
+BEGIN
+            RAISERROR('User không tồn tại', 16, 1);
+ROLLBACK TRANSACTION;
+RETURN;
+END
+
+        IF EXISTS (SELECT 1 FROM AppUsers WHERE user_id = @UserId AND email_verified = 1)
+BEGIN
+            RAISERROR('Email đã được xác thực', 16, 1);
+ROLLBACK TRANSACTION;
+RETURN;
+END
+
+UPDATE EmailVerificationTokens
+SET is_used = 1, used_at = GETDATE()
+WHERE user_id = @UserId AND token_type = 'EMAIL_VERIFICATION' AND is_used = 0;
+
+INSERT INTO EmailVerificationTokens (user_id, token, token_type, expiry_date, ip_address, user_agent)
+VALUES (@UserId, @Token, 'EMAIL_VERIFICATION', DATEADD(HOUR, @ExpiryHours, GETDATE()), @IpAddress, @UserAgent);
+
+COMMIT TRANSACTION;
+SELECT 'SUCCESS' AS Result, 'Token tạo thành công' AS Message, @Token AS Token, DATEADD(HOUR, @ExpiryHours, GETDATE()) AS ExpiryDate;
+END TRY
+BEGIN CATCH
+IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+SELECT 'ERROR' AS Result, ERROR_MESSAGE() AS Message;
+END CATCH
+END;
+GO
+
+-- SP: Verify Email
+IF OBJECT_ID('sp_VerifyEmail', 'P') IS NOT NULL DROP PROCEDURE sp_VerifyEmail;
+GO
+
+CREATE PROCEDURE sp_VerifyEmail
+    @Token NVARCHAR(256),
+    @IpAddress NVARCHAR(50) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+BEGIN TRY
+BEGIN TRANSACTION;
+
+        DECLARE @UserId INT, @IsUsed BIT, @ExpiryDate DATETIME;
+
+SELECT @UserId = user_id, @IsUsed = is_used, @ExpiryDate = expiry_date
+FROM EmailVerificationTokens
+WHERE token = @Token AND token_type = 'EMAIL_VERIFICATION';
+
+IF @UserId IS NULL
+BEGIN
+            RAISERROR('Token không hợp lệ', 16, 1);
+ROLLBACK TRANSACTION;
+RETURN;
+END
+
+        IF @IsUsed = 1
+BEGIN
+            RAISERROR('Token đã được sử dụng', 16, 1);
+ROLLBACK TRANSACTION;
+RETURN;
+END
+
+        IF @ExpiryDate < GETDATE()
+BEGIN
+            RAISERROR('Token đã hết hạn', 16, 1);
+ROLLBACK TRANSACTION;
+RETURN;
+END
+
+UPDATE AppUsers SET email_verified = 1 WHERE user_id = @UserId;
+UPDATE EmailVerificationTokens SET is_used = 1, used_at = GETDATE() WHERE token = @Token;
+
+COMMIT TRANSACTION;
+SELECT 'SUCCESS' AS Result, 'Email đã được xác thực thành công!' AS Message, @UserId AS UserId;
+END TRY
+BEGIN CATCH
+IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+SELECT 'ERROR' AS Result, ERROR_MESSAGE() AS Message;
+END CATCH
+END;
+GO
+
+-- SP: Resend Verification Email
+IF OBJECT_ID('sp_ResendVerificationEmail', 'P') IS NOT NULL DROP PROCEDURE sp_ResendVerificationEmail;
+GO
+
+CREATE PROCEDURE sp_ResendVerificationEmail
+    @Email NVARCHAR(100),
+    @NewToken NVARCHAR(256),
+    @IpAddress NVARCHAR(50) = NULL,
+    @UserAgent NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+BEGIN TRY
+        DECLARE @UserId INT, @IsVerified BIT;
+
+SELECT @UserId = user_id, @IsVerified = email_verified
+FROM AppUsers
+WHERE email = LOWER(TRIM(@Email)) AND is_active = 1;
+
+IF @UserId IS NULL
+BEGIN
+            RAISERROR('Email không tồn tại hoặc tài khoản đã bị vô hiệu hóa', 16, 1);
+            RETURN;
+END
+
+        IF @IsVerified = 1
+BEGIN
+            RAISERROR('Email đã được xác thực', 16, 1);
+            RETURN;
+END
+
+        IF (SELECT COUNT(*) FROM EmailVerificationTokens
+            WHERE user_id = @UserId AND token_type = 'EMAIL_VERIFICATION'
+              AND created_at > DATEADD(HOUR, -1, GETDATE())) >= 3
+BEGIN
+            RAISERROR('Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau 1 giờ.', 16, 1);
+            RETURN;
+END
+
+EXEC sp_GenerateEmailVerificationToken @UserId = @UserId, @Token = @NewToken, @ExpiryHours = 24, @IpAddress = @IpAddress, @UserAgent = @UserAgent;
+END TRY
+BEGIN CATCH
+SELECT 'ERROR' AS Result, ERROR_MESSAGE() AS Message;
+END CATCH
+END;
+GO
+
+-- SP: Generate Password Reset Token
+IF OBJECT_ID('sp_GeneratePasswordResetToken', 'P') IS NOT NULL DROP PROCEDURE sp_GeneratePasswordResetToken;
+GO
+
+CREATE PROCEDURE sp_GeneratePasswordResetToken
+    @Email NVARCHAR(100),
+    @Token NVARCHAR(256),
+    @IpAddress NVARCHAR(50) = NULL,
+    @UserAgent NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+BEGIN TRY
+BEGIN TRANSACTION;
+
+        DECLARE @UserId INT;
+
+SELECT @UserId = user_id FROM AppUsers WHERE email = LOWER(TRIM(@Email)) AND is_active = 1;
+
+IF @UserId IS NULL
+BEGIN
+            RAISERROR('Email không tồn tại hoặc tài khoản đã bị vô hiệu hóa', 16, 1);
+ROLLBACK TRANSACTION;
+RETURN;
+END
+
+        IF (SELECT COUNT(*) FROM EmailVerificationTokens
+            WHERE user_id = @UserId AND token_type = 'PASSWORD_RESET'
+              AND created_at > DATEADD(HOUR, -1, GETDATE())) >= 3
+BEGIN
+            RAISERROR('Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau 1 giờ.', 16, 1);
+ROLLBACK TRANSACTION;
+RETURN;
+END
+
+UPDATE EmailVerificationTokens
+SET is_used = 1, used_at = GETDATE()
+WHERE user_id = @UserId AND token_type = 'PASSWORD_RESET' AND is_used = 0;
+
+INSERT INTO EmailVerificationTokens (user_id, token, token_type, expiry_date, ip_address, user_agent)
+VALUES (@UserId, @Token, 'PASSWORD_RESET', DATEADD(HOUR, 1, GETDATE()), @IpAddress, @UserAgent);
+
+COMMIT TRANSACTION;
+SELECT 'SUCCESS' AS Result, 'Token reset password đã được tạo' AS Message, @Token AS Token, @UserId AS UserId;
+END TRY
+BEGIN CATCH
+IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+SELECT 'ERROR' AS Result, ERROR_MESSAGE() AS Message;
+END CATCH
+END;
+GO
+
+-- SP: Reset Password
+IF OBJECT_ID('sp_ResetPassword', 'P') IS NOT NULL DROP PROCEDURE sp_ResetPassword;
+GO
+
+CREATE PROCEDURE sp_ResetPassword
+    @Token NVARCHAR(256),
+    @NewPasswordHash NVARCHAR(255),
+    @IpAddress NVARCHAR(50) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+BEGIN TRY
+BEGIN TRANSACTION;
+
+        DECLARE @UserId INT, @IsUsed BIT, @ExpiryDate DATETIME;
+
+SELECT @UserId = user_id, @IsUsed = is_used, @ExpiryDate = expiry_date
+FROM EmailVerificationTokens
+WHERE token = @Token AND token_type = 'PASSWORD_RESET';
+
+IF @UserId IS NULL
+BEGIN
+            RAISERROR('Token không hợp lệ', 16, 1);
+ROLLBACK TRANSACTION;
+RETURN;
+END
+
+        IF @IsUsed = 1
+BEGIN
+            RAISERROR('Token đã được sử dụng', 16, 1);
+ROLLBACK TRANSACTION;
+RETURN;
+END
+
+        IF @ExpiryDate < GETDATE()
+BEGIN
+            RAISERROR('Token đã hết hạn', 16, 1);
+ROLLBACK TRANSACTION;
+RETURN;
+END
+
+UPDATE AppUsers SET password_hash = @NewPasswordHash WHERE user_id = @UserId;
+UPDATE EmailVerificationTokens SET is_used = 1, used_at = GETDATE() WHERE token = @Token;
+
+COMMIT TRANSACTION;
+SELECT 'SUCCESS' AS Result, 'Mật khẩu đã được đặt lại thành công!' AS Message, @UserId AS UserId;
+END TRY
+BEGIN CATCH
+IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+SELECT 'ERROR' AS Result, ERROR_MESSAGE() AS Message;
+END CATCH
+END;
+GO
+
+-- SP: Login or Register with OAuth
+IF OBJECT_ID('sp_LoginOrRegisterOAuth', 'P') IS NOT NULL DROP PROCEDURE sp_LoginOrRegisterOAuth;
+GO
+
+CREATE PROCEDURE sp_LoginOrRegisterOAuth
+    @Email NVARCHAR(100),
+    @Name NVARCHAR(100),
+    @OAuthProvider NVARCHAR(50),
+    @OAuthId NVARCHAR(255)
+AS
+BEGIN
+    SET NOCOUNT ON;
+BEGIN TRY
+BEGIN TRANSACTION;
+
+        DECLARE @UserId INT;
+
+SELECT @UserId = u.user_id
+FROM AppUsers u
+         INNER JOIN Customers c ON u.user_id = c.customer_id
+WHERE u.email = LOWER(TRIM(@Email)) OR (c.oauth_provider = @OAuthProvider AND c.oauth_id = @OAuthId);
+
+IF @UserId IS NULL
+BEGIN
+INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified)
+VALUES (LOWER(TRIM(@Email)), '', 'CUSTOMER', 1, 1);
+
+SET @UserId = SCOPE_IDENTITY();
+
+INSERT INTO Customers (customer_id, name, oauth_provider, oauth_id)
+VALUES (@UserId, @Name, @OAuthProvider, @OAuthId);
+
+COMMIT TRANSACTION;
+SELECT 'SUCCESS' AS Result, 'Đăng ký thành công qua ' + @OAuthProvider AS Message, @UserId AS UserId, 1 AS IsNewUser;
+END
+ELSE
+BEGIN
+UPDATE AppUsers SET last_login = GETDATE() WHERE user_id = @UserId;
+UPDATE Customers SET oauth_provider = @OAuthProvider, oauth_id = @OAuthId
+WHERE customer_id = @UserId AND (oauth_provider IS NULL OR oauth_id IS NULL);
+
+COMMIT TRANSACTION;
+SELECT 'SUCCESS' AS Result, 'Đăng nhập thành công' AS Message, @UserId AS UserId, 0 AS IsNewUser;
+END
+END TRY
+BEGIN CATCH
+IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+SELECT 'ERROR' AS Result, ERROR_MESSAGE() AS Message;
+END CATCH
+END;
+GO
+
+-- SP: Cleanup Expired Tokens
+IF OBJECT_ID('sp_CleanupExpiredTokens', 'P') IS NOT NULL DROP PROCEDURE sp_CleanupExpiredTokens;
+GO
+
+CREATE PROCEDURE sp_CleanupExpiredTokens
+    @DaysOld INT = 30
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+DELETE FROM EmailVerificationTokens
+WHERE expiry_date < DATEADD(DAY, -@DaysOld, GETDATE());
+
+SELECT @@ROWCOUNT AS DeletedTokens, 'Đã xóa ' + CAST(@@ROWCOUNT AS NVARCHAR) + ' tokens hết hạn' AS Message;
+END;
+GO
+
+-- =============================================
+-- STORED PROCEDURES - USER MANAGEMENT
+-- =============================================
+
+-- SP: Register Customer
 IF OBJECT_ID('sp_RegisterCustomer', 'P') IS NOT NULL DROP PROCEDURE sp_RegisterCustomer;
 GO
 
@@ -683,7 +1084,11 @@ CREATE PROCEDURE sp_RegisterCustomer
     @Name NVARCHAR(100),
     @Phone NVARCHAR(20) = NULL,
     @Address NVARCHAR(255) = NULL,
-    @OAuthProvider NVARCHAR(50) = NULL
+    @OAuthProvider NVARCHAR(50) = NULL,
+    @OAuthId NVARCHAR(255) = NULL,
+    @VerificationToken NVARCHAR(256) = NULL,
+    @IpAddress NVARCHAR(50) = NULL,
+    @UserAgent NVARCHAR(500) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -697,16 +1102,23 @@ ROLLBACK TRANSACTION;
 RETURN;
 END
 
-INSERT INTO AppUsers (email, password_hash, role, is_active)
-VALUES (LOWER(TRIM(@Email)), @Password, 'CUSTOMER', 1);
+INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified)
+VALUES (LOWER(TRIM(@Email)), @Password, 'CUSTOMER', 1, CASE WHEN @OAuthProvider IS NOT NULL THEN 1 ELSE 0 END);
 
 DECLARE @CustomerId INT = SCOPE_IDENTITY();
 
-INSERT INTO Customers (customer_id, name, phone, address, oauth_provider)
-VALUES (@CustomerId, @Name, @Phone, @Address, @OAuthProvider);
+INSERT INTO Customers (customer_id, name, phone, address, oauth_provider, oauth_id)
+VALUES (@CustomerId, @Name, @Phone, @Address, @OAuthProvider, @OAuthId);
+
+IF @OAuthProvider IS NULL AND @VerificationToken IS NOT NULL
+BEGIN
+INSERT INTO EmailVerificationTokens (user_id, token, token_type, expiry_date, ip_address, user_agent)
+VALUES (@CustomerId, @VerificationToken, 'EMAIL_VERIFICATION', DATEADD(HOUR, 24, GETDATE()), @IpAddress, @UserAgent);
+END
 
 COMMIT TRANSACTION;
-SELECT 'SUCCESS' AS Result, 'Đăng ký thành công!' AS Message, @CustomerId AS CustomerId;
+SELECT 'SUCCESS' AS Result, 'Đăng ký thành công!' AS Message, @CustomerId AS CustomerId,
+       CASE WHEN @OAuthProvider IS NULL THEN 0 ELSE 1 END AS EmailVerified;
 END TRY
 BEGIN CATCH
 IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
@@ -715,6 +1127,7 @@ END CATCH
 END;
 GO
 
+-- SP: Admin Create Staff
 IF OBJECT_ID('sp_AdminCreateStaff', 'P') IS NOT NULL DROP PROCEDURE sp_AdminCreateStaff;
 GO
 
@@ -745,8 +1158,8 @@ ROLLBACK TRANSACTION;
 RETURN;
 END
 
-INSERT INTO AppUsers (email, password_hash, role, is_active)
-VALUES (LOWER(TRIM(@Email)), @Password, 'STAFF', 1);
+INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified)
+VALUES (LOWER(TRIM(@Email)), @Password, 'STAFF', 1, 1);
 
 DECLARE @StaffId INT = SCOPE_IDENTITY();
 
@@ -763,6 +1176,7 @@ END CATCH
 END;
 GO
 
+-- SP: Admin Update Staff
 IF OBJECT_ID('sp_AdminUpdateStaff', 'P') IS NOT NULL DROP PROCEDURE sp_AdminUpdateStaff;
 GO
 
@@ -782,9 +1196,7 @@ BEGIN
             RETURN;
 END
 
-UPDATE Staff
-SET name = @Name, phone = @Phone, address = @Address
-WHERE staff_id = @StaffId;
+UPDATE Staff SET name = @Name, phone = @Phone, address = @Address WHERE staff_id = @StaffId;
 
 IF @@ROWCOUNT > 0
 SELECT 'SUCCESS' AS Result, 'Cập nhật Staff thành công!' AS Message;
@@ -797,6 +1209,7 @@ END CATCH
 END;
 GO
 
+-- SP: Admin Toggle Staff Status
 IF OBJECT_ID('sp_AdminToggleStaffStatus', 'P') IS NOT NULL DROP PROCEDURE sp_AdminToggleStaffStatus;
 GO
 
@@ -827,6 +1240,7 @@ END CATCH
 END;
 GO
 
+-- SP: Admin Reset Staff Password
 IF OBJECT_ID('sp_AdminResetStaffPassword', 'P') IS NOT NULL DROP PROCEDURE sp_AdminResetStaffPassword;
 GO
 
@@ -856,6 +1270,10 @@ SELECT 'ERROR' AS Result, ERROR_MESSAGE() AS Message;
 END CATCH
 END;
 GO
+
+-- =============================================
+-- STORED PROCEDURES - PROMOTIONS
+-- =============================================
 
 IF OBJECT_ID('sp_ClaimPromotion', 'P') IS NOT NULL DROP PROCEDURE sp_ClaimPromotion;
 GO
@@ -981,23 +1399,6 @@ GO
 -- VERIFICATION
 -- =============================================
 PRINT '';
-PRINT '========================================';
-PRINT 'UPDATED DATABASE CREATED SUCCESSFULLY!';
-PRINT '========================================';
-PRINT '';
-PRINT 'Changes Made:';
-PRINT '  Removed from Staff: position, department, hired_date, salary, created_by, notes';
-PRINT '  Removed from Customers: loyalty_points';
-PRINT '  Simplified Staff and Customers tables';
-PRINT '  Updated all related views and stored procedures';
-PRINT '';
-PRINT 'Database Structure:';
-PRINT '  - 13 Tables (simplified)';
-PRINT '  - 9 Views';
-PRINT '  - 7 Stored Procedures';
-PRINT '  - 4 Triggers';
-PRINT '  - Indexes optimized';
-PRINT '';
-PRINT 'Database is ready for use!';
+PRINT 'Database sẵn sàng sử dụng!';
 PRINT '========================================';
 GO
