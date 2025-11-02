@@ -10,14 +10,17 @@
     <title>Trang Chủ - Car Showroom</title>
 
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+          crossorigin="anonymous">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+          crossorigin="anonymous">
 
     <style>
-        /* ===================================
-           GLOBAL STYLES
-           =================================== */
         body {
             min-height: 100vh;
             display: flex;
@@ -26,14 +29,11 @@
             color: #fff;
         }
 
-        /* ===================================
-           HERO SECTION
-           =================================== */
         .hero-section {
             position: relative;
-            height: 600px;
+            height: 650px;
             background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-            url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1920') center/cover;
+            url('${pageContext.request.contextPath}/images/BG.png') center/cover;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -61,7 +61,7 @@
             color: #e0e0e0;
         }
 
-        .btn-explore {
+        .btn-hero-primary {
             padding: 15px 40px;
             font-size: 1.1rem;
             border-radius: 50px;
@@ -70,18 +70,36 @@
             border: none;
             transition: all 0.3s ease;
             font-weight: 600;
+            margin: 0 10px;
         }
 
-        .btn-explore:hover {
+        .btn-hero-primary:hover {
             background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
             transform: translateY(-3px);
             box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
             color: #000;
         }
 
-        /* ===================================
-           SECTION TITLE
-           =================================== */
+        .btn-hero-outline {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            background: transparent;
+            color: #fff;
+            border: 2px solid #fff;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin: 0 10px;
+        }
+
+        .btn-hero-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #ffd700;
+            color: #ffd700;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+        }
+
         .section-title {
             text-align: center;
             margin-bottom: 40px;
@@ -103,9 +121,6 @@
             color: #ffd700;
         }
 
-        /* ===================================
-           CAR CARDS
-           =================================== */
         .car-card {
             background: linear-gradient(145deg, #1f1f1f 0%, #1a1a1a 100%);
             border: 1px solid #2a2a2a;
@@ -179,9 +194,6 @@
             transform: translateY(-2px);
         }
 
-        /* ===================================
-           VIEW ALL BUTTON
-           =================================== */
         .btn-outline-primary {
             border-color: #ffd700;
             color: #ffd700;
@@ -196,9 +208,56 @@
             box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
         }
 
-        /* ===================================
-           EMPTY STATE
-           =================================== */
+        .features-section {
+            background: #1a1a1a;
+            padding: 60px 0;
+            border-top: 1px solid #333;
+            border-bottom: 1px solid #333;
+        }
+
+        .feature-card {
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 30px;
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: #ffd700;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .feature-card i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h4 {
+            color: #f8f9fa;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #888;
+            margin: 0;
+        }
+
+        .feature-card.quality i {
+            color: #ffd700;
+        }
+
+        .feature-card.support i {
+            color: #4caf50;
+        }
+
+        .feature-card.price i {
+            color: #ff9800;
+        }
+
         .empty-state {
             color: #888;
             padding: 5rem 0;
@@ -208,16 +267,10 @@
             color: #555;
         }
 
-        /* ===================================
-           FOOTER
-           =================================== */
         footer {
             margin-top: auto;
         }
 
-        /* ===================================
-           RESPONSIVE
-           =================================== */
         @media (max-width: 768px) {
             .hero-content h1 {
                 font-size: 2.5rem;
@@ -230,11 +283,18 @@
             .section-title h2 {
                 font-size: 2rem;
             }
+
+            .btn-hero-primary,
+            .btn-hero-outline {
+                padding: 12px 30px;
+                font-size: 1rem;
+                margin: 5px;
+            }
         }
 
         @media (max-width: 576px) {
             .hero-section {
-                height: 400px;
+                height: 500px;
             }
 
             .hero-content h1 {
@@ -244,55 +304,52 @@
             .hero-content p {
                 font-size: 1rem;
             }
-
-            .btn-explore {
-                padding: 12px 30px;
-                font-size: 1rem;
-            }
         }
     </style>
 </head>
 <body>
 
-<!-- ========================================
-     HEADER
-     ======================================== -->
 <jsp:include page="header.jsp" />
 
-<!-- ========================================
-     HERO SECTION
-     ======================================== -->
-<section class="hero-section">
+<section class="hero-section" aria-label="Hero banner">
     <div class="hero-content">
-        <h1>Khám phá thế giới xe hơi đẳng cấp</h1>
-        <p>Tận hưởng trải nghiệm lái xe tuyệt vời với những mẫu xe mới nhất.</p>
-        <a href="${pageContext.request.contextPath}/cars" class="btn btn-primary btn-explore">
-            Khám Phá Ngay
-        </a>
+        <h1>Khám Phá Thế Giới Xe Hơi Đẳng Cấp</h1>
+        <p>Tận hưởng trải nghiệm lái xe tuyệt vời với những mẫu xe mới nhất</p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="${pageContext.request.contextPath}/cars"
+               class="btn btn-hero-primary"
+               title="Khám phá tất cả xe"
+               aria-label="Khám phá tất cả xe có sẵn">
+                <i class="fas fa-search" aria-hidden="true"></i> Khám Phá Ngay
+            </a>
+            <a href="${pageContext.request.contextPath}/promotions"
+               class="btn btn-hero-outline"
+               title="Xem khuyến mãi"
+               aria-label="Xem các chương trình khuyến mãi">
+                <i class="fas fa-gift" aria-hidden="true"></i> Khuyến Mãi
+            </a>
+        </div>
     </div>
 </section>
 
-<!-- ========================================
-     MAIN CONTENT
-     ======================================== -->
-<main class="container">
+<main class="container my-5 py-5">
     <!-- Featured Cars Section -->
-    <section class="mb-5">
+    <section class="mb-5" aria-labelledby="featured-cars-heading">
         <!-- Section Title -->
         <div class="section-title">
-            <h2>
-                <i class="fas fa-star text-warning"></i> Xe Nổi Bật
+            <h2 id="featured-cars-heading">
+                <i class="fas fa-star text-warning" aria-hidden="true"></i> Xe Nổi Bật
             </h2>
-            <p>Khám phá những mẫu xe được yêu thích nhất</p>
+            <p>Những mẫu xe được yêu thích nhất</p>
         </div>
 
         <!-- Car Grid -->
-        <div class="row g-4">
+        <div class="row g-4" role="list">
             <c:choose>
                 <%-- Display cars if available --%>
                 <c:when test="${not empty cars}">
                     <c:forEach var="car" items="${cars}" begin="0" end="7">
-                        <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="col-lg-3 col-md-4 col-sm-6" role="listitem">
                             <article class="card car-card shadow-sm">
                                     <%-- Find main image --%>
                                 <c:set var="mainImage" value="" />
@@ -307,19 +364,19 @@
                                     <c:when test="${not empty mainImage}">
                                         <img src="${mainImage}"
                                              class="card-img-top car-card-img"
-                                             alt="${car.name}"
+                                             alt="Hình ảnh xe ${car.name}"
                                              loading="lazy">
                                     </c:when>
                                     <c:when test="${not empty car.imageUrl}">
                                         <img src="${car.imageUrl}"
                                              class="card-img-top car-card-img"
-                                             alt="${car.name}"
+                                             alt="Hình ảnh xe ${car.name}"
                                              loading="lazy">
                                     </c:when>
                                     <c:otherwise>
                                         <img src="https://via.placeholder.com/300x200?text=No+Image"
                                              class="card-img-top car-card-img"
-                                             alt="${car.name}"
+                                             alt="Không có hình ảnh cho ${car.name}"
                                              loading="lazy">
                                     </c:otherwise>
                                 </c:choose>
@@ -342,8 +399,9 @@
                                         <%-- View Details Button --%>
                                     <a href="${pageContext.request.contextPath}/car-detail?id=${car.id}"
                                        class="btn btn-primary w-100"
-                                       aria-label="Xem chi tiết ${car.name}">
-                                        <i class="fas fa-eye"></i> Xem Chi Tiết
+                                       title="Xem chi tiết xe ${car.name}"
+                                       aria-label="Xem chi tiết xe ${car.name}">
+                                        <i class="fas fa-eye" aria-hidden="true"></i> Xem Chi Tiết
                                     </a>
                                 </div>
                             </article>
@@ -355,8 +413,9 @@
                 <c:otherwise>
                     <div class="col-12">
                         <div class="text-center empty-state">
-                            <i class="fas fa-car-crash fa-4x mb-3"></i>
+                            <i class="fas fa-car-crash fa-5x mb-3" aria-hidden="true"></i>
                             <h3>Hiện chưa có xe nào để hiển thị</h3>
+                            <p>Vui lòng quay lại sau</p>
                         </div>
                     </div>
                 </c:otherwise>
@@ -367,20 +426,48 @@
         <div class="text-center mt-5">
             <a href="${pageContext.request.contextPath}/cars"
                class="btn btn-outline-primary btn-lg px-5"
-               aria-label="Xem tất cả xe">
-                <i class="fas fa-th me-2"></i> Xem Tất Cả Xe
+               title="Xem tất cả các xe có sẵn"
+               aria-label="Xem tất cả các xe có sẵn">
+                <i class="fas fa-th me-2" aria-hidden="true"></i> Xem Tất Cả Xe
             </a>
         </div>
     </section>
 </main>
 
-<!-- ========================================
-     FOOTER
-     ======================================== -->
+<section class="features-section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card quality text-center">
+                    <i class="fas fa-award" aria-hidden="true"></i>
+                    <h4>Chất Lượng Đảm Bảo</h4>
+                    <p>Tất cả xe đều được kiểm tra kỹ lưỡng và có chế độ bảo hành uy tín</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card support text-center">
+                    <i class="fas fa-headset" aria-hidden="true"></i>
+                    <h4>Hỗ Trợ 24/7</h4>
+                    <p>Đội ngũ chuyên nghiệp luôn sẵn sàng tư vấn và hỗ trợ mọi lúc mọi nơi</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card price text-center">
+                    <i class="fas fa-dollar-sign" aria-hidden="true"></i>
+                    <h4>Giá Tốt Nhất</h4>
+                    <p>Cam kết giá cạnh tranh nhất thị trường với nhiều ưu đãi hấp dẫn</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <jsp:include page="footer.jsp" />
 
 <!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
 
 </body>
 </html>
