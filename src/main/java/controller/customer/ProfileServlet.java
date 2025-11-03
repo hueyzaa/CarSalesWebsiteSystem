@@ -2,6 +2,7 @@ package controller.customer;
 
 import dao.CustomerDAO;
 import model.Customer;
+import model.User;
 import util.SessionUtils;
 import util.ValidationUtil;
 import jakarta.servlet.ServletException;
@@ -68,6 +69,9 @@ public class ProfileServlet extends HttpServlet {
 
             // Set attributes
             request.setAttribute("customer", customer);
+            User user = SessionUtils.getUser(session);
+            request.setAttribute("user", user);
+
             request.getRequestDispatcher("/WEB-INF/views/profile.jsp")
                     .forward(request, response);
 
@@ -109,12 +113,21 @@ public class ProfileServlet extends HttpServlet {
             boolean success = customerDAO.updateCustomer(customerId, name, phone, address);
 
             if (success) {
-                // Reload and update session
                 Customer updatedCustomer = customerDAO.getCustomerById(customerId);
+
                 if (updatedCustomer != null) {
-                    SessionUtils.updateUser(session, updatedCustomer);
+                    User currentUser = SessionUtils.getUser(session);
+
+                    // Update user info in session
+                    currentUser.setName(updatedCustomer.getName());
+                    currentUser.setPhone(updatedCustomer.getPhone());
+                    currentUser.setAddress(updatedCustomer.getAddress());
+
+
+                    SessionUtils.updateUser(session, currentUser);
                     logger.info("Customer profile updated successfully: {}", customerId);
                 }
+
                 session.setAttribute("success", "Cập nhật thông tin thành công!");
             } else {
                 session.setAttribute("error", "Cập nhật thông tin thất bại!");

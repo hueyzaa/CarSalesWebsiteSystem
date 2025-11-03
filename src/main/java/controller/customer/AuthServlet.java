@@ -1,7 +1,7 @@
 package controller.customer;
 
 import dao.AuthDAO;
-import model.Customer;
+import model.User;
 import service.EmailService;
 import util.SessionUtils;
 import util.ValidationUtil;
@@ -174,9 +174,6 @@ public class AuthServlet extends HttpServlet {
         }
     }
 
-    // ============================================
-    // LOGIN
-    // ============================================
 
     private void showLoginPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -200,14 +197,14 @@ public class AuthServlet extends HttpServlet {
                 throw new IllegalArgumentException("Mật khẩu không được để trống");
             }
 
-            Customer customer = authDAO.login(email, password);
+            User user = authDAO.login(email, password);
 
-            if (customer == null) {
+            if (user == null) {
                 throw new IllegalArgumentException("Email hoặc mật khẩu không đúng");
             }
 
-            // Check if email is verified
-            if (!customer.isEmailVerified()) {
+            // ADMIN and STAFF don't need email verification
+            if (user.isCustomer() && !user.isEmailVerified()) {
                 request.setAttribute("needsVerification", true);
                 request.setAttribute("email", email);
                 throw new IllegalArgumentException("Vui lòng xác thực email trước khi đăng nhập");
@@ -215,17 +212,27 @@ public class AuthServlet extends HttpServlet {
 
             // Create session
             HttpSession session = request.getSession();
-            SessionUtils.setUser(session, customer);
+            SessionUtils.setUser(session, user);
             SessionUtils.preventSessionFixation(request);
 
-            logger.info("User logged in: {}", email);
+            logger.info("User logged in: {} (Role: {})", email, user.getRole());
 
-            String redirectUrl = request.getParameter("redirect");
-            if (redirectUrl != null && !redirectUrl.isEmpty()) {
-                response.sendRedirect(request.getContextPath() + redirectUrl);
+            String redirectUrl;
+            if (user.isAdmin()) {
+                redirectUrl = request.getContextPath() + "/admin/dashboard";
+            } else if (user.isStaff()) {
+                redirectUrl = request.getContextPath() + "/staff/dashboard";
             } else {
-                response.sendRedirect(request.getContextPath() + "/home");
+                // Check if there's a redirect parameter
+                String redirect = request.getParameter("redirect");
+                if (redirect != null && !redirect.isEmpty()) {
+                    redirectUrl = request.getContextPath() + redirect;
+                } else {
+                    redirectUrl = request.getContextPath() + "/home";
+                }
             }
+
+            response.sendRedirect(redirectUrl);
 
         } catch (Exception e) {
             logger.warn("Login error: {}", e.getMessage());
@@ -241,6 +248,7 @@ public class AuthServlet extends HttpServlet {
             throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session != null) {
+            SessionUtils.removeUser(session);
             session.invalidate();
             logger.info("User logged out");
         }
@@ -279,10 +287,12 @@ public class AuthServlet extends HttpServlet {
             Map<String, Object> result = authDAO.requestPasswordReset(email, token, ip, userAgent);
 
             if ((boolean) result.get("success")) {
-                Customer customer = authDAO.getCustomerByEmail(email);
-                String resetUrl = buildUrl(request, "/reset-password?token=" + token);
-                emailService.sendPasswordResetEmail(request, email, customer.getName(), resetUrl);
-                logger.info("Password reset email sent to: {}", email);
+                User user = authDAO.getUserByEmail(email);
+                if (user != null) {
+                    String resetUrl = buildUrl(request, "/reset-password?token=" + token);
+                    emailService.sendPasswordResetEmail(request, email, user.getName(), resetUrl);
+                    logger.info("Password reset email sent to: {}", email);
+                }
             }
 
             request.setAttribute("success", "Nếu email tồn tại, link đặt lại mật khẩu đã được gửi");

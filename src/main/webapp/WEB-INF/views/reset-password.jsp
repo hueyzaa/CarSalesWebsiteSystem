@@ -276,12 +276,12 @@
         }
 
         if (password === confirmPassword) {
-            confirmHelp.textContent = '✅ Mật khẩu khớp';
+            confirmHelp.textContent = 'Mật khẩu khớp';
             confirmHelp.className = 'form-text text-success';
             this.classList.remove('is-invalid');
             this.classList.add('is-valid');
         } else {
-            confirmHelp.textContent = '❌ Mật khẩu không khớp';
+            confirmHelp.textContent = 'Mật khẩu không khớp';
             confirmHelp.className = 'form-text text-danger';
             this.classList.remove('is-valid');
             this.classList.add('is-invalid');

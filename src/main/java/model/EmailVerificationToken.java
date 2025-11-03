@@ -13,7 +13,7 @@ public class EmailVerificationToken implements Serializable {
     private int tokenId;
     private int userId;
     private String token;
-    private String tokenType; // EMAIL_VERIFICATION, PASSWORD_RESET
+    private String tokenType;
     private Date expiryDate;
     private boolean isUsed;
     private Date createdAt;
@@ -37,10 +37,6 @@ public class EmailVerificationToken implements Serializable {
         this.isUsed = false;
         this.createdAt = new Date();
     }
-
-    // ============================================
-    // GETTERS AND SETTERS
-    // ============================================
 
     public int getTokenId() {
         return tokenId;
@@ -122,9 +118,6 @@ public class EmailVerificationToken implements Serializable {
         this.userAgent = userAgent;
     }
 
-    // ============================================
-    // UTILITY METHODS
-    // ============================================
 
     /**
      * Checks if token is expired

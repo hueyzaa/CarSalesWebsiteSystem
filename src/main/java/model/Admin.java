@@ -12,7 +12,7 @@ public class Admin implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // From User (AppUsers table)
-    private int adminId; // FK to AppUsers.user_id
+    private int adminId;
     private String email;
     private boolean isActive;
     private boolean emailVerified;

@@ -1,6 +1,7 @@
 package dao;
 
 import model.Customer;
+import model.User;
 import util.DBContext;
 import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
@@ -61,16 +62,21 @@ public class AuthDAO {
         return result;
     }
 
-    // ============================================
-    // LOGIN
-    // ============================================
 
-    public Customer login(String email, String password) {
-        String sql = "SELECT u.user_id, u.email, u.password_hash, u.is_active, u.email_verified, " +
-                "c.name, c.phone, c.address, c.oauth_provider, c.oauth_id " +
+    /**
+     * Login user - Returns User object for ALL roles (ADMIN, STAFF, CUSTOMER)
+     */
+    public User login(String email, String password) {
+        String sql = "SELECT u.user_id, u.email, u.password_hash, u.role, u.is_active, u.email_verified, " +
+                "u.created_at, u.last_login, " +
+                "COALESCE(c.name, s.name) as name, " +
+                "COALESCE(c.phone, s.phone) as phone, " +
+                "COALESCE(c.address, s.address) as address, " +
+                "c.oauth_provider, c.oauth_id " +
                 "FROM AppUsers u " +
-                "JOIN Customers c ON u.user_id = c.customer_id " +
-                "WHERE u.email = ? AND u.role = 'CUSTOMER'";
+                "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
+                "LEFT JOIN Staff s ON u.user_id = s.staff_id " +
+                "WHERE u.email = ?";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -80,7 +86,7 @@ public class AuthDAO {
 
             if (rs.next()) {
                 if (!rs.getBoolean("is_active")) {
-                    logger.warn("Login attempt for inactive account: {}", email);
+                    logger.warn("⚠️ Login attempt for inactive account: {}", email);
                     return null;
                 }
 
@@ -89,20 +95,22 @@ public class AuthDAO {
                     // Update last login
                     updateLastLogin(rs.getInt("user_id"));
 
-                    // Build Customer object
-                    Customer customer = new Customer();
-                    customer.setCustomerId(rs.getInt("user_id"));
-                    customer.setEmail(rs.getString("email"));
-                    customer.setName(rs.getString("name"));
-                    customer.setPhone(rs.getString("phone"));
-                    customer.setAddress(rs.getString("address"));
-                    customer.setOauthProvider(rs.getString("oauth_provider"));
-                    customer.setOauthId(rs.getString("oauth_id"));
-                    customer.setActive(true);
-                    customer.setEmailVerified(rs.getBoolean("email_verified"));
+                    // User object
+                    User user = new User();
+                    user.setUserId(rs.getInt("user_id"));
+                    user.setEmail(rs.getString("email"));
+                    user.setRole(rs.getString("role")); // ADMIN, STAFF, or CUSTOMER
+                    user.setName(rs.getString("name"));
+                    user.setPhone(rs.getString("phone"));
+                    user.setAddress(rs.getString("address"));
+                    user.setOauthProvider(rs.getString("oauth_provider"));
+                    user.setActive(true);
+                    user.setEmailVerified(rs.getBoolean("email_verified"));
+                    user.setCreatedAt(rs.getTimestamp("created_at"));
+                    user.setLastLogin(rs.getTimestamp("last_login"));
 
-                    logger.info("User logged in: {}", email);
-                    return customer;
+                    logger.info("User logged in: {} (Role: {})", email, user.getRole());
+                    return user;
                 } else {
                     logger.warn("Wrong password for: {}", email);
                 }
@@ -278,27 +286,67 @@ public class AuthDAO {
         return false;
     }
 
-    public Customer getCustomerByEmail(String email) {
-        String sql = "SELECT * FROM vw_CustomerList WHERE email = ?";
+    /**
+     * Get user by email - Returns User object
+     */
+    public User getUserByEmail(String email) {
+        String sql = "SELECT u.user_id, u.email, u.role, u.is_active, u.email_verified, " +
+                "u.created_at, u.last_login, " +
+                "COALESCE(c.name, s.name) as name, " +
+                "COALESCE(c.phone, s.phone) as phone, " +
+                "COALESCE(c.address, s.address) as address, " +
+                "c.oauth_provider, c.oauth_id " +
+                "FROM AppUsers u " +
+                "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
+                "LEFT JOIN Staff s ON u.user_id = s.staff_id " +
+                "WHERE u.email = ?";
+
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, email);
             ResultSet rs = stmt.executeQuery();
+
             if (rs.next()) {
-                Customer customer = new Customer();
-                customer.setCustomerId(rs.getInt("customer_id"));
-                customer.setEmail(rs.getString("email"));
-                customer.setName(rs.getString("name"));
-                customer.setPhone(rs.getString("phone"));
-                customer.setAddress(rs.getString("address"));
-                customer.setOauthProvider(rs.getString("oauth_provider"));
-                customer.setOauthId(rs.getString("oauth_id"));
-                customer.setActive(rs.getBoolean("is_active"));
-                customer.setEmailVerified(rs.getBoolean("email_verified"));
-                return customer;
+                User user = new User();
+                user.setUserId(rs.getInt("user_id"));
+                user.setEmail(rs.getString("email"));
+                user.setRole(rs.getString("role"));
+                user.setName(rs.getString("name"));
+                user.setPhone(rs.getString("phone"));
+                user.setAddress(rs.getString("address"));
+                user.setOauthProvider(rs.getString("oauth_provider"));
+                user.setActive(rs.getBoolean("is_active"));
+                user.setEmailVerified(rs.getBoolean("email_verified"));
+                user.setCreatedAt(rs.getTimestamp("created_at"));
+                user.setLastLogin(rs.getTimestamp("last_login"));
+                return user;
             }
         } catch (SQLException e) {
-            logger.error("Error getting customer by email", e);
+            logger.error("Error getting user by email", e);
+        }
+        return null;
+    }
+
+    /**
+     * Get customer by email - Backward compatibility
+     */
+    public Customer getCustomerByEmail(String email) {
+        User user = getUserByEmail(email);
+        if (user != null && user.isCustomer()) {
+            // Convert User to Customer
+            Customer customer = new Customer();
+            customer.setCustomerId(user.getUserId());
+            customer.setEmail(user.getEmail());
+            customer.setName(user.getName());
+            customer.setPhone(user.getPhone());
+            customer.setAddress(user.getAddress());
+            customer.setOauthProvider(user.getOauthProvider());
+            customer.setActive(user.isActive());
+            customer.setEmailVerified(user.isEmailVerified());
+            customer.setCreatedAt(user.getCreatedAt());
+            customer.setLastLogin(user.getLastLogin());
+            return customer;
         }
         return null;
     }
