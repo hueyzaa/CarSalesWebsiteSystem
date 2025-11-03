@@ -105,6 +105,9 @@ public class LoginServlet extends HttpServlet {
 
         String role = SessionUtils.getUserRole(userObject);
         Integer userId = SessionUtils.getUserId(userObject);
+        if ("ADMIN".equalsIgnoreCase(role) && userObject instanceof Admin) {
+            session.setAttribute("adminAccount", (Admin) userObject);
+        }
 
         logger.info("User logged in: {} (role: {}, ID: {})", email, role, userId);
 
@@ -129,7 +132,7 @@ public class LoginServlet extends HttpServlet {
     private String getDefaultRedirectByRole(String role) {
         switch (role) {
             case "ADMIN":
-                return "/admin/dashboard";
+                return "/Admin/dashboard";
             case "STAFF":
                 return "/staff/dashboard";
             case "CUSTOMER":

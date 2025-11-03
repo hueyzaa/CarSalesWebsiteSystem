@@ -152,17 +152,16 @@
         <div class="form-section">
             <label class="form-label">Vai trò</label>
             <select name="role" class="form-select">
-                <option value="ADMIN" <c:if test="${user.role eq 'ADMIN'}">selected</c:if>>Quản trị viên</option>
                 <option value="STAFF" <c:if test="${user.role eq 'STAFF'}">selected</c:if>>Nhân viên</option>
                 <option value="CUSTOMER" <c:if test="${user.role eq 'CUSTOMER'}">selected</c:if>>Khách hàng</option>
             </select>
         </div>
 
-        <div class="form-section">
-            <label class="form-label">Trạng thái</label>
+        <div class="mb-3">
+            <label class="form-label">Trạng thái tài khoản</label>
             <select name="status" class="form-select">
-                <option value="ACTIVE" <c:if test="${user.status eq 'ACTIVE'}">selected</c:if>>Hoạt động</option>
-                <option value="INACTIVE" <c:if test="${user.status eq 'INACTIVE'}">selected</c:if>>Không hoạt động</option>
+                <option value="ACTIVE" ${user.active ? 'selected' : ''}>Hoạt động</option>
+                <option value="INACTIVE" ${!user.active ? 'selected' : ''}>Vô hiệu hóa</option>
             </select>
         </div>
 

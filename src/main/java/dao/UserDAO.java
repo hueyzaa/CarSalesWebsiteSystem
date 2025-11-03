@@ -467,8 +467,7 @@ public class UserDAO {
      */
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
-        String sql = "SELECT user_id, email, role, is_active, created_at, last_login, " +
-                "name, phone, address FROM vw_AllUsers ORDER BY created_at DESC";
+        String sql = "SELECT * FROM vw_AllUsers WHERE role IN ('STAFF', 'CUSTOMER') ORDER BY user_id ASC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -479,15 +478,16 @@ public class UserDAO {
                 users.add(user);
             }
 
-            logger.debug("Retrieved {} users from vw_AllUsers", users.size());
+            logger.debug("Retrieved {} staff/customers from vw_AllUsers", users.size());
 
         } catch (SQLException e) {
-            logger.error("Error getting all users", e);
-            throw new RuntimeException("Failed to retrieve all users", e);
+            logger.error("Error getting staff/customers", e);
+            throw new RuntimeException("Failed to retrieve staff/customers", e);
         }
 
         return users;
     }
+
 
     /**
      * Get users by role

@@ -1,7 +1,8 @@
 package controller.admin;
 
-import dao.UserDAO;
-import model.User;
+import dao.AdminDAO;
+import model.Admin;
+import model.Staff;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -9,12 +10,18 @@ import java.io.IOException;
 
 @WebServlet("/Admin/update-staff")
 public class UpdateStaffServlet extends HttpServlet {
-    private final UserDAO userDAO = new UserDAO();
+    private final AdminDAO adminDAO = new AdminDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        HttpSession session = request.getSession(false);
+        Admin admin = (Admin) session.getAttribute("adminAccount");
+        if (admin == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
 
         String idParam = request.getParameter("id");
         if (idParam == null) {
@@ -23,15 +30,14 @@ public class UpdateStaffServlet extends HttpServlet {
         }
 
         try {
-            int userId = Integer.parseInt(idParam);
-            User staff = userDAO.getUserById(userId);
+            int staffId = Integer.parseInt(idParam);
+            Staff staff = adminDAO.getStaffById(staffId);
 
             if (staff == null) {
                 request.setAttribute("error", "Không tìm thấy nhân viên!");
                 request.getRequestDispatcher("/WEB-INF/views/Admin/staff-list.jsp").forward(request, response);
                 return;
             }
-
 
             request.setAttribute("staff", staff);
             request.getRequestDispatcher("/WEB-INF/views/Admin/update-staff.jsp").forward(request, response);
@@ -45,42 +51,50 @@ public class UpdateStaffServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        request.setCharacterEncoding("UTF-8");
+        HttpSession session = request.getSession(false);
+        Admin admin = (Admin) session.getAttribute("adminAccount");
+
+        if (admin == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+
         try {
-            int userId = Integer.parseInt(request.getParameter("userId"));
+            int staffId = Integer.parseInt(request.getParameter("staffId"));
             String name = request.getParameter("name");
-            String email = request.getParameter("email");
             String phone = request.getParameter("phone");
             String address = request.getParameter("address");
+            String status = request.getParameter("status");
 
 
-            User staff = userDAO.getUserById(userId);
-            if (staff == null) {
-                request.setAttribute("error", "Không tìm thấy nhân viên để cập nhật!");
-                request.getRequestDispatcher("/WEB-INF/views/Admin/update-staff.jsp").forward(request, response);
-                return;
+            boolean updated = adminDAO.updateStaff(admin.getAdminId(), staffId, name, phone, address);
+
+
+            if ("INACTIVE".equalsIgnoreCase(status)) {
+                adminDAO.toggleStaffStatus(admin.getAdminId(), staffId, false);
+            } else if ("ACTIVE".equalsIgnoreCase(status)) {
+                adminDAO.toggleStaffStatus(admin.getAdminId(), staffId, true);
             }
 
-
-            staff.setName(name);
-            staff.setEmail(email);
-            staff.setPhone(phone);
-            staff.setAddress(address);
-
-            boolean success = userDAO.updateUser(staff);
-
-            if (success) {
+            if (updated) {
                 request.setAttribute("success", "Cập nhật thông tin nhân viên thành công!");
             } else {
-                request.setAttribute("error", "Cập nhật thất bại, vui lòng thử lại!");
+                request.setAttribute("error", "Không thể cập nhật thông tin nhân viên. Vui lòng thử lại!");
             }
 
 
-            request.setAttribute("staff", userDAO.getUserById(userId));
+            request.setAttribute("staff", adminDAO.getStaffById(staffId));
             request.getRequestDispatcher("/WEB-INF/views/Admin/update-staff.jsp").forward(request, response);
 
         } catch (NumberFormatException e) {
             request.setAttribute("error", "ID nhân viên không hợp lệ!");
             request.getRequestDispatcher("/WEB-INF/views/Admin/staff-list.jsp").forward(request, response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Đã xảy ra lỗi khi cập nhật nhân viên!");
+            request.getRequestDispatcher("/WEB-INF/views/Admin/update-staff.jsp").forward(request, response);
         }
     }
 }

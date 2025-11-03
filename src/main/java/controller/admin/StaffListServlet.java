@@ -1,6 +1,8 @@
 package controller.admin;
 
+import dao.AdminDAO;
 import dao.UserDAO;
+import model.Staff;
 import model.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -27,11 +29,7 @@ public class StaffListServlet extends HttpServlet {
         }
 
 
-        List<User> allUsers = userDAO.getAllUsers();
-        List<User> staffList = allUsers.stream()
-                .filter(u -> "STAFF".equalsIgnoreCase(u.getRole()))
-                .collect(Collectors.toList());
-
+        List<Staff> staffList = AdminDAO.getAllStaff();
         request.setAttribute("staffList", staffList);
         request.getRequestDispatcher("/WEB-INF/views/Admin/staff-list.jsp").forward(request, response);
     }

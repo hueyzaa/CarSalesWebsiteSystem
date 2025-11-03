@@ -1,22 +1,28 @@
 package controller.admin;
 
+import dao.AdminDAO;
 import dao.UserDAO;
+import model.Admin;
 import model.User;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+
 import java.io.IOException;
 
 @WebServlet("/Admin/update-user")
 public class UpdateUserServlet extends HttpServlet {
+    private final AdminDAO adminDAO = new AdminDAO();
     private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         HttpSession session = request.getSession(false);
-        if (session == null || !"ADMIN".equalsIgnoreCase((String) session.getAttribute("userRole"))) {
-            response.sendRedirect(request.getContextPath() + "/access-denied.jsp");
+        Admin admin = (Admin) session.getAttribute("adminAccount");
+        if (admin == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
@@ -29,6 +35,7 @@ public class UpdateUserServlet extends HttpServlet {
         try {
             int userId = Integer.parseInt(idParam);
             User user = userDAO.getUserById(userId);
+
             if (user == null) {
                 request.setAttribute("error", "Không tìm thấy người dùng!");
                 request.getRequestDispatcher("/WEB-INF/views/Admin/user-list.jsp").forward(request, response);
@@ -48,26 +55,48 @@ public class UpdateUserServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
+        HttpSession session = request.getSession(false);
+        Admin admin = (Admin) session.getAttribute("adminAccount");
 
-        int userId = Integer.parseInt(request.getParameter("userId"));
-        String name = request.getParameter("name");
-        String email = request.getParameter("email");
-        String phone = request.getParameter("phone");
-        String address = request.getParameter("address");
-        String role = request.getParameter("role");
-        String status = request.getParameter("status");
-
-        User user = new User();
-        user.setUserId(userId);
-        user.setName(name);
-        user.setEmail(email);
-        user.setPhone(phone);
-        user.setAddress(address);
-        user.setRole(role);
-        user.setStatus(status);
+        if (admin == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
 
         try {
-            boolean updated = userDAO.updateUser(user);
+            int userId = Integer.parseInt(request.getParameter("userId"));
+            String name = request.getParameter("name");
+            String email = request.getParameter("email");
+            String phone = request.getParameter("phone");
+            String address = request.getParameter("address");
+            String role = request.getParameter("role");
+            String status = request.getParameter("status");
+
+            boolean updated = false;
+
+
+            if ("STAFF".equalsIgnoreCase(role)) {
+                updated = adminDAO.updateStaff(admin.getAdminId(), userId, name, phone, address);
+
+
+                if ("INACTIVE".equalsIgnoreCase(status)) {
+                    adminDAO.toggleStaffStatus(admin.getAdminId(), userId, false);
+                } else if ("ACTIVE".equalsIgnoreCase(status)) {
+                    adminDAO.toggleStaffStatus(admin.getAdminId(), userId, true);
+                }
+
+            } else if ("CUSTOMER".equalsIgnoreCase(role)) {
+
+                updated = userDAO.updateCustomer(userId, name, phone, address);
+
+
+                if ("INACTIVE".equalsIgnoreCase(status)) {
+                    userDAO.deactivateUser(userId);
+                } else if ("ACTIVE".equalsIgnoreCase(status)) {
+                    userDAO.activateUser(userId);
+                }
+            }
+
             if (updated) {
                 response.sendRedirect(request.getContextPath() + "/Admin/user-list?success=1");
             } else {
@@ -75,10 +104,14 @@ public class UpdateUserServlet extends HttpServlet {
                 request.setAttribute("user", userDAO.getUserById(userId));
                 request.getRequestDispatcher("/WEB-INF/views/Admin/update-user.jsp").forward(request, response);
             }
+
+        } catch (NumberFormatException e) {
+            request.setAttribute("error", "ID người dùng không hợp lệ!");
+            request.getRequestDispatcher("/WEB-INF/views/Admin/user-list.jsp").forward(request, response);
+
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi khi cập nhật!");
-            request.setAttribute("user", userDAO.getUserById(userId));
             request.getRequestDispatcher("/WEB-INF/views/Admin/update-user.jsp").forward(request, response);
         }
     }

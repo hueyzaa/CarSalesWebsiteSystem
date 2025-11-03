@@ -148,7 +148,7 @@ public class AdminDAO {
     /**
      * Get all Staff - UPDATED: Simplified view query
      */
-    public List<Staff> getAllStaff() {
+    public static List<Staff> getAllStaff() {
         List<Staff> staffList = new ArrayList<>();
         String sql = "SELECT * FROM vw_StaffManagement ORDER BY created_at DESC";
 
@@ -297,7 +297,7 @@ public class AdminDAO {
     /**
      * Map ResultSet to Staff object - UPDATED: Removed unused fields
      */
-    private Staff mapStaffFromResultSet(ResultSet rs) throws SQLException {
+    private static Staff mapStaffFromResultSet(ResultSet rs) throws SQLException {
         Staff staff = new Staff();
         staff.setStaffId(rs.getInt("staff_id"));
         staff.setEmail(rs.getString("email"));

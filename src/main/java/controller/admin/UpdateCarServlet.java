@@ -100,10 +100,6 @@ public class UpdateCarServlet extends HttpServlet {
             request.getSession().setAttribute("success", "Cập nhật xe thành công!");
             response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
 
-        } catch (ValidationException e) {
-            logger.warn("Lỗi xác thực dữ liệu: {}", e.getMessage());
-            handleError(request, response, e.getMessage());
-
         } catch (DatabaseException e) {
             logger.error("Lỗi cơ sở dữ liệu khi cập nhật xe", e);
             handleError(request, response, e.getMessage());

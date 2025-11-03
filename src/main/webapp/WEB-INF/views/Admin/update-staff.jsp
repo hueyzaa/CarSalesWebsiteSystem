@@ -38,13 +38,13 @@
             margin-bottom: 25px;
         }
 
-        .form-control {
+        .form-control, .form-select {
             background-color: #2a2a2a;
             color: #fff;
             border: 1px solid #444;
         }
 
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             border-color: #ffd700;
             box-shadow: 0 0 6px #ffd700;
         }
@@ -69,7 +69,8 @@
         .btn-secondary:hover {
             background-color: #555;
         }
-        .form-label{
+
+        .form-label {
             color: #fff;
         }
     </style>
@@ -85,15 +86,15 @@
 
     <c:if test="${not empty success}">
         <div class="alert alert-success text-center">${success}</div>
+        <script>
+            setTimeout(() => {
+                window.location.href = "${pageContext.request.contextPath}/Admin/dashboard?section=staff";
+            }, 2000);
+        </script>
     </c:if>
-    <script>
-        setTimeout(() => {
-            window.location.href = "${pageContext.request.contextPath}/Admin/dashboard";
-        }, 2000);
-    </script>
 
     <form method="post" action="${pageContext.request.contextPath}/Admin/update-staff">
-        <input type="hidden" name="userId" value="${staff.userId}">
+        <input type="hidden" name="userId" value="${staff.staffId}">
 
         <div class="mb-3">
             <label class="form-label">Tên nhân viên</label>
@@ -115,16 +116,25 @@
             <input type="text" name="address" value="${staff.address}" class="form-control">
         </div>
 
+        <div class="mb-3">
+            <label class="form-label">Trạng thái tài khoản</label>
+            <select name="status" class="form-select">
+                <option value="ACTIVE" ${staff.active ? 'selected' : ''}>Hoạt động</option>
+                <option value="INACTIVE" ${!staff.active ? 'selected' : ''}>Vô hiệu hóa</option>
+            </select>
+        </div>
+
         <div class="text-center mt-4">
             <button type="submit" class="btn btn-primary me-2">
                 <i class="fas fa-save"></i> Lưu thay đổi
             </button>
-            <a href="${pageContext.request.contextPath}/Admin/dashboard" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Quay lại Dashboard
+            <a href="${pageContext.request.contextPath}/Admin/dashboard?section=staff" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Quay lại danh sách
             </a>
         </div>
     </form>
 </div>
+
 </body>
 </html>
 

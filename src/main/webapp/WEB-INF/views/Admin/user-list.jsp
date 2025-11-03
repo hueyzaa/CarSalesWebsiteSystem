@@ -11,11 +11,19 @@
 
 <div class="admin-table-container">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4><i class="fas fa-user-tie"></i> Danh sách người dùng</h4>
+        <h4><i class="fas fa-users"></i> Danh sách người dùng</h4>
         <a href="${pageContext.request.contextPath}/Admin/add-user" class="btn btn-warning btn-sm">
             <i class="fas fa-plus-circle"></i> Thêm người dùng
         </a>
     </div>
+
+
+    <c:if test="${not empty success}">
+        <div class="alert alert-success text-center">${success}</div>
+    </c:if>
+    <c:if test="${not empty error}">
+        <div class="alert alert-danger text-center">${error}</div>
+    </c:if>
 
     <table class="table table-dark table-striped table-hover text-center align-middle">
         <thead>
@@ -27,36 +35,54 @@
             <th>Số điện thoại</th>
             <th>Địa chỉ</th>
             <th>Ngày tạo</th>
-            <th>Tình trạng</th>
+            <th>Đăng nhập gần nhất</th>
+            <th>Trạng thái</th>
             <th>Hành động</th>
         </tr>
         </thead>
+
         <tbody>
         <c:forEach var="user" items="${userList}">
             <tr>
                 <td>${user.userId}</td>
-                <td>${user.role}</td>
+                <td>
+                    <span class="badge
+                        ${user.role eq 'ADMIN' ? 'bg-danger' :
+                          (user.role eq 'STAFF' ? 'bg-primary' : 'bg-success')}">
+                            ${user.role}
+                    </span>
+                </td>
                 <td>${user.name}</td>
                 <td>${user.email}</td>
                 <td>${user.phone}</td>
                 <td>${user.address}</td>
                 <td><fmt:formatDate value="${user.createdAt}" pattern="dd/MM/yyyy"/></td>
                 <td>
-                    <span class="badge ${user.status == 'ACTIVE' ? 'bg-success' : 'bg-danger'}">
-                            ${user.status}
+                    <c:choose>
+                        <c:when test="${not empty user.lastLogin}">
+                            <fmt:formatDate value="${user.lastLogin}" pattern="dd/MM/yyyy"/>
+                        </c:when>
+                        <c:otherwise>-</c:otherwise>
+                    </c:choose>
+                </td>
+                <td>
+                    <span class="badge ${user.active ? 'bg-success' : 'bg-secondary'}">
+                            ${user.active ? 'Hoạt động' : 'Bị khóa'}
                     </span>
                 </td>
                 <td>
                     <a href="${pageContext.request.contextPath}/Admin/update-user?id=${user.userId}"
-                       class="btn btn-warning btn-sm">
-                        <i class="fas fa-edit"></i> Cập nhật
+                       class="btn btn-sm btn-warning" title="Cập nhật">
+                        <i class="fas fa-edit"></i>
                     </a>
+
                     <form action="${pageContext.request.contextPath}/Admin/delete-user"
                           method="post" style="display:inline;">
                         <input type="hidden" name="id" value="${user.userId}">
-                        <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Xóa người dùng này?');">
-                            <i class="fas fa-trash"></i> Xoá
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Bạn có chắc chắn muốn xóa người dùng này không?');"
+                                title="Xóa người dùng">
+                            <i class="fas fa-user-slash"></i>
                         </button>
                     </form>
                 </td>
@@ -64,6 +90,14 @@
         </c:forEach>
         </tbody>
     </table>
+
+    <c:if test="${empty userList}">
+        <div class="alert alert-info text-center mt-3">
+            Không có người dùng nào trong hệ thống.
+        </div>
+    </c:if>
 </div>
+
+
 
 

@@ -39,14 +39,14 @@
                 <td>${staff.address}</td>
                 <td><fmt:formatDate value="${staff.createdAt}" pattern="dd/MM/yyyy"/></td>
                 <td>
-                    <a href="${pageContext.request.contextPath}/Admin/update-staff?id=${staff.userId}"
-                       class="btn btn-warning btn-sm"><i class="fas fa-edit"></i>Cập nhật</a>
+                    <a href="${pageContext.request.contextPath}/Admin/update-staff?id=${staff.staffId}"
+                       class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
                     <form action="${pageContext.request.contextPath}/Admin/delete-staff"
                           method="post" style="display:inline;">
-                        <input type="hidden" name="id" value="${staff.userId}">
+                        <input type="hidden" name="id" value="${staff.staffId}">
                         <button type="submit" class="btn btn-danger btn-sm"
                                 onclick="return confirm('Xóa nhân viên này?');">
-                            <i class="fas fa-trash"></i>Xoá
+                            <i class="fas fa-trash"></i>
                         </button>
                     </form>
                 </td>
