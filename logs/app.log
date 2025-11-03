@@ -1,4 +1,7 @@
-2025-11-02 17:05:58.139 [main] WARN  util.EnvLoader - .env file not found in any expected location
-2025-11-02 17:05:58.140 [main] INFO  util.EnvLoader - Falling back to system environment variables
-2025-11-02 17:05:58.140 [main] INFO  util.EmailService - Email configuration loaded from .env
-2025-11-02 17:05:58.141 [main] ERROR util.EmailService - Email service not configured
+2025-11-03 21:30:28.998 [main] INFO  test.TestGoogleOAuth - 🧪 Testing Google OAuth Configuration
+2025-11-03 21:30:29.004 [main] INFO  util.GoogleOAuthConfig - Google OAuth config loaded
+2025-11-03 21:30:29.004 [main] INFO  test.TestGoogleOAuth - Client ID: ✅ Loaded
+2025-11-03 21:30:29.005 [main] INFO  test.TestGoogleOAuth - Client Secret: ✅ Loaded
+2025-11-03 21:30:29.033 [main] INFO  service.GoogleOAuthService - 🔗 Generated Google OAuth URL
+2025-11-03 21:30:29.033 [main] INFO  test.TestGoogleOAuth - ✅ Auth URL generated successfully
+2025-11-03 21:30:29.034 [main] INFO  test.TestGoogleOAuth - URL: https://accounts.google.com/o/oauth2/v2/auth?client_id=297939920405-v184rvufoon4bjavl7opgcdphi4ja9df.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fyourdomain.com%2FCarSalesWebsiteSystem%2Foauth2%2Fcallback%2Fgoogle&response_type=code&scope=openid+email+profile&state=test-state-123&access_type=offline&prompt=consent
