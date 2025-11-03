@@ -350,4 +350,113 @@ public class AuthDAO {
         }
         return null;
     }
+    /**
+     * Login or register user with Google OAuth
+     */
+    public User loginOrRegisterWithGoogle(String email, String name, String googleId) {
+        try (Connection conn = DBContext.getConnection()) {
+            // Check if user exists
+            String checkSql = "SELECT user_id FROM AppUsers WHERE email = ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
+                ps.setString(1, email);
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    // User exists - login
+                    int userId = rs.getInt("user_id");
+                    updateLastLogin(userId);
+                    return getUserById(userId);
+                }
+            }
+
+            // User doesn't exist - register
+            return registerGoogleUser(conn, email, name, googleId);
+
+        } catch (SQLException e) {
+            logger.error("Error with Google OAuth login", e);
+            return null;
+        }
+    }
+
+    private User registerGoogleUser(Connection conn, String email, String name, String googleId)
+            throws SQLException {
+
+        conn.setAutoCommit(false);
+
+        try {
+            // Insert into AppUsers
+            String userSql = "INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified, created_at) " +
+                    "OUTPUT INSERTED.user_id " +
+                    "VALUES (?, '', 'CUSTOMER', 1, 1, GETDATE())";
+
+            int userId;
+            try (PreparedStatement ps = conn.prepareStatement(userSql)) {
+                ps.setString(1, email);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    userId = rs.getInt(1);
+                } else {
+                    throw new SQLException("Failed to create user");
+                }
+            }
+
+            // Insert into Customers
+            String customerSql = "INSERT INTO Customers (customer_id, name, oauth_provider, oauth_id) " +
+                    "VALUES (?, ?, 'GOOGLE', ?)";
+
+            try (PreparedStatement ps = conn.prepareStatement(customerSql)) {
+                ps.setInt(1, userId);
+                ps.setString(2, name);
+                ps.setString(3, googleId);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+
+            logger.info("Google user registered: {}", email);
+            return getUserById(userId);
+
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
+        }
+    }
+
+    private User getUserById(int userId) throws SQLException {
+        String sql = "SELECT u.user_id, u.email, u.role, u.is_active, u.email_verified, " +
+                "u.created_at, u.last_login, " +
+                "c.name, c.phone, c.address, c.oauth_provider, c.oauth_id " +
+                "FROM AppUsers u " +
+                "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
+                "WHERE u.user_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                User user = new User();
+                user.setUserId(rs.getInt("user_id"));
+                user.setEmail(rs.getString("email"));
+                user.setRole(rs.getString("role"));
+                user.setName(rs.getString("name"));
+                user.setPhone(rs.getString("phone"));
+                user.setAddress(rs.getString("address"));
+                user.setOauthProvider(rs.getString("oauth_provider"));
+                user.setActive(rs.getBoolean("is_active"));
+                user.setEmailVerified(rs.getBoolean("email_verified"));
+                user.setCreatedAt(rs.getTimestamp("created_at"));
+                user.setLastLogin(rs.getTimestamp("last_login"));
+                return user;
+            }
+        }
+
+        return null;
+    }
+
 }

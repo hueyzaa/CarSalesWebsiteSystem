@@ -178,6 +178,43 @@
             padding-left: 45px;
         }
 
+        .btn-google {
+            background: #fff;
+            border: 1px solid #333;
+            color: #3c4043;
+            padding: 12px;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all 0.3s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .btn-google:hover {
+            background: #f8f9fa;
+            border-color: #444;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
+            color: #3c4043;
+        }
+
+        .btn-google img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .btn-google i.fab.fa-google {
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 25%, #fbbc05 50%, #ea4335 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
         .btn-login {
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             border: none;
@@ -203,6 +240,13 @@
             border-radius: 10px;
         }
 
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            color: #51cf66;
+            border-radius: 10px;
+        }
+
         .divider {
             text-align: center;
             margin: 25px 0;
@@ -225,6 +269,7 @@
             padding: 0 15px;
             position: relative;
             z-index: 1;
+            font-size: 0.9rem;
         }
 
         .register-link {
@@ -294,6 +339,27 @@
         .forgot-password-link i {
             font-size: 0.85rem;
         }
+
+        /* Loading spinner for OAuth */
+        .btn-google.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .btn-google.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #3c4043;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -341,12 +407,33 @@
                     </div>
 
                     <div class="login-body">
+                        <!-- Error Message -->
                         <c:if test="${not empty error}">
                             <div class="alert alert-danger" role="alert">
                                 <i class="fas fa-exclamation-circle"></i> ${error}
                             </div>
                         </c:if>
 
+                        <!-- Success Message -->
+                        <c:if test="${not empty success}">
+                            <div class="alert alert-success" role="alert">
+                                <i class="fas fa-check-circle"></i> ${success}
+                            </div>
+                        </c:if>
+
+                        <a href="${pageContext.request.contextPath}/oauth2/google"
+                           class="btn btn-google w-100"
+                           id="googleLoginBtn">
+                            <i class="fab fa-google"></i>
+                            <span>Đăng nhập với Google</span>
+                        </a>
+
+                        <!-- Divider -->
+                        <div class="divider">
+                            <span>hoặc đăng nhập với email</span>
+                        </div>
+
+                        <!-- Email/Password Login Form -->
                         <form method="post" action="${pageContext.request.contextPath}/login">
                             <input type="hidden" name="csrfToken" value="${csrfToken}">
 
@@ -362,7 +449,8 @@
                                            name="email"
                                            required
                                            placeholder="example@email.com"
-                                           autocomplete="email">
+                                           autocomplete="email"
+                                           value="${email}">
                                 </div>
                             </div>
 
@@ -393,6 +481,7 @@
                             </button>
                         </form>
 
+                        <!-- Register Link -->
                         <div class="register-link">
                             <p>
                                 Chưa có tài khoản?
@@ -409,5 +498,36 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('googleLoginBtn').addEventListener('click', function(e) {
+        // Add loading class
+        this.classList.add('loading');
+
+        // Optional: Show loading text
+        const span = this.querySelector('span');
+        const originalText = span.textContent;
+        span.textContent = 'Đang chuyển hướng...';
+
+        // If user cancels or goes back, reset button
+        setTimeout(() => {
+            this.classList.remove('loading');
+            span.textContent = originalText;
+        }, 5000);
+    });
+
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('logout') === 'true') {
+        // Could show a success message
+        console.log('Logged out successfully');
+    }
+</script>
 </body>
 </html>
