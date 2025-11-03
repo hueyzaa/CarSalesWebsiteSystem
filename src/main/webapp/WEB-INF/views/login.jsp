@@ -272,6 +272,28 @@
         .back-home:hover i {
             transform: translateX(-5px);
         }
+
+        .forgot-password-link {
+            text-align: right;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+
+        .forgot-password-link a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .forgot-password-link a:hover {
+            color: #ffd700;
+            text-decoration: underline;
+        }
+
+        .forgot-password-link i {
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
@@ -344,7 +366,7 @@
                                 </div>
                             </div>
 
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <label for="password" class="form-label">
                                     <i class="fas fa-lock"></i> Mật khẩu
                                 </label>
@@ -358,6 +380,12 @@
                                            placeholder="Nhập mật khẩu của bạn"
                                            autocomplete="current-password">
                                 </div>
+                            </div>
+
+                            <div class="forgot-password-link">
+                                <a href="${pageContext.request.contextPath}/forgot-password">
+                                    <i class="fas fa-key"></i> Quên mật khẩu?
+                                </a>
                             </div>
 
                             <button type="submit" class="btn btn-login w-100">
