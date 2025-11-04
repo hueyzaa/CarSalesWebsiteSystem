@@ -19,6 +19,7 @@
         text-transform: uppercase;
         letter-spacing: 1px;
         transition: color 0.3s ease;
+        flex-shrink: 0;
     }
 
     .navbar-brand:hover {
@@ -64,7 +65,7 @@
     }
 
     /* ===================================
-       CART BUTTON
+       CART BUTTON - FIXED TO NEVER SHRINK
        =================================== */
     .cart-btn-nav {
         position: relative;
@@ -72,15 +73,20 @@
         color: #1a1a1a;
         border: none;
         border-radius: 25px;
-        padding: 8px 16px;
+        padding: 10px 20px;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         margin-left: 15px;
         transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        justify-content: center;
+        gap: 8px;
         text-decoration: none;
+        /* CRITICAL: Prevent shrinking */
+        flex-shrink: 0;
+        min-width: 130px;
+        white-space: nowrap;
     }
 
     .cart-btn-nav:hover {
@@ -98,13 +104,14 @@
         background: #dc3545;
         color: white;
         border-radius: 50%;
-        width: 20px;
-        height: 20px;
+        min-width: 22px;
+        height: 22px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 11px;
         font-weight: 700;
+        padding: 0 5px;
     }
 
     /* ===================================
@@ -160,14 +167,24 @@
     }
 
     /* ===================================
+       RIGHT SIDE MENU CONTAINER
+       =================================== */
+    .navbar-right-menu {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+    /* ===================================
        RESPONSIVE
        =================================== */
     @media (max-width: 991px) {
         .cart-btn-nav {
             width: 100%;
-            justify-content: center;
             margin-left: 0;
-            margin-top: 10px;
+            margin-top: 15px;
+            min-width: unset;
         }
 
         .search-navbar {
@@ -176,6 +193,17 @@
 
         .navbar-brand {
             font-size: 1.3rem;
+        }
+
+        .navbar-right-menu {
+            flex-direction: column;
+            width: 100%;
+            gap: 0;
+        }
+
+        .navbar-right-menu .navbar-nav {
+            width: 100%;
+            margin: 0 !important;
         }
     }
 
@@ -192,6 +220,24 @@
             font-size: 0.9rem;
             padding: 8px 16px;
         }
+
+        .cart-btn-nav {
+            font-size: 0.9rem;
+            padding: 10px 18px;
+        }
+    }
+
+    /* Extra small screens */
+    @media (max-width: 380px) {
+        .navbar-brand {
+            font-size: 1.1rem;
+        }
+
+        .cart-btn-nav {
+            font-size: 0.85rem;
+            padding: 8px 16px;
+            min-width: 110px;
+        }
     }
 </style>
 
@@ -205,7 +251,7 @@ NAVIGATION BAR
            href="${pageContext.request.contextPath}/"
            title="Về trang chủ"
            aria-label="Car Showroom - Trang chủ">
-            <i class="fas fa-car" aria-hidden="true"></i> Car Showroom
+            <i class="fas fa-car" aria-hidden="true"></i> CAR SHOWROOM
         </a>
 
         <!-- Desktop Navigation Links -->
@@ -236,7 +282,7 @@ NAVIGATION BAR
             </li>
         </ul>
 
-        <!-- Mobile Toggle Button - FIXED: Added title and aria-label -->
+        <!-- Mobile Toggle Button -->
         <button class="navbar-toggler"
                 type="button"
                 data-bs-toggle="collapse"
@@ -291,9 +337,9 @@ NAVIGATION BAR
                        title="Nhập tên xe để tìm kiếm">
             </form>
 
-            <!-- Right Side Menu -->
-            <div class="d-flex align-items-center mt-3 mt-lg-0">
-                <!-- Cart Button -->
+            <!-- Right Side Menu - FIXED WITH WRAPPER -->
+            <div class="navbar-right-menu mt-3 mt-lg-0">
+                <!-- Cart Button - Will never shrink -->
                 <a href="${pageContext.request.contextPath}/cart"
                    class="cart-btn-nav"
                    title="Xem giỏ hàng"
@@ -306,7 +352,7 @@ NAVIGATION BAR
                 </a>
 
                 <!-- User Menu -->
-                <ul class="navbar-nav ms-3 mb-0">
+                <ul class="navbar-nav ms-lg-3 mb-0">
                     <c:choose>
                         <%-- User is logged in --%>
                         <c:when test="${not empty sessionScope.user}">

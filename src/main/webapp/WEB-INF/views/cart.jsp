@@ -379,9 +379,7 @@
             <i class="fas fa-shopping-cart fa-5x"></i>
             <h3>Giỏ Hàng Trống</h3>
             <p>Bạn chưa có sản phẩm nào trong giỏ hàng</p>
-            <a href="${pageContext.request.contextPath}/cars" class="btn btn-explore">
-                <i class="fas fa-search"></i> Khám Phá Xe
-            </a>
+            <a href="${pageContext.request.contextPath}/cars" class="btn btn-explore">Khám Phá Xe</a>
         </div>
     </c:if>
 

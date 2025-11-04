@@ -669,9 +669,7 @@
                             <i class="fas fa-car-crash"></i>
                             <h3>Không tìm thấy xe nào</h3>
                             <p>Vui lòng thử lại với các tiêu chí khác</p>
-                            <a href="${pageContext.request.contextPath}/cars" class="btn btn-filter">
-                                <i class="fas fa-redo"></i> Xem Tất Cả Xe
-                            </a>
+                            <a href="${pageContext.request.contextPath}/cars" class="btn btn-filter">Xem Tất Cả Xe</a>
                         </div>
                     </c:otherwise>
                 </c:choose>

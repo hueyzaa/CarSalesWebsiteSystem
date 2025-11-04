@@ -333,9 +333,7 @@
                 <i class="fas fa-ticket-alt"></i>
                 <h3>Bạn chưa nhận khuyến mãi nào</h3>
                 <p>Hãy khám phá các chương trình khuyến mãi hấp dẫn của chúng tôi!</p>
-                <a href="${pageContext.request.contextPath}/promotions" class="btn-browse-promotions">
-                    <i class="fas fa-search"></i> Xem khuyến mãi
-                </a>
+                <a href="${pageContext.request.contextPath}/promotions" class="btn-browse-promotions">Xem khuyến mãi</a>
             </div>
         </c:otherwise>
     </c:choose>
