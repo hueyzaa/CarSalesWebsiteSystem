@@ -62,9 +62,6 @@ public class AuthDAO {
         return result;
     }
 
-    // ============================================
-    // LOGIN
-    // ============================================
 
     /**
      * Login user - Returns User object for ALL roles (ADMIN, STAFF, CUSTOMER)
@@ -294,7 +291,7 @@ public class AuthDAO {
 
                     // BLOCK: Non-customer roles
                     if (!"CUSTOMER".equals(role)) {
-                        logger.warn("⚠️ Non-customer role attempting Google OAuth: {} ({})", email, role);
+                        logger.warn("Non-customer role attempting Google OAuth: {} ({})", email, role);
                         return null;
                     }
 
@@ -503,9 +500,6 @@ public class AuthDAO {
         return null;
     }
 
-    // ============================================
-    // UTILITIES
-    // ============================================
 
     public boolean emailExists(String email) {
         String sql = "SELECT COUNT(*) FROM AppUsers WHERE email = ?";
@@ -585,5 +579,72 @@ public class AuthDAO {
             return customer;
         }
         return null;
+    }
+
+    /**
+     * Register verified customer (after email verification)
+     * Simple registration - no tokens needed, email already verified
+     */
+    public boolean registerVerifiedCustomer(String email, String hashedPassword,
+                                            String name, String phone, String address,
+                                            String ipAddress) {
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
+
+            // Insert into AppUsers
+            String userSql = "INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified, created_at) " +
+                    "OUTPUT INSERTED.user_id " +
+                    "VALUES (?, ?, 'CUSTOMER', 1, 1, GETDATE())";
+
+            int userId;
+            try (PreparedStatement ps = conn.prepareStatement(userSql)) {
+                ps.setString(1, email.toLowerCase().trim());
+                ps.setString(2, hashedPassword);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    userId = rs.getInt(1);
+                } else {
+                    throw new SQLException("Failed to create user");
+                }
+            }
+
+            // Insert into Customers
+            String customerSql = "INSERT INTO Customers (customer_id, name, phone, address, oauth_provider, oauth_id) " +
+                    "VALUES (?, ?, ?, ?, NULL, NULL)";
+
+            try (PreparedStatement ps = conn.prepareStatement(customerSql)) {
+                ps.setInt(1, userId);
+                ps.setString(2, name);
+                ps.setString(3, phone);
+                ps.setString(4, address);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            logger.info("Verified customer registered: {} (ID: {})", email, userId);
+            return true;
+
+        } catch (SQLException e) {
+            logger.error("Error registering verified customer: {}", email, e);
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException ex) {
+                    logger.error("Rollback failed", ex);
+                }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    logger.error("Error closing connection", e);
+                }
+            }
+        }
     }
 }

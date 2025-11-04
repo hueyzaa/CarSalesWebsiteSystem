@@ -92,6 +92,7 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             overflow: hidden;
             position: relative;
+            width: 100%;
         }
 
         .login-card::before {
@@ -106,45 +107,58 @@
 
         .login-header {
             text-align: center;
-            padding: 40px 40px 20px;
+            padding: 40px 40px 30px;
             background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);
             border-bottom: 1px solid #333;
         }
 
         .login-header i {
-            font-size: 3rem;
+            font-size: 3.5rem;
             color: #ffd700;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .login-header h2 {
             color: #f8f9fa;
             font-weight: 700;
             margin-bottom: 10px;
+            font-size: 1.8rem;
         }
 
         .login-header p {
             color: #888;
             margin: 0;
+            font-size: 1rem;
         }
 
         .login-body {
-            padding: 40px;
+            padding: 45px;
+        }
+
+        @media (max-width: 576px) {
+            .login-body {
+                padding: 30px 25px;
+            }
+            .login-header {
+                padding: 30px 25px 25px;
+            }
         }
 
         .form-label {
             color: #e0e0e0;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
         }
 
         .form-control {
             background: #0f0f0f;
             border: 1px solid #333;
             color: #fff;
-            padding: 12px 15px;
+            padding: 14px 15px;
             border-radius: 10px;
             transition: all 0.3s;
+            font-size: 1rem;
         }
 
         .form-control:focus {
@@ -169,39 +183,40 @@
             transform: translateY(-50%);
             color: #888;
             z-index: 10;
+            font-size: 1.1rem;
         }
 
         .input-group .form-control {
-            padding-left: 45px;
+            padding-left: 48px;
         }
 
         .btn-google {
             background: #fff;
-            border: 1px solid #333;
+            border: 2px solid #333;
             color: #3c4043;
-            padding: 12px;
+            padding: 14px;
             font-weight: 600;
             border-radius: 10px;
             transition: all 0.3s;
-            font-size: 1rem;
+            font-size: 1.05rem;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
             text-decoration: none;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .btn-google:hover {
             background: #f8f9fa;
-            border-color: #444;
+            border-color: #555;
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.15);
             color: #3c4043;
         }
 
         .btn-google i.fab.fa-google {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             background: linear-gradient(135deg, #4285f4 0%, #34a853 25%, #fbbc05 50%, #ea4335 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -215,25 +230,25 @@
 
         .oauth-info {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .oauth-info small {
             color: #888;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
         }
 
         .oauth-info i {
-            font-size: 0.8rem;
-            margin-right: 4px;
+            font-size: 0.85rem;
+            margin-right: 5px;
         }
 
         .btn-login {
             background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
             border: none;
             color: #1a1a1a;
-            padding: 12px;
-            font-weight: 600;
+            padding: 14px;
+            font-weight: 700;
             border-radius: 10px;
             transition: all 0.3s;
             font-size: 1.1rem;
@@ -251,6 +266,7 @@
             border: 1px solid rgba(220, 53, 69, 0.3);
             color: #ff6b6b;
             border-radius: 10px;
+            padding: 14px 16px;
         }
 
         .alert-success {
@@ -258,11 +274,12 @@
             border: 1px solid rgba(40, 167, 69, 0.3);
             color: #51cf66;
             border-radius: 10px;
+            padding: 14px 16px;
         }
 
         .divider {
             text-align: center;
-            margin: 25px 0;
+            margin: 28px 0;
             position: relative;
         }
 
@@ -279,22 +296,23 @@
         .divider span {
             background: #1a1a1a;
             color: #888;
-            padding: 0 15px;
+            padding: 0 18px;
             position: relative;
             z-index: 1;
-            font-size: 0.9rem;
+            font-size: 0.92rem;
         }
 
         .register-link {
             text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
+            margin-top: 25px;
+            padding-top: 25px;
             border-top: 1px solid #333;
         }
 
         .register-link p {
             color: #888;
             margin: 0;
+            font-size: 0.98rem;
         }
 
         .register-link a {
@@ -317,6 +335,7 @@
             gap: 8px;
             margin-bottom: 20px;
             transition: all 0.3s;
+            font-size: 0.95rem;
         }
 
         .back-home:hover {
@@ -333,20 +352,24 @@
 
         .forgot-password-link {
             text-align: right;
-            margin-top: -10px;
-            margin-bottom: 20px;
+            margin-top: -8px;
+            margin-bottom: 22px;
         }
 
         .forgot-password-link a {
             color: #888;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.92rem;
             transition: all 0.3s;
         }
 
         .forgot-password-link a:hover {
             color: #ffd700;
             text-decoration: underline;
+        }
+
+        .mb-3 {
+            margin-bottom: 1.2rem !important;
         }
     </style>
 </head>
@@ -381,7 +404,7 @@
 <div class="login-container">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-5 col-lg-4">
+            <div class="col-md-6 col-lg-5">
                 <a href="${pageContext.request.contextPath}/" class="back-home">
                     <i class="fas fa-arrow-left"></i>
                     <span>Quay lại trang chủ</span>
@@ -409,6 +432,7 @@
                             </div>
                         </c:if>
 
+                        <!-- Google Login Button -->
                         <a href="${pageContext.request.contextPath}/oauth2/google"
                            class="btn btn-google w-100"
                            id="googleLoginBtn">
@@ -416,6 +440,7 @@
                             <span>Đăng nhập với Google</span>
                         </a>
 
+                        <!-- Info Text -->
                         <div class="oauth-info">
                             <small>
                                 <i class="fas fa-info-circle"></i>

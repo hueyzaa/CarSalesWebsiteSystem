@@ -19,7 +19,6 @@ import java.util.UUID;
 
 /**
  * Google OAuth 2.0 Servlet
- * ✅ UPDATED: Strict separation between password and OAuth accounts
  */
 @WebServlet(urlPatterns = {"/oauth2/google", "/oauth2/callback/google"})
 public class GoogleOAuthServlet extends HttpServlet {
@@ -33,7 +32,7 @@ public class GoogleOAuthServlet extends HttpServlet {
         super.init();
         oauthService = new GoogleOAuthService();
         authDAO = new AuthDAO();
-        logger.info("✅ GoogleOAuthServlet initialized");
+        logger.info("GoogleOAuthServlet initialized");
     }
 
     @Override
@@ -67,16 +66,16 @@ public class GoogleOAuthServlet extends HttpServlet {
             String authUrl = oauthService.getAuthorizationUrl(state);
 
             if (authUrl != null) {
-                logger.info("🔗 Redirecting to Google OAuth");
+                logger.info("Redirecting to Google OAuth");
                 response.sendRedirect(authUrl);
             } else {
-                logger.error("❌ Failed to generate Google OAuth URL");
+                logger.error("Failed to generate Google OAuth URL");
                 session.setAttribute("error", "Không thể kết nối với Google");
                 response.sendRedirect(request.getContextPath() + "/login");
             }
 
         } catch (Exception e) {
-            logger.error("❌ Error in Google OAuth", e);
+            logger.error("Error in Google OAuth", e);
             request.getSession().setAttribute("error", "Lỗi kết nối Google");
             response.sendRedirect(request.getContextPath() + "/login");
         }
@@ -84,7 +83,6 @@ public class GoogleOAuthServlet extends HttpServlet {
 
     /**
      * Step 2: Handle Google OAuth callback
-     * ✅ UPDATED: Check for password accounts
      */
     private void handleGoogleCallback(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
@@ -99,7 +97,7 @@ public class GoogleOAuthServlet extends HttpServlet {
 
             // Check for errors
             if (error != null) {
-                logger.warn("⚠️ Google OAuth error: {}", error);
+                logger.warn("Google OAuth error: {}", error);
                 session.setAttribute("error", "Đăng nhập Google thất bại");
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
@@ -108,7 +106,7 @@ public class GoogleOAuthServlet extends HttpServlet {
             // Validate state (CSRF protection)
             String sessionState = (String) session.getAttribute("oauth_state");
             if (sessionState == null || !sessionState.equals(state)) {
-                logger.warn("⚠️ Invalid OAuth state");
+                logger.warn("Invalid OAuth state");
                 session.setAttribute("error", "Yêu cầu không hợp lệ (CSRF)");
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
@@ -120,7 +118,7 @@ public class GoogleOAuthServlet extends HttpServlet {
             // Exchange code for access token
             String accessToken = oauthService.getAccessToken(code);
             if (accessToken == null) {
-                logger.error("❌ Failed to get access token");
+                logger.error("Failed to get access token");
                 session.setAttribute("error", "Không thể xác thực với Google");
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
@@ -129,7 +127,7 @@ public class GoogleOAuthServlet extends HttpServlet {
             // Get user info from Google
             Map<String, String> userInfo = oauthService.getUserInfo(accessToken);
             if (userInfo == null) {
-                logger.error("❌ Failed to get user info");
+                logger.error("Failed to get user info");
                 session.setAttribute("error", "Không thể lấy thông tin người dùng");
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
@@ -140,11 +138,11 @@ public class GoogleOAuthServlet extends HttpServlet {
             String name = userInfo.get("name");
             String googleId = userInfo.get("googleId");
 
-            logger.info("📧 Google user info: {} ({})", name, email);
+            logger.info("Google user info: {} ({})", name, email);
 
-            // ✅ SECURITY CHECK: Is this a password account?
+            // SECURITY CHECK: Is this a password account?
             if (authDAO.isPasswordAccount(email)) {
-                logger.warn("⚠️ Password account attempting Google login: {}", email);
+                logger.warn("Password account attempting Google login: {}", email);
                 session.setAttribute("error",
                         "Email này đã được đăng ký bằng mật khẩu. " +
                                 "Vui lòng đăng nhập bằng email và mật khẩu.");
@@ -152,10 +150,10 @@ public class GoogleOAuthServlet extends HttpServlet {
                 return;
             }
 
-            // ✅ SECURITY CHECK: Different OAuth provider?
+            // SECURITY CHECK: Different OAuth provider?
             String existingProvider = authDAO.getOAuthProvider(email);
             if (existingProvider != null && !"GOOGLE".equals(existingProvider)) {
-                logger.warn("⚠️ Email linked to different OAuth: {}", existingProvider);
+                logger.warn("Email linked to different OAuth: {}", existingProvider);
                 session.setAttribute("error",
                         "Email này đã được liên kết với " + existingProvider + ". " +
                                 "Vui lòng đăng nhập bằng " + existingProvider + ".");
@@ -163,11 +161,11 @@ public class GoogleOAuthServlet extends HttpServlet {
                 return;
             }
 
-            // ✅ Login or register with Google OAuth
+            // Login or register with Google OAuth
             User user = authDAO.loginOrRegisterWithGoogle(email, name, googleId);
 
             if (user == null) {
-                logger.error("❌ Failed to login/register Google user");
+                logger.error("Failed to login/register Google user");
                 session.setAttribute("error", "Không thể đăng nhập với Google. Vui lòng thử lại.");
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
@@ -175,17 +173,17 @@ public class GoogleOAuthServlet extends HttpServlet {
 
             // Check if account is active
             if (!user.isActive()) {
-                logger.warn("⚠️ Inactive Google account: {}", email);
+                logger.warn("Inactive Google account: {}", email);
                 session.setAttribute("error", "Tài khoản đã bị vô hiệu hóa");
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
             }
 
-            // ✅ Login successful - Create session
+            // Login successful - Create session
             SessionUtils.setUser(session, user);
             SessionUtils.preventSessionFixation(request);
 
-            logger.info("✅ Google login successful: {} (Role: {})", email, user.getRole());
+            logger.info("Google login successful: {} (Role: {})", email, user.getRole());
 
             // Redirect based on role
             String redirectUrl;
@@ -200,7 +198,7 @@ public class GoogleOAuthServlet extends HttpServlet {
             response.sendRedirect(redirectUrl);
 
         } catch (Exception e) {
-            logger.error("❌ Error in Google OAuth callback", e);
+            logger.error("Error in Google OAuth callback", e);
             session.setAttribute("error", "Đã xảy ra lỗi trong quá trình đăng nhập");
             response.sendRedirect(request.getContextPath() + "/login");
         }
@@ -209,6 +207,6 @@ public class GoogleOAuthServlet extends HttpServlet {
     @Override
     public void destroy() {
         super.destroy();
-        logger.info("👋 GoogleOAuthServlet destroyed");
+        logger.info("GoogleOAuthServlet destroyed");
     }
 }

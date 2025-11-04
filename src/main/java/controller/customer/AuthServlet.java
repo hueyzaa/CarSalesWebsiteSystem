@@ -8,10 +8,12 @@ import util.ValidationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -87,9 +89,6 @@ public class AuthServlet extends HttpServlet {
         }
     }
 
-    // ============================================
-    // REGISTER
-    // ============================================
 
     private void showRegisterPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -115,32 +114,49 @@ public class AuthServlet extends HttpServlet {
                     request.getParameter("confirmPassword")
             );
 
+            // Check email exists in database
             if (authDAO.emailExists(email)) {
                 throw new IllegalArgumentException("Email đã được sử dụng");
             }
 
+            // Generate verification token
             String token = UUID.randomUUID().toString();
             String ip = getClientIP(request);
             String userAgent = request.getHeader("User-Agent");
 
-            Map<String, Object> result = authDAO.register(email, password, name, phone, address, token, ip, userAgent);
+            // Hash password before storing in session
+            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
 
-            if ((boolean) result.get("success")) {
-                // Send verification email
-                try {
-                    String verifyUrl = buildUrl(request, "/verify?token=" + token);
-                    emailService.sendVerificationEmail(request, email, name, verifyUrl);
-                    logger.info("Verification email sent to: {}", email);
-                } catch (Exception e) {
-                    logger.error("Failed to send verification email", e);
-                }
+            // Store registration data in session (NOT in DB yet)
+            HttpSession session = request.getSession();
+            Map<String, Object> pendingRegistration = new HashMap<>();
+            pendingRegistration.put("email", email);
+            pendingRegistration.put("hashedPassword", hashedPassword);
+            pendingRegistration.put("name", name);
+            pendingRegistration.put("phone", phone);
+            pendingRegistration.put("address", address);
+            pendingRegistration.put("token", token);
+            pendingRegistration.put("ipAddress", ip);
+            pendingRegistration.put("userAgent", userAgent);
+            pendingRegistration.put("createdAt", System.currentTimeMillis());
+            pendingRegistration.put("expiryAt", System.currentTimeMillis() + (24 * 60 * 60 * 1000)); // 24 hours
 
-                request.getSession().setAttribute("registeredEmail", email);
-                request.getRequestDispatcher("/WEB-INF/views/verification-pending.jsp")
-                        .forward(request, response);
-            } else {
-                throw new RuntimeException((String) result.get("message"));
+            session.setAttribute("pendingRegistration", pendingRegistration);
+            session.setAttribute("registeredEmail", email);
+
+            // Send verification email
+            try {
+                String verifyUrl = buildUrl(request, "/verify?token=" + token);
+                emailService.sendVerificationEmail(request, email, name, verifyUrl);
+                logger.info("Verification email sent to: {}", email);
+            } catch (Exception e) {
+                logger.error("Failed to send verification email", e);
+                throw new RuntimeException("Không thể gửi email xác thực. Vui lòng thử lại.");
             }
+
+            // Redirect to pending page
+            request.getRequestDispatcher("/WEB-INF/views/verification-pending.jsp")
+                    .forward(request, response);
 
         } catch (Exception e) {
             logger.warn("Register error: {}", e.getMessage());
@@ -148,13 +164,12 @@ public class AuthServlet extends HttpServlet {
         }
     }
 
-    // ============================================
-    // EMAIL VERIFICATION
-    // ============================================
 
     private void handleVerifyEmail(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         String token = request.getParameter("token");
+        HttpSession session = request.getSession(false);
 
         if (token == null || token.isEmpty()) {
             request.setAttribute("error", "Token không hợp lệ");
@@ -162,15 +177,80 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
-        String ip = getClientIP(request);
-        Map<String, Object> result = authDAO.verifyEmail(token, ip);
+        try {
+            // Get pending registration from session
+            if (session == null) {
+                throw new IllegalStateException("Phiên làm việc đã hết hạn. Vui lòng đăng ký lại.");
+            }
 
-        if ((boolean) result.get("success")) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> pendingRegistration =
+                    (Map<String, Object>) session.getAttribute("pendingRegistration");
+
+            if (pendingRegistration == null) {
+                throw new IllegalStateException("Không tìm thấy thông tin đăng ký. Vui lòng đăng ký lại.");
+            }
+
+            // Validate token
+            String storedToken = (String) pendingRegistration.get("token");
+            if (!token.equals(storedToken)) {
+                throw new IllegalArgumentException("Token không hợp lệ");
+            }
+
+            // Check expiry (24 hours)
+            long expiryAt = (long) pendingRegistration.get("expiryAt");
+            if (System.currentTimeMillis() > expiryAt) {
+                // Clear expired registration
+                session.removeAttribute("pendingRegistration");
+                session.removeAttribute("registeredEmail");
+                throw new IllegalArgumentException("Token đã hết hạn. Vui lòng đăng ký lại.");
+            }
+
+            // Extract registration data
+            String email = (String) pendingRegistration.get("email");
+            String hashedPassword = (String) pendingRegistration.get("hashedPassword");
+            String name = (String) pendingRegistration.get("name");
+            String phone = (String) pendingRegistration.get("phone");
+            String address = (String) pendingRegistration.get("address");
+            String ipAddress = (String) pendingRegistration.get("ipAddress");
+
+            // Check email still available (race condition check)
+            if (authDAO.emailExists(email)) {
+                session.removeAttribute("pendingRegistration");
+                session.removeAttribute("registeredEmail");
+                throw new IllegalStateException("Email đã được sử dụng bởi người khác");
+            }
+
+            boolean success = authDAO.registerVerifiedCustomer(
+                    email, hashedPassword, name, phone, address, ipAddress
+            );
+
+            if (!success) {
+                throw new RuntimeException("Không thể hoàn tất đăng ký. Vui lòng thử lại.");
+            }
+
+            // Clean up session
+            session.removeAttribute("pendingRegistration");
+            session.removeAttribute("registeredEmail");
+
+            logger.info("Email verified and customer registered: {}", email);
+
+            // Show success page
             request.setAttribute("success", "Email đã được xác thực thành công!");
-            request.getRequestDispatcher("/WEB-INF/views/verify-success.jsp").forward(request, response);
-        } else {
-            request.setAttribute("error", result.get("message"));
-            request.getRequestDispatcher("/WEB-INF/views/verify-error.jsp").forward(request, response);
+            request.setAttribute("email", email);
+            request.getRequestDispatcher("/WEB-INF/views/verify-success.jsp")
+                    .forward(request, response);
+
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            logger.warn("Verification error: {}", e.getMessage());
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/verify-error.jsp")
+                    .forward(request, response);
+        } catch (Exception e) {
+            logger.error("Verification error", e);
+            request.setAttribute("error", "Đã xảy ra lỗi. Vui lòng thử lại.");
+            request.getRequestDispatcher("/WEB-INF/views/verify-error.jsp")
+                    .forward(request, response);
         }
     }
 
@@ -203,12 +283,6 @@ public class AuthServlet extends HttpServlet {
                 throw new IllegalArgumentException("Email hoặc mật khẩu không đúng");
             }
 
-            // ADMIN and STAFF don't need email verification
-            if (user.isCustomer() && !user.isEmailVerified()) {
-                request.setAttribute("needsVerification", true);
-                request.setAttribute("email", email);
-                throw new IllegalArgumentException("Vui lòng xác thực email trước khi đăng nhập");
-            }
 
             // Create session
             HttpSession session = request.getSession();
@@ -217,13 +291,13 @@ public class AuthServlet extends HttpServlet {
 
             logger.info("User logged in: {} (Role: {})", email, user.getRole());
 
+            // Redirect based on role
             String redirectUrl;
             if (user.isAdmin()) {
                 redirectUrl = request.getContextPath() + "/admin/dashboard";
             } else if (user.isStaff()) {
                 redirectUrl = request.getContextPath() + "/staff/dashboard";
             } else {
-                // Check if there's a redirect parameter
                 String redirect = request.getParameter("redirect");
                 if (redirect != null && !redirect.isEmpty()) {
                     redirectUrl = request.getContextPath() + redirect;
@@ -240,9 +314,6 @@ public class AuthServlet extends HttpServlet {
         }
     }
 
-    // ============================================
-    // LOGOUT
-    // ============================================
 
     private void handleLogout(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -255,9 +326,6 @@ public class AuthServlet extends HttpServlet {
         response.sendRedirect(request.getContextPath() + "/login?logout=true");
     }
 
-    // ============================================
-    // FORGOT PASSWORD
-    // ============================================
 
     private void showForgotPasswordPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -305,9 +373,6 @@ public class AuthServlet extends HttpServlet {
         }
     }
 
-    // ============================================
-    // RESET PASSWORD
-    // ============================================
 
     private void showResetPasswordPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -354,9 +419,6 @@ public class AuthServlet extends HttpServlet {
         }
     }
 
-    // ============================================
-    // UTILITIES
-    // ============================================
 
     private String validatePasswordMatch(String password, String confirmPassword) {
         ValidationUtil.validatePassword(password);
