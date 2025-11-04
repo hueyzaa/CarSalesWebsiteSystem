@@ -42,7 +42,7 @@ public class GoogleOAuthService {
                     "&access_type=offline" +
                     "&prompt=consent";
 
-            logger.info("🔗 Generated Google OAuth URL");
+            logger.info("Generated Google OAuth URL");
             return url;
 
         } catch (Exception e) {
