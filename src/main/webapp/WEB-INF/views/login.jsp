@@ -18,7 +18,6 @@
             overflow-x: hidden;
         }
 
-        /* Background Pattern */
         body::before {
             content: '';
             position: fixed;
@@ -32,7 +31,6 @@
             pointer-events: none;
         }
 
-        /* Navbar */
         .navbar {
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
             padding: 15px 0;
@@ -78,7 +76,6 @@
             color: #fff;
         }
 
-        /* Login Container */
         .login-container {
             position: relative;
             z-index: 1;
@@ -192,6 +189,7 @@
             justify-content: center;
             gap: 12px;
             text-decoration: none;
+            margin-bottom: 8px;
         }
 
         .btn-google:hover {
@@ -202,17 +200,32 @@
             color: #3c4043;
         }
 
-        .btn-google img {
-            width: 20px;
-            height: 20px;
-        }
-
         .btn-google i.fab.fa-google {
             font-size: 1.2rem;
             background: linear-gradient(135deg, #4285f4 0%, #34a853 25%, #fbbc05 50%, #ea4335 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+
+        .btn-google.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .oauth-info {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .oauth-info small {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .oauth-info i {
+            font-size: 0.8rem;
+            margin-right: 4px;
         }
 
         .btn-login {
@@ -335,31 +348,6 @@
             color: #ffd700;
             text-decoration: underline;
         }
-
-        .forgot-password-link i {
-            font-size: 0.85rem;
-        }
-
-        /* Loading spinner for OAuth */
-        .btn-google.loading {
-            pointer-events: none;
-            opacity: 0.7;
-        }
-
-        .btn-google.loading::after {
-            content: '';
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #3c4043;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
@@ -427,6 +415,13 @@
                             <i class="fab fa-google"></i>
                             <span>Đăng nhập với Google</span>
                         </a>
+
+                        <div class="oauth-info">
+                            <small>
+                                <i class="fas fa-info-circle"></i>
+                                Chỉ dành cho tài khoản đăng ký bằng Google
+                            </small>
+                        </div>
 
                         <!-- Divider -->
                         <div class="divider">
@@ -499,22 +494,20 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Google Login Button with loading state
     document.getElementById('googleLoginBtn').addEventListener('click', function(e) {
-        // Add loading class
         this.classList.add('loading');
-
-        // Optional: Show loading text
         const span = this.querySelector('span');
         const originalText = span.textContent;
         span.textContent = 'Đang chuyển hướng...';
 
-        // If user cancels or goes back, reset button
         setTimeout(() => {
             this.classList.remove('loading');
             span.textContent = originalText;
         }, 5000);
     });
 
+    // Auto-dismiss alerts after 5 seconds
     setTimeout(function() {
         const alerts = document.querySelectorAll('.alert');
         alerts.forEach(function(alert) {
@@ -522,12 +515,6 @@
             bsAlert.close();
         });
     }, 5000);
-
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('logout') === 'true') {
-        // Could show a success message
-        console.log('Logged out successfully');
-    }
 </script>
 </body>
 </html>

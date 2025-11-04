@@ -62,6 +62,9 @@ public class AuthDAO {
         return result;
     }
 
+    // ============================================
+    // LOGIN
+    // ============================================
 
     /**
      * Login user - Returns User object for ALL roles (ADMIN, STAFF, CUSTOMER)
@@ -86,7 +89,7 @@ public class AuthDAO {
 
             if (rs.next()) {
                 if (!rs.getBoolean("is_active")) {
-                    logger.warn("⚠️ Login attempt for inactive account: {}", email);
+                    logger.warn("Login attempt for inactive account: {}", email);
                     return null;
                 }
 
@@ -95,11 +98,11 @@ public class AuthDAO {
                     // Update last login
                     updateLastLogin(rs.getInt("user_id"));
 
-                    // User object
+                    // Build User object
                     User user = new User();
                     user.setUserId(rs.getInt("user_id"));
                     user.setEmail(rs.getString("email"));
-                    user.setRole(rs.getString("role")); // ADMIN, STAFF, or CUSTOMER
+                    user.setRole(rs.getString("role"));
                     user.setName(rs.getString("name"));
                     user.setPhone(rs.getString("phone"));
                     user.setAddress(rs.getString("address"));
@@ -199,9 +202,6 @@ public class AuthDAO {
         return result;
     }
 
-    // ============================================
-    // PASSWORD RESET
-    // ============================================
 
     public Map<String, Object> requestPasswordReset(String email, String token,
                                                     String ipAddress, String userAgent) {
@@ -265,6 +265,242 @@ public class AuthDAO {
         }
 
         return result;
+    }
+
+
+    /**
+     * Login or register user with Google OAuth
+     */
+    public User loginOrRegisterWithGoogle(String email, String name, String googleId) {
+        try (Connection conn = DBContext.getConnection()) {
+
+            // Check if user exists and their auth method
+            String checkSql = "SELECT u.user_id, u.password_hash, u.role, " +
+                    "c.oauth_provider, c.oauth_id " +
+                    "FROM AppUsers u " +
+                    "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
+                    "WHERE u.email = ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
+                ps.setString(1, email);
+                ResultSet rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    int userId = rs.getInt("user_id");
+                    String passwordHash = rs.getString("password_hash");
+                    String role = rs.getString("role");
+                    String oauthProvider = rs.getString("oauth_provider");
+                    String oauthId = rs.getString("oauth_id");
+
+                    // BLOCK: Non-customer roles
+                    if (!"CUSTOMER".equals(role)) {
+                        logger.warn("⚠️ Non-customer role attempting Google OAuth: {} ({})", email, role);
+                        return null;
+                    }
+
+                    // Case 1: User already uses Google OAuth with same ID
+                    if ("GOOGLE".equals(oauthProvider) && googleId.equals(oauthId)) {
+                        logger.info("Existing Google OAuth user login: {}", email);
+                        updateLastLogin(userId);
+                        return getUserById(userId);
+                    }
+
+                    // Case 2: User has PASSWORD set (registered via email/password)
+                    // BLOCK: Don't allow Google login for password users
+                    if (passwordHash != null && !passwordHash.isEmpty() && oauthProvider == null) {
+                        logger.warn("Email registered with password, blocking Google OAuth: {}", email);
+                        return null; // Will show error message in servlet
+                    }
+
+                    // Case 3: User linked to different OAuth provider
+                    if (oauthProvider != null && !"GOOGLE".equals(oauthProvider)) {
+                        logger.warn("Email already linked to: {}", oauthProvider);
+                        return null;
+                    }
+
+                    // Case 4: Google ID mismatch (shouldn't happen normally)
+                    if ("GOOGLE".equals(oauthProvider) && !googleId.equals(oauthId)) {
+                        logger.error("Google ID mismatch for user: {}", email);
+                        return null;
+                    }
+                }
+            }
+
+            // New user - register with Google OAuth
+            logger.info("Registering new Google OAuth user: {}", email);
+            return registerGoogleUser(conn, email, name, googleId);
+
+        } catch (SQLException e) {
+            logger.error("Error with Google OAuth login", e);
+            return null;
+        }
+    }
+
+    /**
+     * Register new Google OAuth user
+     */
+    private User registerGoogleUser(Connection conn, String email, String name, String googleId)
+            throws SQLException {
+
+        conn.setAutoCommit(false);
+
+        try {
+            // Insert into AppUsers (empty password for OAuth users)
+            String userSql = "INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified, created_at) " +
+                    "OUTPUT INSERTED.user_id " +
+                    "VALUES (?, '', 'CUSTOMER', 1, 1, GETDATE())";
+
+            int userId;
+            try (PreparedStatement ps = conn.prepareStatement(userSql)) {
+                ps.setString(1, email);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    userId = rs.getInt(1);
+                } else {
+                    throw new SQLException("Failed to create user");
+                }
+            }
+
+            // Insert into Customers with Google OAuth info
+            String customerSql = "INSERT INTO Customers (customer_id, name, oauth_provider, oauth_id) " +
+                    "VALUES (?, ?, 'GOOGLE', ?)";
+
+            try (PreparedStatement ps = conn.prepareStatement(customerSql)) {
+                ps.setInt(1, userId);
+                ps.setString(2, name);
+                ps.setString(3, googleId);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+
+            logger.info("Google user registered: {}", email);
+            return getUserById(userId);
+
+        } catch (SQLException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.setAutoCommit(true);
+        }
+    }
+
+    /**
+     * Get user by ID
+     */
+    private User getUserById(int userId) throws SQLException {
+        String sql = "SELECT u.user_id, u.email, u.role, u.is_active, u.email_verified, " +
+                "u.created_at, u.last_login, " +
+                "c.name, c.phone, c.address, c.oauth_provider, c.oauth_id " +
+                "FROM AppUsers u " +
+                "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
+                "WHERE u.user_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                User user = new User();
+                user.setUserId(rs.getInt("user_id"));
+                user.setEmail(rs.getString("email"));
+                user.setRole(rs.getString("role"));
+                user.setName(rs.getString("name"));
+                user.setPhone(rs.getString("phone"));
+                user.setAddress(rs.getString("address"));
+                user.setOauthProvider(rs.getString("oauth_provider"));
+                user.setActive(rs.getBoolean("is_active"));
+                user.setEmailVerified(rs.getBoolean("email_verified"));
+                user.setCreatedAt(rs.getTimestamp("created_at"));
+                user.setLastLogin(rs.getTimestamp("last_login"));
+                return user;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if email uses password authentication
+     */
+    public boolean isPasswordAccount(String email) {
+        String sql = "SELECT u.password_hash, c.oauth_provider " +
+                "FROM AppUsers u " +
+                "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
+                "WHERE u.email = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String passwordHash = rs.getString("password_hash");
+                String oauthProvider = rs.getString("oauth_provider");
+
+                // Has password and NO OAuth provider = password account
+                return (passwordHash != null && !passwordHash.isEmpty() && oauthProvider == null);
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error checking account type", e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if email uses OAuth
+     */
+    public boolean isOAuthAccount(String email) {
+        String sql = "SELECT c.oauth_provider FROM AppUsers u " +
+                "JOIN Customers c ON u.user_id = c.customer_id " +
+                "WHERE u.email = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String oauthProvider = rs.getString("oauth_provider");
+                return oauthProvider != null && !oauthProvider.isEmpty();
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error checking OAuth status", e);
+        }
+
+        return false;
+    }
+
+    /**
+     * Get OAuth provider name
+     */
+    public String getOAuthProvider(String email) {
+        String sql = "SELECT c.oauth_provider FROM AppUsers u " +
+                "JOIN Customers c ON u.user_id = c.customer_id " +
+                "WHERE u.email = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("oauth_provider");
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error getting OAuth provider", e);
+        }
+
+        return null;
     }
 
     // ============================================
@@ -350,113 +586,4 @@ public class AuthDAO {
         }
         return null;
     }
-    /**
-     * Login or register user with Google OAuth
-     */
-    public User loginOrRegisterWithGoogle(String email, String name, String googleId) {
-        try (Connection conn = DBContext.getConnection()) {
-            // Check if user exists
-            String checkSql = "SELECT user_id FROM AppUsers WHERE email = ?";
-
-            try (PreparedStatement ps = conn.prepareStatement(checkSql)) {
-                ps.setString(1, email);
-                ResultSet rs = ps.executeQuery();
-
-                if (rs.next()) {
-                    // User exists - login
-                    int userId = rs.getInt("user_id");
-                    updateLastLogin(userId);
-                    return getUserById(userId);
-                }
-            }
-
-            // User doesn't exist - register
-            return registerGoogleUser(conn, email, name, googleId);
-
-        } catch (SQLException e) {
-            logger.error("Error with Google OAuth login", e);
-            return null;
-        }
-    }
-
-    private User registerGoogleUser(Connection conn, String email, String name, String googleId)
-            throws SQLException {
-
-        conn.setAutoCommit(false);
-
-        try {
-            // Insert into AppUsers
-            String userSql = "INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified, created_at) " +
-                    "OUTPUT INSERTED.user_id " +
-                    "VALUES (?, '', 'CUSTOMER', 1, 1, GETDATE())";
-
-            int userId;
-            try (PreparedStatement ps = conn.prepareStatement(userSql)) {
-                ps.setString(1, email);
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    userId = rs.getInt(1);
-                } else {
-                    throw new SQLException("Failed to create user");
-                }
-            }
-
-            // Insert into Customers
-            String customerSql = "INSERT INTO Customers (customer_id, name, oauth_provider, oauth_id) " +
-                    "VALUES (?, ?, 'GOOGLE', ?)";
-
-            try (PreparedStatement ps = conn.prepareStatement(customerSql)) {
-                ps.setInt(1, userId);
-                ps.setString(2, name);
-                ps.setString(3, googleId);
-                ps.executeUpdate();
-            }
-
-            conn.commit();
-
-            logger.info("Google user registered: {}", email);
-            return getUserById(userId);
-
-        } catch (SQLException e) {
-            conn.rollback();
-            throw e;
-        } finally {
-            conn.setAutoCommit(true);
-        }
-    }
-
-    private User getUserById(int userId) throws SQLException {
-        String sql = "SELECT u.user_id, u.email, u.role, u.is_active, u.email_verified, " +
-                "u.created_at, u.last_login, " +
-                "c.name, c.phone, c.address, c.oauth_provider, c.oauth_id " +
-                "FROM AppUsers u " +
-                "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
-                "WHERE u.user_id = ?";
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, userId);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                User user = new User();
-                user.setUserId(rs.getInt("user_id"));
-                user.setEmail(rs.getString("email"));
-                user.setRole(rs.getString("role"));
-                user.setName(rs.getString("name"));
-                user.setPhone(rs.getString("phone"));
-                user.setAddress(rs.getString("address"));
-                user.setOauthProvider(rs.getString("oauth_provider"));
-                user.setActive(rs.getBoolean("is_active"));
-                user.setEmailVerified(rs.getBoolean("email_verified"));
-                user.setCreatedAt(rs.getTimestamp("created_at"));
-                user.setLastLogin(rs.getTimestamp("last_login"));
-                return user;
-            }
-        }
-
-        return null;
-    }
-
 }
