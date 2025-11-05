@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * SessionUtils - Utility class for session management and user authentication
+ * UPDATED: Fixed getCustomer(), getStaff(), getAdmin() to support User object conversion
  */
 public class SessionUtils {
     private static final Logger logger = LoggerFactory.getLogger(SessionUtils.class);
@@ -313,7 +314,8 @@ public class SessionUtils {
 
     /**
      * Get Customer object from session
-     * Legacy method for backward compatibility
+     * Supports both Customer instance and User object with CUSTOMER role
+     * FIXED: Now converts User object to Customer object
      *
      * @param session HTTP session
      * @return Customer object or null if not a customer
@@ -324,8 +326,35 @@ public class SessionUtils {
         }
 
         Object userObject = session.getAttribute("user");
+
+        // Case 1: Already a Customer object (legacy support)
         if (userObject instanceof Customer) {
             return (Customer) userObject;
+        }
+
+        // Case 2: User object with CUSTOMER role (NEW - FIX)
+        if (userObject instanceof User) {
+            User user = (User) userObject;
+
+            // Only convert if user is actually a customer
+            if (!"CUSTOMER".equalsIgnoreCase(user.getRole())) {
+                return null;
+            }
+
+            // Convert User to Customer
+            Customer customer = new Customer();
+            customer.setCustomerId(user.getUserId());
+            customer.setEmail(user.getEmail());
+            customer.setName(user.getName());
+            customer.setPhone(user.getPhone());
+            customer.setAddress(user.getAddress());
+            customer.setOauthProvider(user.getOauthProvider());
+            customer.setActive(user.isActive());
+            customer.setEmailVerified(user.isEmailVerified());
+            customer.setCreatedAt(user.getCreatedAt());
+            customer.setLastLogin(user.getLastLogin());
+
+            return customer;
         }
 
         return null;
@@ -333,7 +362,8 @@ public class SessionUtils {
 
     /**
      * Get Staff object from session
-     * Legacy method for backward compatibility
+     * Supports both Staff instance and User object with STAFF role
+     * FIXED: Now converts User object to Staff object
      *
      * @param session HTTP session
      * @return Staff object or null if not a staff
@@ -344,8 +374,34 @@ public class SessionUtils {
         }
 
         Object userObject = session.getAttribute("user");
+
+        // Case 1: Already a Staff object (legacy support)
         if (userObject instanceof Staff) {
             return (Staff) userObject;
+        }
+
+        // Case 2: User object with STAFF role (NEW - FIX)
+        if (userObject instanceof User) {
+            User user = (User) userObject;
+
+            // Only convert if user is actually staff
+            if (!"STAFF".equalsIgnoreCase(user.getRole())) {
+                return null;
+            }
+
+            // Convert User to Staff
+            Staff staff = new Staff();
+            staff.setStaffId(user.getUserId());
+            staff.setEmail(user.getEmail());
+            staff.setName(user.getName());
+            staff.setPhone(user.getPhone());
+            staff.setAddress(user.getAddress());
+            staff.setActive(user.isActive());
+            staff.setEmailVerified(user.isEmailVerified());
+            staff.setCreatedAt(user.getCreatedAt());
+            staff.setLastLogin(user.getLastLogin());
+
+            return staff;
         }
 
         return null;
@@ -353,7 +409,8 @@ public class SessionUtils {
 
     /**
      * Get Admin object from session
-     * Legacy method for backward compatibility
+     * Supports both Admin instance and User object with ADMIN role
+     * FIXED: Now converts User object to Admin object
      *
      * @param session HTTP session
      * @return Admin object or null if not an admin
@@ -364,8 +421,33 @@ public class SessionUtils {
         }
 
         Object userObject = session.getAttribute("user");
+
+        // Case 1: Already an Admin object (legacy support)
         if (userObject instanceof Admin) {
             return (Admin) userObject;
+        }
+
+        // Case 2: User object with ADMIN role
+        if (userObject instanceof User) {
+            User user = (User) userObject;
+
+            // Only convert if user is actually admin
+            if (!"ADMIN".equalsIgnoreCase(user.getRole())) {
+                return null;
+            }
+
+            // Convert User to Admin
+            Admin admin = new Admin();
+            admin.setAdminId(user.getUserId());
+            admin.setEmail(user.getEmail());
+            admin.setName(user.getName());
+            admin.setPhone(user.getPhone());
+            admin.setActive(user.isActive());
+            admin.setEmailVerified(user.isEmailVerified());
+            admin.setCreatedAt(user.getCreatedAt());
+            admin.setLastLogin(user.getLastLogin());
+
+            return admin;
         }
 
         return null;
@@ -663,4 +745,5 @@ public class SessionUtils {
             logger.error("Error logging session info", e);
         }
     }
+
 }

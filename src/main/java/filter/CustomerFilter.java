@@ -23,8 +23,9 @@ import java.io.IOException;
         "/my-promotions",
         "/cart/*",
         "/checkout/*",
-        "/my-orders",
-        "/profile"
+        "/order-detail",
+        "/profile",
+        "/orders"
 })
 public class CustomerFilter implements Filter {
     private static final Logger logger = LoggerFactory.getLogger(CustomerFilter.class);

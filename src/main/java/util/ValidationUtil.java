@@ -80,8 +80,8 @@ public class ValidationUtil {
             throw new IllegalArgumentException("Mật khẩu không được để trống");
         }
 
-        if (password.length() < 6) {
-            throw new IllegalArgumentException("Mật khẩu phải có ít nhất 6 ký tự");
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("Mật khẩu phải có ít nhất 8 ký tự");
         }
 
         if (password.length() > 100) {
