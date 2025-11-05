@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * CustomerDAO - Customer-specific operations
- * UPDATED: Removed all loyalty_points related methods
+ * UPDATED: Added oauth_id and email_verified support
  */
 public class CustomerDAO {
     private static final Logger logger = LoggerFactory.getLogger(CustomerDAO.class);
@@ -304,7 +304,7 @@ public class CustomerDAO {
 
     /**
      * Map ResultSet to Customer object
-     * UPDATED: Removed loyalty_points mapping
+     * UPDATED: Added oauth_id and email_verified mapping
      */
     private Customer mapCustomerFromResultSet(ResultSet rs) throws SQLException {
         Customer customer = new Customer();
@@ -314,7 +314,9 @@ public class CustomerDAO {
         customer.setPhone(rs.getString("phone"));
         customer.setAddress(rs.getString("address"));
         customer.setOauthProvider(rs.getString("oauth_provider"));
+        customer.setOauthId(rs.getString("oauth_id"));
         customer.setActive(rs.getBoolean("is_active"));
+        customer.setEmailVerified(rs.getBoolean("email_verified"));
         customer.setCreatedAt(rs.getTimestamp("created_at"));
         customer.setLastLogin(rs.getTimestamp("last_login"));
         customer.setTotalOrders(rs.getInt("total_orders"));

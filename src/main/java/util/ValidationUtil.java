@@ -17,7 +17,6 @@ public class ValidationUtil {
     private static final Pattern VIN_PATTERN = Pattern.compile("^[A-HJ-NPR-Z0-9]{17}$");
     private static final Pattern LICENSE_PLATE_PATTERN = Pattern.compile("^\\d{2}[A-Z]-?\\d{3,5}\\.?\\d{0,2}$");
 
-    // ==================== STRING VALIDATION ====================
 
     /**
      * Validate string field
@@ -64,7 +63,6 @@ public class ValidationUtil {
         return input;
     }
 
-    // ==================== EMAIL & PASSWORD ====================
 
     /**
      * Validate email format
@@ -95,8 +93,8 @@ public class ValidationUtil {
             throw new IllegalArgumentException("Mật khẩu không được để trống");
         }
 
-        if (password.length() < 6) {
-            throw new IllegalArgumentException("Mật khẩu phải có ít nhất 6 ký tự");
+        if (password.length() < 8) {
+            throw new IllegalArgumentException("Mật khẩu phải có ít nhất 8 ký tự");
         }
 
         if (password.length() > 100) {
@@ -114,7 +112,6 @@ public class ValidationUtil {
         }
     }
 
-    // ==================== NUMERIC VALIDATION ====================
 
     /**
      * Validate price
@@ -207,7 +204,6 @@ public class ValidationUtil {
         }
     }
 
-    // ==================== STATUS & ENUM ====================
 
     /**
      * Validate status
@@ -226,7 +222,6 @@ public class ValidationUtil {
         return status;
     }
 
-    // ==================== URL & CONTACT ====================
 
     /**
      * Validate URL
@@ -267,7 +262,6 @@ public class ValidationUtil {
         return phone;
     }
 
-    // ==================== VEHICLE-SPECIFIC (NEW) ====================
 
     /**
      * Validate VIN (Vehicle Identification Number) - NEW
@@ -309,7 +303,6 @@ public class ValidationUtil {
         return plate;
     }
 
-    // ==================== SECURITY & SANITIZATION ====================
 
     /**
      * Sanitize string input (ENHANCED - prevent XSS)

@@ -26,14 +26,14 @@ import java.io.IOException;
 @WebServlet("/order-detail")
 public class OrderDetailServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(OrderDetailServlet.class);
+
     private OrdersDAO ordersDAO;
     private OrderDetailDAO orderDetailDAO;
     private TransactionDAO transactionDAO;
     private CustomerDAO customerDAO;
 
     @Override
-    public void init() throws ServletException {
-        super.init();
+    public void init() {
         ordersDAO = new OrdersDAO();
         orderDetailDAO = new OrderDetailDAO();
         transactionDAO = new TransactionDAO();
@@ -48,7 +48,7 @@ public class OrderDetailServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
 
         if (!SessionUtils.isLoggedIn(session)) {
-            response.sendRedirect(request.getContextPath() + "/login");
+            redirect(response, request.getContextPath() + "/login");
             return;
         }
 
@@ -56,12 +56,10 @@ public class OrderDetailServlet extends HttpServlet {
             Integer currentUserId = SessionUtils.getUserId(session);
             boolean isAdmin = SessionUtils.isAdmin(session);
 
-            // Validate order ID parameter
             String orderIdParam = request.getParameter("id");
-            if (orderIdParam == null || orderIdParam.trim().isEmpty()) {
+            if (isEmpty(orderIdParam)) {
                 logger.warn("Order ID parameter is missing");
-                redirectWithError(session, response, request.getContextPath() + "/orders",
-                        "Không tìm thấy đơn hàng!");
+                redirectWithError(session, response, "/orders", "Không tìm thấy đơn hàng!");
                 return;
             }
 
@@ -69,47 +67,33 @@ public class OrderDetailServlet extends HttpServlet {
             logger.info("Loading order {} for user {} (isAdmin: {})",
                     orderId, currentUserId, isAdmin);
 
-            // Get order
             Order order = ordersDAO.getOrderById(orderId);
             if (order == null) {
                 logger.warn("Order not found: {}", orderId);
-                redirectWithError(session, response, request.getContextPath() + "/orders",
-                        "Đơn hàng không tồn tại!");
+                redirectWithError(session, response, "/orders", "Đơn hàng không tồn tại!");
                 return;
             }
 
-            // Check permission
-            if (!isAdmin && order.getUserId() != currentUserId) {
+            if (!hasPermission(currentUserId, isAdmin, order)) {
                 logger.warn("User {} attempted to access order {} (owner: {})",
                         currentUserId, orderId, order.getUserId());
-                redirectWithError(session, response, request.getContextPath() + "/orders",
+                redirectWithError(session, response, "/orders",
                         "Bạn không có quyền xem đơn hàng này!");
                 return;
             }
 
-            // Enrich order with details
             enrichOrder(order);
 
-            // Load customer info
             Customer customer = customerDAO.getCustomerById(order.getUserId());
 
-            // Log order summary
             logOrderSummary(orderId, order, customer);
 
-            // Set attributes
-            request.setAttribute("order", order);
-            request.setAttribute("customer", customer);
-            request.setAttribute("isAdmin", isAdmin);
-            request.setAttribute("currentUserId", currentUserId);
-            request.setAttribute("userRole", SessionUtils.getUserRole(session));
-
-            request.getRequestDispatcher("/WEB-INF/views/order-detail.jsp")
-                    .forward(request, response);
+            setOrderAttributes(request, session, order, customer, isAdmin, currentUserId);
+            forward(request, response, "/WEB-INF/views/order-detail.jsp");
 
         } catch (NumberFormatException e) {
             logger.error("Invalid order ID format", e);
-            redirectWithError(session, response, request.getContextPath() + "/orders",
-                    "ID đơn hàng không hợp lệ!");
+            redirectWithError(session, response, "/orders", "ID đơn hàng không hợp lệ!");
         } catch (RuntimeException e) {
             logger.error("Database error in OrderDetailServlet", e);
             handleError(request, response, "Không thể tải thông tin đơn hàng: " + e.getMessage());
@@ -119,9 +103,8 @@ public class OrderDetailServlet extends HttpServlet {
         }
     }
 
-    /**
-     * Enrich order with details and transactions
-     */
+    // ============ ORDER PROCESSING ============
+
     private void enrichOrder(Order order) {
         order.setOrderDetails(orderDetailDAO.getOrderDetailsByOrderId(order.getOrderId()));
         order.setTransactions(transactionDAO.getTransactionsByOrderId(order.getOrderId()));
@@ -133,9 +116,24 @@ public class OrderDetailServlet extends HttpServlet {
         order.setPaidAmount(paid);
     }
 
-    /**
-     * Log order summary
-     */
+    private void setOrderAttributes(HttpServletRequest request, HttpSession session,
+                                    Order order, Customer customer,
+                                    boolean isAdmin, Integer currentUserId) {
+        request.setAttribute("order", order);
+        request.setAttribute("customer", customer);
+        request.setAttribute("isAdmin", isAdmin);
+        request.setAttribute("currentUserId", currentUserId);
+        request.setAttribute("userRole", SessionUtils.getUserRole(session));
+    }
+
+    // ============ VALIDATION ============
+
+    private boolean hasPermission(Integer userId, boolean isAdmin, Order order) {
+        return isAdmin || order.getUserId() == userId;
+    }
+
+    // ============ LOGGING ============
+
     private void logOrderSummary(int orderId, Order order, Customer customer) {
         logger.info("Order {} details:", orderId);
         logger.info("  Customer: {} (ID: {})",
@@ -147,28 +145,32 @@ public class OrderDetailServlet extends HttpServlet {
                 order.getOrderDetails().size(), order.getTransactions().size(), order.isFullyPaid());
     }
 
-    /**
-     * Redirect with error message
-     */
-    private void redirectWithError(HttpSession session, HttpServletResponse response,
-                                   String redirectUrl, String errorMessage) throws IOException {
-        session.setAttribute("error", errorMessage);
-        response.sendRedirect(redirectUrl);
+    // ============ UTILITY METHODS ============
+
+    private boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
     }
 
-    /**
-     * Handle error and forward to error page
-     */
+    private void redirect(HttpServletResponse response, String url) throws IOException {
+        response.sendRedirect(url);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private void redirectWithError(HttpSession session, HttpServletResponse response,
+                                   String path, String errorMessage) throws IOException {
+        session.setAttribute("error", errorMessage);
+        redirect(response, session.getServletContext().getContextPath() + path);
+    }
+
+    @SuppressWarnings("SameParameterValue")
     private void handleError(HttpServletRequest request, HttpServletResponse response,
                              String errorMessage) throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
-        request.getRequestDispatcher("/WEB-INF/views/error.jsp")
-                .forward(request, response);
+        forward(request, response, "/WEB-INF/views/error.jsp");
     }
 
-    @Override
-    public void destroy() {
-        super.destroy();
-        logger.info("OrderDetailServlet destroyed");
+    private void forward(HttpServletRequest request, HttpServletResponse response, String path)
+            throws ServletException, IOException {
+        request.getRequestDispatcher(path).forward(request, response);
     }
 }

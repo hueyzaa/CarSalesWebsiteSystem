@@ -23,8 +23,9 @@ import java.io.IOException;
         "/my-promotions",
         "/cart/*",
         "/checkout/*",
-        "/my-orders",
-        "/profile"
+        "/order-detail",
+        "/profile",
+        "/orders"
 })
 public class CustomerFilter implements Filter {
     private static final Logger logger = LoggerFactory.getLogger(CustomerFilter.class);
@@ -37,7 +38,6 @@ public class CustomerFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         HttpSession session = httpRequest.getSession(false);
 
-        // ✅ Check if user is logged in
         if (!SessionUtils.isLoggedIn(session)) {
             String requestURI = httpRequest.getRequestURI();
             logger.info("Guest user attempting to access customer page: {}", requestURI);
@@ -50,7 +50,6 @@ public class CustomerFilter implements Filter {
             return;
         }
 
-        // ✅ Check if user is a customer
         if (!SessionUtils.isCustomer(session)) {
             String requestURI = httpRequest.getRequestURI();
             String userRole = SessionUtils.getUserRole(session);
@@ -64,7 +63,6 @@ public class CustomerFilter implements Filter {
             return;
         }
 
-        // ✅ Customer authenticated, allow access
         logger.debug("Customer access granted to: {} for user: {}",
                 httpRequest.getRequestURI(), SessionUtils.getUserEmail(session));
 

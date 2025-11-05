@@ -31,7 +31,7 @@ public class CheckoutServlet extends HttpServlet {
     private PromotionService promotionService;
 
     @Override
-    public void init() throws ServletException {
+    public void init() {
         cartDAO = new CartDAO();
         ordersDAO = new OrdersDAO();
         transactionDAO = new TransactionDAO();
@@ -41,41 +41,23 @@ public class CheckoutServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
 
-        if (!SessionUtils.isLoggedIn(session)) {
-            redirectToLogin(response, request.getContextPath());
-            return;
-        }
-
-        Integer userId = SessionUtils.getUserId(session);
-        if (userId == null) {
-            redirectToLogin(response, request.getContextPath());
-            return;
-        }
+        Integer userId = validateUser(request, response);
+        if (userId == null) return;
 
         try {
             List<CartItem> cartItems = cartDAO.getCartItemsByUserId(userId);
 
-            if (cartItems == null || cartItems.isEmpty()) {
-                setError(session, "Giỏ hàng của bạn đang trống!");
-                response.sendRedirect(request.getContextPath() + "/cart");
-                return;
-            }
-
-            String stockError = validateStock(cartItems);
-            if (stockError != null) {
-                setError(session, stockError);
-                response.sendRedirect(request.getContextPath() + "/cart");
+            if (hasCartValidationError(cartItems, request, response)) {
                 return;
             }
 
             double total = calculateTotal(cartItems);
-            List<Promotion> availablePromotions = promotionService
+            List<Promotion> promotions = promotionService
                     .getAvailablePromotionsForCart(userId, cartItems);
 
-            setCheckoutAttributes(request, cartItems, total, availablePromotions);
-            request.getRequestDispatcher("/WEB-INF/views/checkout.jsp").forward(request, response);
+            setCheckoutAttributes(request, cartItems, total, promotions);
+            forward(request, response, "/WEB-INF/views/checkout.jsp");
 
         } catch (Exception e) {
             logger.error("Error in checkout GET", e);
@@ -85,134 +67,140 @@ public class CheckoutServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
+
+        Integer userId = validateUser(request, response);
+        if (userId == null) return;
+
+        try {
+            String retryOrderId = request.getParameter("retryOrderId");
+            if (isNotEmpty(retryOrderId)) {
+                handleRetryPayment(request, response, userId, retryOrderId);
+            } else {
+                handleCheckout(request, response, userId);
+            }
+        } catch (Exception e) {
+            logger.error("Error in checkout POST", e);
+            String contextPath = request.getContextPath();
+            redirectWithError(response, request.getSession(),
+                    contextPath + "/checkout", "Đã xảy ra lỗi không mong muốn!");
+        }
+    }
+
+    // USER VALIDATION
+
+    private Integer validateUser(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
         HttpSession session = request.getSession(false);
 
         if (!SessionUtils.isLoggedIn(session)) {
-            redirectToLogin(response, request.getContextPath());
-            return;
+            redirect(response, request.getContextPath() + "/login");
+            return null;
         }
 
         Integer userId = SessionUtils.getUserId(session);
         if (userId == null) {
-            redirectToLogin(response, request.getContextPath());
-            return;
+            redirect(response, request.getContextPath() + "/login");
+            return null;
         }
 
-        try {
-            // Handle retry payment
-            String retryOrderId = request.getParameter("retryOrderId");
-            if (retryOrderId != null && !retryOrderId.trim().isEmpty()) {
-                handleRetryPayment(request, response, session, userId, retryOrderId);
-                return;
-            }
-
-            // Handle normal checkout
-            handleCheckout(request, response, session, userId);
-
-        } catch (Exception e) {
-            logger.error("Error in checkout POST", e);
-            setError(session, "Đã xảy ra lỗi không mong muốn!");
-            response.sendRedirect(request.getContextPath() + "/checkout");
-        }
+        return userId;
     }
 
-    // ============ HELPER METHODS ============
+    // RETRY PAYMENT
 
     private void handleRetryPayment(HttpServletRequest request, HttpServletResponse response,
-                                    HttpSession session, Integer userId, String retryOrderIdParam)
-            throws IOException {
+                                    Integer userId, String retryOrderIdParam) throws IOException {
         try {
             int orderId = Integer.parseInt(retryOrderIdParam);
             Order order = ordersDAO.getOrderById(orderId);
 
-            if (!validateRetryPayment(session, response, order, userId, orderId,
-                    request.getContextPath())) {
+            if (!validateRetryOrder(order, userId, orderId, request, response)) {
                 return;
             }
 
+            HttpSession session = request.getSession();
             session.setAttribute("success", "Tiếp tục thanh toán cho đơn hàng #" + orderId);
-            response.sendRedirect(request.getContextPath() + "/payment?orderId=" + orderId);
+            redirect(response, request.getContextPath() + "/payment?orderId=" + orderId);
 
         } catch (NumberFormatException e) {
             logger.error("Invalid retry order ID: {}", retryOrderIdParam);
-            setError(session, "Mã đơn hàng không hợp lệ!");
-            response.sendRedirect(request.getContextPath() + "/orders");
+            String contextPath = request.getContextPath();
+            redirectWithError(response, request.getSession(),
+                    contextPath + "/orders", "Mã đơn hàng không hợp lệ!");
         }
     }
 
-    private boolean validateRetryPayment(HttpSession session, HttpServletResponse response,
-                                         Order order, Integer userId, int orderId,
-                                         String contextPath) throws IOException {
+    private boolean validateRetryOrder(Order order, Integer userId, int orderId,
+                                       HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String contextPath = request.getContextPath();
+        HttpSession session = request.getSession();
+
         if (order == null) {
-            setError(session, "Đơn hàng không tồn tại!");
-            response.sendRedirect(contextPath + "/orders");
-            return false;
+            return redirectWithError(response, session,
+                    contextPath + "/orders", "Đơn hàng không tồn tại!");
         }
 
         if (order.getUserId() != userId) {
-            setError(session, "Bạn không có quyền thực hiện thao tác này!");
-            response.sendRedirect(contextPath + "/orders");
-            return false;
+            return redirectWithError(response, session,
+                    contextPath + "/orders", "Bạn không có quyền thực hiện thao tác này!");
         }
 
         if (!"PENDING".equals(order.getStatus())) {
-            setError(session, "Chỉ có thể thanh toán lại cho đơn hàng đang chờ xử lý!");
-            response.sendRedirect(contextPath + "/order-detail?id=" + orderId);
-            return false;
+            return redirectWithError(response, session,
+                    contextPath + "/order-detail?id=" + orderId,
+                    "Chỉ có thể thanh toán lại cho đơn hàng đang chờ xử lý!");
         }
 
         if (order.getPaidAmount() > 0) {
-            setError(session, "Đơn hàng này đã có giao dịch thanh toán!");
-            response.sendRedirect(contextPath + "/order-detail?id=" + orderId);
-            return false;
+            return redirectWithError(response, session,
+                    contextPath + "/order-detail?id=" + orderId,
+                    "Đơn hàng này đã có giao dịch thanh toán!");
         }
 
         return true;
     }
 
+    // NORMAL CHECKOUT
+
     private void handleCheckout(HttpServletRequest request, HttpServletResponse response,
-                                HttpSession session, Integer userId) throws IOException {
+                                Integer userId) throws IOException {
+        String contextPath = request.getContextPath();
+        HttpSession session = request.getSession();
         String paymentType = request.getParameter("paymentType");
 
         if (!isValidPaymentType(paymentType)) {
-            setError(session, "Vui lòng chọn hình thức thanh toán hợp lệ!");
-            response.sendRedirect(request.getContextPath() + "/checkout");
+            redirectWithError(response, session, contextPath + "/checkout",
+                    "Vui lòng chọn hình thức thanh toán hợp lệ!");
             return;
         }
 
         Integer promotionId = getPromotionId(request, paymentType, session);
-        if (promotionId == null && session.getAttribute("checkout_error") != null) {
+        if (session.getAttribute("checkout_error") != null) {
             session.removeAttribute("checkout_error");
-            response.sendRedirect(request.getContextPath() + "/checkout");
+            redirect(response, contextPath + "/checkout");
             return;
         }
 
         List<CartItem> cartItems = cartDAO.getCartItemsByUserId(userId);
-        if (cartItems == null || cartItems.isEmpty()) {
-            setError(session, "Giỏ hàng của bạn đang trống!");
-            response.sendRedirect(request.getContextPath() + "/cart");
-            return;
-        }
-
-        String stockError = validateStock(cartItems);
-        if (stockError != null) {
-            setError(session, stockError);
-            response.sendRedirect(request.getContextPath() + "/cart");
+        if (hasCartValidationError(cartItems, request, response)) {
             return;
         }
 
         CheckoutData data = calculateCheckoutData(userId, cartItems, paymentType,
                 promotionId, session);
         if (data == null) {
-            response.sendRedirect(request.getContextPath() + "/checkout");
+            redirect(response, contextPath + "/checkout");
             return;
         }
 
-        int orderId = createOrder(userId, cartItems, paymentType, data, promotionId);
+        int orderId = ordersDAO.createOrderWithPromotion(userId, cartItems, paymentType,
+                data.depositAmount, data.notes, promotionId);
+
         if (orderId == -1) {
-            setError(session, "Không thể tạo đơn hàng. Vui lòng thử lại!");
-            response.sendRedirect(request.getContextPath() + "/checkout");
+            redirectWithError(response, session, contextPath + "/checkout",
+                    "Không thể tạo đơn hàng. Vui lòng thử lại!");
             return;
         }
 
@@ -220,122 +208,30 @@ public class CheckoutServlet extends HttpServlet {
         cartDAO.clearCart(userId);
         session.setAttribute("cartCount", 0);
 
-        redirectAfterCheckout(response, session, paymentType, orderId, data.successMessage,
-                request.getContextPath());
+        redirectAfterCheckout(response, session, paymentType, orderId,
+                data.successMessage, contextPath);
     }
 
-    private CheckoutData calculateCheckoutData(Integer userId, List<CartItem> cartItems,
-                                               String paymentType, Integer promotionId,
-                                               HttpSession session) {
-        double orderTotal = calculateTotal(cartItems);
-        double discount = 0;
+    // CART VALIDATION
 
-        if (promotionId != null && "DEPOSIT".equals(paymentType)) {
-            String error = promotionService.validatePromotionForCart(userId, promotionId, cartItems);
-            if (error != null) {
-                setError(session, error);
-                return null;
-            }
-            discount = promotionService.calculateTotalDiscount(promotionId, cartItems);
+    private boolean hasCartValidationError(List<CartItem> cartItems, HttpServletRequest request,
+                                           HttpServletResponse response) throws IOException {
+        String contextPath = request.getContextPath();
+
+        if (isEmpty(cartItems)) {
+            redirectWithError(response, request.getSession(),
+                    contextPath + "/cart", "Giỏ hàng của bạn đang trống!");
+            return true;
         }
 
-        double finalTotal = Math.max(0, orderTotal - discount);
-
-        CheckoutData data = new CheckoutData();
-        data.orderTotal = orderTotal;
-        data.discount = discount;
-        data.finalTotal = finalTotal;
-
-        if ("SHOWROOM".equals(paymentType)) {
-            data.paymentAmount = 0;
-            data.depositAmount = null;
-            data.notes = String.format(
-                    "Khách hàng sẽ thanh toán toàn bộ %,.0f₫ tại showroom. " +
-                            "Vui lòng liên hệ khách hàng để xác nhận và hẹn lịch đến showroom.",
-                    finalTotal);
-        } else {
-            data.depositAmount = finalTotal * DEPOSIT_PERCENTAGE;
-            data.paymentAmount = data.depositAmount;
-            double remaining = finalTotal - data.depositAmount;
-
-            data.notes = discount > 0
-                    ? String.format(
-                    "Chờ thanh toán đặt cọc %,.0f₫ (10%%). " +
-                            "Đã áp dụng khuyến mãi giảm %,.0f₫. " +
-                            "Sau khi đặt cọc thành công, khách hàng cần thanh toán %,.0f₫ " +
-                            "tại showroom khi nhận xe.",
-                    data.depositAmount, discount, remaining)
-                    : String.format(
-                    "Chờ thanh toán đặt cọc %,.0f₫ (10%%). " +
-                            "Sau khi đặt cọc thành công, khách hàng cần thanh toán %,.0f₫ " +
-                            "tại showroom khi nhận xe.",
-                    data.depositAmount, remaining);
-
-            if (discount > 0) {
-                data.successMessage = String.format("Bạn đã tiết kiệm %,.0f₫!", discount);
-            }
+        String stockError = validateStock(cartItems);
+        if (stockError != null) {
+            redirectWithError(response, request.getSession(),
+                    contextPath + "/cart", stockError);
+            return true;
         }
 
-        return data;
-    }
-
-    private int createOrder(Integer userId, List<CartItem> cartItems, String paymentType,
-                            CheckoutData data, Integer promotionId) {
-        return ordersDAO.createOrderWithPromotion(userId, cartItems, paymentType,
-                data.depositAmount, data.notes, promotionId);
-    }
-
-    private void createTransaction(int orderId, double amount, String paymentType) {
-        int transactionId = transactionDAO.createTransaction(orderId, amount, paymentType, "PENDING");
-        if (transactionId != -1) {
-            logger.info("Transaction created with ID: {}", transactionId);
-        }
-    }
-
-    private void redirectAfterCheckout(HttpServletResponse response, HttpSession session,
-                                       String paymentType, int orderId, String successMessage,
-                                       String contextPath) throws IOException {
-        if ("SHOWROOM".equals(paymentType)) {
-            String message = String.format(
-                    "Đặt hàng thành công! Mã đơn hàng: #%d. " +
-                            "Chúng tôi sẽ liên hệ với bạn để xác nhận.", orderId);
-            session.setAttribute("success", message);
-            response.sendRedirect(contextPath + "/order-detail?id=" + orderId);
-        } else {
-            if (successMessage != null) {
-                session.setAttribute("success", successMessage);
-            }
-            response.sendRedirect(contextPath + "/payment?orderId=" + orderId);
-        }
-    }
-
-    // ============ VALIDATION & CALCULATION ============
-
-    private boolean isValidPaymentType(String paymentType) {
-        return "DEPOSIT".equals(paymentType) || "SHOWROOM".equals(paymentType);
-    }
-
-    private Integer getPromotionId(HttpServletRequest request, String paymentType,
-                                   HttpSession session) {
-        String param = request.getParameter("promotionId");
-        if (param == null || param.trim().isEmpty()) {
-            return null;
-        }
-
-        try {
-            Integer promotionId = Integer.parseInt(param);
-
-            if ("SHOWROOM".equals(paymentType)) {
-                setError(session, "Khuyến mãi chỉ áp dụng cho hình thức Đặt Cọc Online!");
-                session.setAttribute("checkout_error", "error");
-                return null;
-            }
-
-            return promotionId;
-        } catch (NumberFormatException e) {
-            logger.error("Invalid promotion ID: {}", param);
-            return null;
-        }
+        return false;
     }
 
     private String validateStock(List<CartItem> cartItems) {
@@ -347,15 +243,146 @@ public class CheckoutServlet extends HttpServlet {
                 continue;
             }
 
-            if (item.getCar().getStock() < item.getQuantity()) {
+            int stock = item.getCar().getStock();
+            int quantity = item.getQuantity();
+
+            if (stock < quantity) {
+                if (!errors.isEmpty()) errors.append(" ");
                 errors.append(item.getCar().getName())
                         .append(" chỉ còn ")
-                        .append(item.getCar().getStock())
-                        .append(" xe. ");
+                        .append(stock)
+                        .append(" xe.");
             }
         }
 
-        return errors.length() > 0 ? "Số lượng không đủ: " + errors.toString() : null;
+        return !errors.isEmpty() ? "Số lượng không đủ: " + errors : null;
+    }
+
+    // CHECKOUT DATA CALCULATION
+
+    private CheckoutData calculateCheckoutData(Integer userId, List<CartItem> cartItems,
+                                               String paymentType, Integer promotionId,
+                                               HttpSession session) {
+        double orderTotal = calculateTotal(cartItems);
+        double discount = calculateDiscount(userId, cartItems, paymentType, promotionId, session);
+
+        if (discount < 0) return null; // Error occurred
+
+        double finalTotal = Math.max(0, orderTotal - discount);
+
+        return "SHOWROOM".equals(paymentType)
+                ? createShowroomData(finalTotal)
+                : createDepositData(finalTotal, discount);
+    }
+
+    private double calculateDiscount(Integer userId, List<CartItem> cartItems,
+                                     String paymentType, Integer promotionId,
+                                     HttpSession session) {
+        if (promotionId == null || !"DEPOSIT".equals(paymentType)) {
+            return 0;
+        }
+
+        String error = promotionService.validatePromotionForCart(userId, promotionId, cartItems);
+        if (error != null) {
+            session.setAttribute("error", error);
+            logger.warn("Promotion validation failed: {}", error);
+            return -1; // Signal error
+        }
+
+        return promotionService.calculateTotalDiscount(promotionId, cartItems);
+    }
+
+    private CheckoutData createShowroomData(double total) {
+        CheckoutData data = new CheckoutData();
+        data.finalTotal = total;
+        data.paymentAmount = 0;
+        data.notes = String.format(
+                "Khách hàng sẽ thanh toán toàn bộ %,.0f₫ tại showroom. " +
+                        "Vui lòng liên hệ khách hàng để xác nhận và hẹn lịch đến showroom.",
+                total);
+        return data;
+    }
+
+    private CheckoutData createDepositData(double total, double discount) {
+        CheckoutData data = new CheckoutData();
+        data.finalTotal = total;
+        data.discount = discount;
+        data.depositAmount = total * DEPOSIT_PERCENTAGE;
+        data.paymentAmount = data.depositAmount;
+
+        double remaining = total - data.depositAmount;
+
+        data.notes = discount > 0
+                ? String.format(
+                "Chờ thanh toán đặt cọc %,.0f₫ (10%%). " +
+                        "Đã áp dụng khuyến mãi giảm %,.0f₫. " +
+                        "Sau khi đặt cọc thành công, khách hàng cần thanh toán %,.0f₫ " +
+                        "tại showroom khi nhận xe.",
+                data.depositAmount, discount, remaining)
+                : String.format(
+                "Chờ thanh toán đặt cọc %,.0f₫ (10%%). " +
+                        "Sau khi đặt cọc thành công, khách hàng cần thanh toán %,.0f₫ " +
+                        "tại showroom khi nhận xe.",
+                data.depositAmount, remaining);
+
+        if (discount > 0) {
+            data.successMessage = String.format("Bạn đã tiết kiệm %,.0f₫!", discount);
+        }
+
+        return data;
+    }
+
+    // TRANSACTION & REDIRECT
+
+    private void createTransaction(int orderId, double amount, String paymentType) {
+        int txId = transactionDAO.createTransaction(orderId, amount, paymentType, "PENDING");
+        if (txId != -1) {
+            logger.info("Transaction {} created for order {}", txId, orderId);
+        }
+    }
+
+    private void redirectAfterCheckout(HttpServletResponse response, HttpSession session,
+                                       String paymentType, int orderId, String successMessage,
+                                       String contextPath) throws IOException {
+        if ("SHOWROOM".equals(paymentType)) {
+            session.setAttribute("success", String.format(
+                    "Đặt hàng thành công! Mã đơn hàng: #%d. " +
+                            "Chúng tôi sẽ liên hệ với bạn để xác nhận.", orderId));
+            redirect(response, contextPath + "/order-detail?id=" + orderId);
+        } else {
+            if (successMessage != null) {
+                session.setAttribute("success", successMessage);
+            }
+            redirect(response, contextPath + "/payment?orderId=" + orderId);
+        }
+    }
+
+    // VALIDATION HELPERS
+
+    private boolean isValidPaymentType(String paymentType) {
+        return "DEPOSIT".equals(paymentType) || "SHOWROOM".equals(paymentType);
+    }
+
+    private Integer getPromotionId(HttpServletRequest request, String paymentType,
+                                   HttpSession session) {
+        String param = request.getParameter("promotionId");
+        if (isEmpty(param)) return null;
+
+        try {
+            Integer promotionId = Integer.parseInt(param);
+
+            if ("SHOWROOM".equals(paymentType)) {
+                session.setAttribute("error",
+                        "Khuyến mãi chỉ áp dụng cho hình thức Đặt Cọc Online!");
+                session.setAttribute("checkout_error", "error");
+                return null;
+            }
+
+            return promotionId;
+        } catch (NumberFormatException e) {
+            logger.error("Invalid promotion ID: {}", param);
+            return null;
+        }
     }
 
     private double calculateTotal(List<CartItem> cartItems) {
@@ -373,31 +400,49 @@ public class CheckoutServlet extends HttpServlet {
         request.setAttribute("availablePromotions", promotions);
     }
 
-    // ============ UTILITY METHODS ============
+    // UTILITY METHODS
 
-    private void redirectToLogin(HttpServletResponse response, String contextPath)
-            throws IOException {
-        logger.warn("User not logged in");
-        response.sendRedirect(contextPath + "/login");
+    private boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
     }
 
-    private void setError(HttpSession session, String message) {
+    private boolean isEmpty(List<?> list) {
+        return list == null || list.isEmpty();
+    }
+
+    private boolean isNotEmpty(String str) {
+        return str != null && !str.trim().isEmpty();
+    }
+
+    private void redirect(HttpServletResponse response, String url) throws IOException {
+        response.sendRedirect(url);
+    }
+
+    private boolean redirectWithError(HttpServletResponse response, HttpSession session,
+                                      String url, String message) throws IOException {
         session.setAttribute("error", message);
         logger.warn("Error: {}", message);
+        response.sendRedirect(url);
+        return false;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void forwardToError(HttpServletRequest request, HttpServletResponse response,
                                 String message) throws ServletException, IOException {
         request.setAttribute("error", message);
-        request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
+        forward(request, response, "/WEB-INF/views/error.jsp");
     }
 
-    // ============ INNER CLASS ============
+    private void forward(HttpServletRequest request, HttpServletResponse response, String path)
+            throws ServletException, IOException {
+        request.getRequestDispatcher(path).forward(request, response);
+    }
+
+    // INNER CLASS
 
     private static class CheckoutData {
-        double orderTotal;
-        double discount;
         double finalTotal;
+        double discount;
         double paymentAmount;
         Double depositAmount;
         String notes;

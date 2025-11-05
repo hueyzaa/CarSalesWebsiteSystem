@@ -256,9 +256,7 @@
             <i class="fas fa-inbox fa-4x"></i>
             <h3>Chưa có đơn hàng nào</h3>
             <p>Bạn chưa đặt hàng sản phẩm nào</p>
-            <a href="${pageContext.request.contextPath}/cars" class="btn-explore">
-                <i class="fas fa-car"></i> Khám phá xe
-            </a>
+            <a href="${pageContext.request.contextPath}/cars" class="btn-explore">Khám phá xe</a>
         </div>
     </c:if>
 

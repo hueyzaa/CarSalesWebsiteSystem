@@ -6,7 +6,6 @@ import model.Order;
 import service.VNPayService;
 import util.SessionUtils;
 import util.VNPayConfig;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,30 +25,33 @@ public class PaymentServlet extends HttpServlet {
     private TransactionDAO transactionDAO;
 
     @Override
-    public void init() throws ServletException {
+    public void init() {
         vnPayService = new VNPayService();
         ordersDAO = new OrdersDAO();
         transactionDAO = new TransactionDAO();
+        logger.info("PaymentServlet initialized");
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         processPayment(request, response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+            throws IOException {
         processPayment(request, response);
     }
+
+    // ============ PAYMENT PROCESSING ============
 
     private void processPayment(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         HttpSession session = request.getSession(false);
 
         if (!SessionUtils.isLoggedIn(session)) {
-            response.sendRedirect(request.getContextPath() + "/login");
+            redirect(response, request.getContextPath() + "/login");
             return;
         }
 
@@ -78,7 +80,7 @@ public class PaymentServlet extends HttpServlet {
             }
 
             session.setAttribute("paymentOrderId", orderId);
-            response.sendRedirect(paymentUrl);
+            redirect(response, paymentUrl);
 
         } catch (NumberFormatException e) {
             logger.error("Invalid order ID format", e);
@@ -91,9 +93,11 @@ public class PaymentServlet extends HttpServlet {
         }
     }
 
+    // ============ VALIDATION ============
+
     private Integer getOrderId(HttpServletRequest request) {
         String param = request.getParameter("orderId");
-        if (param == null || param.trim().isEmpty()) {
+        if (isEmpty(param)) {
             return null;
         }
 
@@ -113,19 +117,27 @@ public class PaymentServlet extends HttpServlet {
             return false;
         }
 
-        if (!"DEPOSIT".equals(order.getPaymentType())) {
+        if (!isDepositOrder(order)) {
             redirectWithError(response, session, "Đơn hàng này không thể thanh toán online!",
                     contextPath + "/order-detail?id=" + orderId);
             return false;
         }
 
-        if (order.getDepositAmount() == null || order.getDepositAmount() <= 0) {
+        if (!hasValidDepositAmount(order)) {
             redirectWithError(response, session, "Không tìm thấy số tiền đặt cọc!",
                     contextPath + "/order-detail?id=" + orderId);
             return false;
         }
 
         return true;
+    }
+
+    private boolean isDepositOrder(Order order) {
+        return "DEPOSIT".equals(order.getPaymentType());
+    }
+
+    private boolean hasValidDepositAmount(Order order) {
+        return order.getDepositAmount() != null && order.getDepositAmount() > 0;
     }
 
     private boolean isAlreadyPaid(int orderId, HttpSession session, HttpServletResponse response,
@@ -139,9 +151,11 @@ public class PaymentServlet extends HttpServlet {
         return false;
     }
 
+    // ============ PAYMENT URL CREATION ============
+
     private String createPaymentUrl(Order order, HttpServletRequest request) {
         long amount = order.getDepositAmount().longValue();
-        String orderInfo = String.format("Dat coc 10%% don hang so %d", order.getOrderId());
+        String orderInfo = buildOrderInfo(order.getOrderId());
         String ipAddress = VNPayConfig.getIpAddress(request);
 
         logger.info("Creating payment for order {}: {}₫", order.getOrderId(), amount);
@@ -149,10 +163,24 @@ public class PaymentServlet extends HttpServlet {
         return vnPayService.createPaymentUrl(order.getOrderId(), amount, orderInfo, ipAddress);
     }
 
+    private String buildOrderInfo(int orderId) {
+        return String.format("Dat coc 10%% don hang so %d", orderId);
+    }
+
+    // ============ UTILITY METHODS ============
+
+    private boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+
+    private void redirect(HttpServletResponse response, String url) throws IOException {
+        response.sendRedirect(url);
+    }
+
     private void redirectWithError(HttpServletResponse response, HttpSession session,
                                    String message, String url) throws IOException {
         session.setAttribute("error", message);
         logger.warn("Payment error: {}", message);
-        response.sendRedirect(url);
+        redirect(response, url);
     }
 }

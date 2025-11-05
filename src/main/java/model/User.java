@@ -5,6 +5,7 @@ import java.util.Date;
 
 /**
  * User model - Base user entity from AppUsers table
+ * Represents all users in the system (Admin, Staff, Customer)
  */
 public class User implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -13,8 +14,9 @@ public class User implements Serializable {
     private int userId;
     private String email;
     private String passwordHash;
-    private String role; // ADMIN, STAFF, CUSTOMER
+    private String role;
     private boolean isActive;
+    private boolean emailVerified;
     private Date createdAt;
     private Date lastLogin;
 
@@ -22,16 +24,25 @@ public class User implements Serializable {
     private String name;
     private String phone;
     private String address;
+    private String oauthProvider;
 
-    // Constructors
+    /**
+     * Default constructor
+     */
     public User() {}
 
+    /**
+     * Constructor with basic fields
+     */
     public User(int userId, String email, String role) {
         this.userId = userId;
         this.email = email;
         this.role = role;
     }
 
+    /**
+     * Constructor with name field
+     */
     public User(int userId, String email, String name, String role) {
         this.userId = userId;
         this.email = email;
@@ -39,7 +50,25 @@ public class User implements Serializable {
         this.role = role;
     }
 
-    // Getters and Setters
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public String getOauthProvider() {
+        return oauthProvider;
+    }
+
+    public void setOauthProvider(String oauthProvider) {
+        this.oauthProvider = oauthProvider;
+    }
+
+    // ... (giữ nguyên các getter/setter cũ) ...
+
     public int getUserId() {
         return userId;
     }
@@ -81,19 +110,19 @@ public class User implements Serializable {
     }
 
     public Date getCreatedAt() {
-        return createdAt;
+        return createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
     public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
+        this.createdAt = createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
     public Date getLastLogin() {
-        return lastLogin;
+        return lastLogin != null ? new Date(lastLogin.getTime()) : null;
     }
 
     public void setLastLogin(Date lastLogin) {
-        this.lastLogin = lastLogin;
+        this.lastLogin = lastLogin != null ? new Date(lastLogin.getTime()) : null;
     }
 
     public String getName() {
@@ -120,7 +149,37 @@ public class User implements Serializable {
         this.address = address;
     }
 
-    // Convenience methods
+
+    /**
+     * Checks if user uses OAuth authentication
+     */
+    public boolean isOAuthUser() {
+        return oauthProvider != null && !oauthProvider.trim().isEmpty();
+    }
+
+    /**
+     * Gets display text for email verification status
+     */
+    public String getEmailVerifiedDisplay() {
+        return emailVerified ? "Đã xác thực" : "Chưa xác thực";
+    }
+
+    /**
+     * Gets Bootstrap badge class for email verification status
+     */
+    public String getEmailVerifiedBadge() {
+        return emailVerified ? "badge-success" : "badge-warning";
+    }
+
+    /**
+     * Gets Bootstrap icon for email verification status
+     */
+    public String getEmailVerifiedIcon() {
+        return emailVerified ? "bi-check-circle-fill" : "bi-exclamation-circle-fill";
+    }
+
+    // ... (giữ nguyên các method cũ: getDisplayName, getInitials, isAdmin, etc.) ...
+
     public String getDisplayName() {
         if (name != null && !name.trim().isEmpty()) {
             return name;
@@ -188,6 +247,7 @@ public class User implements Serializable {
                 ", email='" + email + '\'' +
                 ", role='" + role + '\'' +
                 ", name='" + name + '\'' +
+                ", emailVerified=" + emailVerified +
                 ", isActive=" + isActive +
                 '}';
     }

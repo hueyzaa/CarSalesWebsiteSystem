@@ -173,10 +173,6 @@ public class OrdersDAO {
         return createOrder(userId, cartItems, "FULL", null, null);
     }
 
-    // =============================================
-    // NEW: CREATE ORDER WITH PROMOTION SUPPORT
-    // =============================================
-
     /**
      * Create order with promotion support
      * @param userId User ID
@@ -383,9 +379,6 @@ public class OrdersDAO {
         }
     }
 
-    // =============================================
-    // EXISTING METHODS (KHÔNG THAY ĐỔI)
-    // =============================================
 
     /**
      * Update order status

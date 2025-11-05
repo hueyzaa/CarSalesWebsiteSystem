@@ -526,9 +526,7 @@
                         <i class="fas fa-newspaper"></i>
                         <h3>Chưa Có Bài Viết Nào</h3>
                         <p>Các bài viết mới sẽ được cập nhật sớm. Vui lòng quay lại sau!</p>
-                        <a href="${pageContext.request.contextPath}/cars" class="btn-read-more">
-                            <i class="fas fa-car"></i> Xem Danh Sách Xe
-                        </a>
+                        <a href="${pageContext.request.contextPath}/cars" class="btn-read-more">Xem Danh Sách Xe</a>
                     </div>
                 </div>
             </c:when>

@@ -22,7 +22,7 @@ public class BrandDAO {
                 Brand brand = new Brand();
                 brand.setBrandId(rs.getInt("brand_id"));
                 brand.setBrandName(rs.getString("brand_name"));
-                brand.setBrandLegion(rs.getString("brand_legion"));
+                brand.setBrandCountry(rs.getString("brand_legion"));
                 brands.add(brand);
             }
         } catch (SQLException e) {
@@ -86,27 +86,7 @@ public class BrandDAO {
         }
         return false;
     }
-
-    /**
-     *
-     */
-    public void deleteBrand(Brand brand) {
-        String sql = "DELETE FROM Brand WHERE brand_id = ?";
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, brandId);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-    }
+    
 
 
 }

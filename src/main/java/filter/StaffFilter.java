@@ -34,7 +34,6 @@ public class StaffFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         HttpSession session = httpRequest.getSession(false);
 
-        // ✅ Check if user is staff or admin
         if (!SessionUtils.isStaffOrAdmin(session)) {
             String requestURI = httpRequest.getRequestURI();
             String userRole = SessionUtils.getUserRole(session);
@@ -56,7 +55,6 @@ public class StaffFilter implements Filter {
             return;
         }
 
-        // ✅ Staff/Admin authenticated, allow access
         logger.debug("Staff/Admin access granted to: {} for user: {}",
                 httpRequest.getRequestURI(), SessionUtils.getUserEmail(session));
 

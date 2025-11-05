@@ -18,9 +18,8 @@ public class BlogDAO {
     public List<Blog> getAllBlogs() {
         List<Blog> blogs = new ArrayList<>();
 
-        // ✅ FIX: Bỏ u.name vì AppUsers không có column name
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
-                "u.email as author_email " +  // ✅ Dùng email thay vì name
+                "u.email as author_email " +
                 "FROM Blog b " +
                 "LEFT JOIN AppUsers u ON b.author_id = u.user_id " +
                 "ORDER BY b.created_at DESC";
@@ -37,7 +36,7 @@ public class BlogDAO {
                 blog.setAuthorId(rs.getInt("author_id"));
                 blog.setCreatedAt(rs.getTimestamp("created_at"));
                 blog.setImageUrl(rs.getString("image_url"));
-                blog.setAuthorName(rs.getString("author_email")); // ✅ Set email vào authorName
+                blog.setAuthorName(rs.getString("author_email"));
 
                 blogs.add(blog);
             }
@@ -55,7 +54,6 @@ public class BlogDAO {
      * Get blog by ID
      */
     public Blog getBlogById(int blogId) {
-        // ✅ FIX: Dùng email thay vì name
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
                 "u.email as author_email " +
                 "FROM Blog b " +
@@ -76,7 +74,7 @@ public class BlogDAO {
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
                     blog.setImageUrl(rs.getString("image_url"));
-                    blog.setAuthorName(rs.getString("author_email")); // ✅ Email
+                    blog.setAuthorName(rs.getString("author_email"));
 
                     logger.info("Retrieved blog: {}", blogId);
                     return blog;
@@ -98,7 +96,6 @@ public class BlogDAO {
     public List<Blog> getRecentBlogs(int limit) {
         List<Blog> blogs = new ArrayList<>();
 
-        // ✅ FIX: Dùng email
         String sql = "SELECT TOP (?) b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
                 "u.email as author_email " +
                 "FROM Blog b " +
@@ -119,7 +116,7 @@ public class BlogDAO {
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
                     blog.setImageUrl(rs.getString("image_url"));
-                    blog.setAuthorName(rs.getString("author_email")); // ✅ Email
+                    blog.setAuthorName(rs.getString("author_email"));
 
                     blogs.add(blog);
                 }
@@ -140,7 +137,6 @@ public class BlogDAO {
     public List<Blog> getBlogsByAuthor(int authorId)  {
         List<Blog> blogs = new ArrayList<>();
 
-        // ✅ FIX: Dùng email
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
                 "u.email as author_email " +
                 "FROM Blog b " +
@@ -162,7 +158,7 @@ public class BlogDAO {
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
                     blog.setImageUrl(rs.getString("image_url"));
-                    blog.setAuthorName(rs.getString("author_email")); // ✅ Email
+                    blog.setAuthorName(rs.getString("author_email"));
 
                     blogs.add(blog);
                 }
@@ -183,7 +179,6 @@ public class BlogDAO {
     public List<Blog> searchBlogs(String keyword){
         List<Blog> blogs = new ArrayList<>();
 
-        // ✅ FIX: Dùng email
         String sql = "SELECT b.blog_id, b.title, b.content, b.author_id, b.created_at, b.image_url, " +
                 "u.email as author_email " +
                 "FROM Blog b " +
@@ -207,7 +202,7 @@ public class BlogDAO {
                     blog.setAuthorId(rs.getInt("author_id"));
                     blog.setCreatedAt(rs.getTimestamp("created_at"));
                     blog.setImageUrl(rs.getString("image_url"));
-                    blog.setAuthorName(rs.getString("author_email")); // ✅ Email
+                    blog.setAuthorName(rs.getString("author_email"));
 
                     blogs.add(blog);
                 }
@@ -222,7 +217,6 @@ public class BlogDAO {
         }
     }
 
-    // ✅ Các methods create, update, delete giữ nguyên (không cần JOIN)
 
     public int createBlog(Blog blog) {
         String sql = "INSERT INTO Blog (title, content, author_id, image_url) VALUES (?, ?, ?, ?)";

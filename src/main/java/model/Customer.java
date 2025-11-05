@@ -4,8 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * Customer model - Simplified version
- * Removed: loyalty_points
+ * Customer model - Represents customer users in the system
  */
 public class Customer implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -14,6 +13,7 @@ public class Customer implements Serializable {
     private int customerId;
     private String email;
     private boolean isActive;
+    private boolean emailVerified;
     private Date createdAt;
     private Date lastLogin;
 
@@ -22,21 +22,45 @@ public class Customer implements Serializable {
     private String phone;
     private String address;
     private String oauthProvider;
+    private String oauthId;
 
     // Additional fields from view
     private int totalOrders;
     private double totalSpent;
 
-    // Constructors
+    /**
+     * Default constructor
+     */
     public Customer() {}
 
+    /**
+     * Constructor with basic fields
+     */
     public Customer(int customerId, String email, String name) {
         this.customerId = customerId;
         this.email = email;
         this.name = name;
     }
 
-    // Getters and Setters
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public String getOauthId() {
+        return oauthId;
+    }
+
+    public void setOauthId(String oauthId) {
+        this.oauthId = oauthId;
+    }
+
+    // ... (giữ nguyên các getter/setter cũ) ...
+
     public int getCustomerId() {
         return customerId;
     }
@@ -78,19 +102,19 @@ public class Customer implements Serializable {
     }
 
     public Date getCreatedAt() {
-        return createdAt;
+        return createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
     public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
+        this.createdAt = createdAt != null ? new Date(createdAt.getTime()) : null;
     }
 
     public Date getLastLogin() {
-        return lastLogin;
+        return lastLogin != null ? new Date(lastLogin.getTime()) : null;
     }
 
     public void setLastLogin(Date lastLogin) {
-        this.lastLogin = lastLogin;
+        this.lastLogin = lastLogin != null ? new Date(lastLogin.getTime()) : null;
     }
 
     public String getName() {
@@ -149,7 +173,64 @@ public class Customer implements Serializable {
         this.totalSpent = totalSpent;
     }
 
-    // Convenience methods
+
+    /**
+     * Gets display text for email verification status
+     */
+    public String getEmailVerifiedDisplay() {
+        return emailVerified ? "Đã xác thực" : "Chưa xác thực";
+    }
+
+    /**
+     * Gets Bootstrap badge class for email verification status
+     */
+    public String getEmailVerifiedBadge() {
+        return emailVerified ? "badge-success" : "badge-warning";
+    }
+
+    /**
+     * Gets Bootstrap icon for email verification status
+     */
+    public String getEmailVerifiedIcon() {
+        return emailVerified ? "bi-check-circle-fill" : "bi-exclamation-circle-fill";
+    }
+
+    /**
+     * Gets OAuth provider display name
+     */
+    public String getOauthProviderDisplay() {
+        if (oauthProvider == null || oauthProvider.trim().isEmpty()) {
+            return "Email/Password";
+        }
+        switch (oauthProvider.toUpperCase()) {
+            case "GOOGLE":
+                return "Google";
+            case "FACEBOOK":
+                return "Facebook";
+            default:
+                return oauthProvider;
+        }
+    }
+
+    /**
+     * Gets OAuth provider icon
+     */
+    public String getOauthProviderIcon() {
+        if (oauthProvider == null || oauthProvider.trim().isEmpty()) {
+            return "bi-envelope";
+        }
+        switch (oauthProvider.toUpperCase()) {
+            case "GOOGLE":
+                return "bi-google";
+            case "FACEBOOK":
+                return "bi-facebook";
+            default:
+                return "bi-shield-lock";
+        }
+    }
+
+    // ... (giữ nguyên các method cũ) ...
+
     public String getDisplayName() {
         return name != null ? name : email;
     }
@@ -204,6 +285,8 @@ public class Customer implements Serializable {
                 ", email='" + email + '\'' +
                 ", name='" + name + '\'' +
                 ", oauthProvider='" + oauthProvider + '\'' +
+                ", oauthId='" + oauthId + '\'' +
+                ", emailVerified=" + emailVerified +
                 ", isActive=" + isActive +
                 '}';
     }

@@ -1,0 +1,4 @@
+2025-11-02 17:05:58.139 [main] WARN  util.EnvLoader - .env file not found in any expected location
+2025-11-02 17:05:58.140 [main] INFO  util.EnvLoader - Falling back to system environment variables
+2025-11-02 17:05:58.140 [main] INFO  util.EmailService - Email configuration loaded from .env
+2025-11-02 17:05:58.141 [main] ERROR util.EmailService - Email service not configured

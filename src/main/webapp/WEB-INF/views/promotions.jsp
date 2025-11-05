@@ -719,8 +719,7 @@
                         <i class="fas fa-gift"></i>
                         <h3>Không Tìm Thấy Khuyến Mãi Nào</h3>
                         <p>Các chương trình khuyến mãi mới sẽ được cập nhật sớm. Vui lòng quay lại sau!</p>
-                        <a href="${pageContext.request.contextPath}/cars" class="btn-view-cars">
-                            <i class="fas fa-car"></i> Xem Danh Sách Xe
+                        <a href="${pageContext.request.contextPath}/cars" class="btn-view-cars">Xem Danh Sách Xe
                         </a>
                     </div>
                 </c:otherwise>
