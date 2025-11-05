@@ -87,10 +87,6 @@ public class UpdateStaffServlet extends HttpServlet {
             request.setAttribute("staff", adminDAO.getStaffById(staffId));
             request.getRequestDispatcher("/WEB-INF/views/Admin/update-staff.jsp").forward(request, response);
 
-        } catch (NumberFormatException e) {
-            request.setAttribute("error", "ID nhân viên không hợp lệ!");
-            request.getRequestDispatcher("/WEB-INF/views/Admin/staff-list.jsp").forward(request, response);
-
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi khi cập nhật nhân viên!");

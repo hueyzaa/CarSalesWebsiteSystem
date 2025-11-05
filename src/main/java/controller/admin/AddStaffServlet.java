@@ -21,13 +21,10 @@ public class AddStaffServlet extends HttpServlet {
             throws ServletException, IOException {
         request.getRequestDispatcher("/WEB-INF/views/Admin/add-staff.jsp").forward(request, response);
     }
-
-    @Override
+     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         request.setCharacterEncoding("UTF-8");
-
         String name = request.getParameter("name");
         String email = request.getParameter("email");
         String password = request.getParameter("password");
@@ -35,39 +32,30 @@ public class AddStaffServlet extends HttpServlet {
         String address = request.getParameter("address");
 
         try {
-
             Admin admin = (Admin) request.getSession().getAttribute("adminAccount");
             if (admin == null) {
                 logger.warn("Unauthorized attempt to add staff — no admin session found");
                 response.sendRedirect(request.getContextPath() + "/login");
                 return;
             }
-
             int adminId = admin.getAdminId();
-
-
             if (userDAO.emailExists(email)) {
                 request.setAttribute("error", "Email này đã được sử dụng!");
                 saveFormData(request, name, email, phone, address);
                 request.getRequestDispatcher("/WEB-INF/views/Admin/add-staff.jsp").forward(request, response);
                 return;
             }
-
-
             boolean success = adminDAO.createStaff(adminId, email, password, name, phone, address);
-
             if (success) {
                 logger.info("Admin {} created new staff: {}", adminId, email);
                 request.getSession().setAttribute("message", "Thêm nhân viên thành công!");
                 response.sendRedirect(request.getContextPath() + "/Admin/dashboard?section=staff");
-                return;
             } else {
                 logger.warn("Admin {} failed to create staff {}", adminId, email);
                 request.setAttribute("error", "Không thể thêm nhân viên. Vui lòng thử lại!");
                 saveFormData(request, name, email, phone, address);
                 request.getRequestDispatcher("/WEB-INF/views/Admin/add-staff.jsp").forward(request, response);
             }
-
         } catch (Exception e) {
             logger.error("Lỗi khi thêm nhân viên mới", e);
             request.setAttribute("error", "Đã xảy ra lỗi hệ thống khi thêm nhân viên!");

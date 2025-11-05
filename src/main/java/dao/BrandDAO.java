@@ -12,7 +12,7 @@ public class BrandDAO {
     // Lấy tất cả thương hiệu
     public List<Brand> getAllBrands() {
         List<Brand> brands = new ArrayList<>();
-        String sql = "SELECT brand_id, brand_name FROM Brand ORDER BY brand_name ASC";
+        String sql = "SELECT brand_id, brand_name, brand_legion FROM Brand ORDER BY brand_name ASC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -22,6 +22,7 @@ public class BrandDAO {
                 Brand brand = new Brand();
                 brand.setBrandId(rs.getInt("brand_id"));
                 brand.setBrandName(rs.getString("brand_name"));
+                brand.setBrandLegion(rs.getString("brand_legion"));
                 brands.add(brand);
             }
         } catch (SQLException e) {
@@ -85,4 +86,27 @@ public class BrandDAO {
         }
         return false;
     }
+
+    /**
+     *
+     */
+    public void deleteBrand(Brand brand) {
+        String sql = "DELETE FROM Brand WHERE brand_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, brandId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
 }

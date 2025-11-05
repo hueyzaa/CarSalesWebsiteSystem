@@ -28,7 +28,7 @@
     <table class="table table-dark table-striped table-hover text-center align-middle">
         <thead>
         <tr>
-            <th>ID</th>
+            <th>STT</th>
             <th>Vai trò</th>
             <th>Tên</th>
             <th>Email</th>
@@ -42,9 +42,9 @@
         </thead>
 
         <tbody>
-        <c:forEach var="user" items="${userList}">
+        <c:forEach var="user" items="${userList}" varStatus="loops">
             <tr>
-                <td>${user.userId}</td>
+                <td>${loops.count}</td>
                 <td>
                     <span class="badge
                         ${user.role eq 'ADMIN' ? 'bg-danger' :
@@ -82,7 +82,7 @@
                         <button type="submit" class="btn btn-sm btn-danger"
                                 onclick="return confirm('Bạn có chắc chắn muốn xóa người dùng này không?');"
                                 title="Xóa người dùng">
-                            <i class="fas fa-user-slash"></i>
+                            <i class="fas fa-trash"></i>
                         </button>
                     </form>
                 </td>

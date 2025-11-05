@@ -5,8 +5,6 @@ import dao.CarDAO;
 import model.Car;
 import model.Brand;
 import util.ValidationUtil;
-import exception.ValidationException;
-import exception.DatabaseException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -38,7 +36,7 @@ public class AddCarServlet extends HttpServlet {
             List<Brand> brandList = brandDAO.getAllBrands();
             request.setAttribute("brandList", brandList);
             request.getRequestDispatcher("/WEB-INF/views/Admin/add-car.jsp").forward(request, response);
-        } catch (DatabaseException e) {
+        } catch (Exception e) {
             logger.error("Error loading add car page", e);
             request.setAttribute("error", "Không thể tải danh sách hãng xe. Vui lòng thử lại sau.");
             request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
@@ -48,9 +46,7 @@ public class AddCarServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         try {
-
             int brandId = ValidationUtil.validatePositiveInt(request.getParameter("brandId"), "Hãng xe");
             String model = ValidationUtil.validateString(request.getParameter("model"), "Tên mẫu xe", 100);
             double price = ValidationUtil.validatePrice(request.getParameter("price")).doubleValue();
@@ -71,16 +67,12 @@ public class AddCarServlet extends HttpServlet {
             List<String> validImageUrls = new ArrayList<>();
             if (imageUrls != null) {
                 for (String url : imageUrls) {
-                    if (url != null && !url.trim().isEmpty()) {
-                        String validUrl = ValidationUtil.validateUrl(url);
-                        if (validUrl != null && validUrl.length() <= 255) {
-                            validImageUrls.add(validUrl);
-                        }
+                    String validUrl = ValidationUtil.validateUrl(url);
+                    if (url != null && !url.trim().isEmpty() && validUrl.length() <= 255) {
+                        validImageUrls.add(validUrl);
                     }
                 }
             }
-
-
             Car car = new Car();
             car.setBrandId(brandId);
             car.setName(model);
@@ -90,12 +82,9 @@ public class AddCarServlet extends HttpServlet {
             car.setYear(year != null ? year : 0);
             car.setColor(color);
             car.setStock(stock != null ? stock : 0);
-
             int carId = carDAO.addCar(car);
             if (carId <= 0)
-                throw new DatabaseException("Không thể thêm xe vào cơ sở dữ liệu");
-
-
+                throw new Exception("Không thể thêm xe vào cơ sở dữ liệu");
             if (!validImageUrls.isEmpty()) {
                 int primaryIndex = 0;
                 try {
@@ -119,19 +108,13 @@ public class AddCarServlet extends HttpServlet {
 
             response.sendRedirect(request.getContextPath() + "/Admin/dashboard?section=cars");
 
-        } catch (ValidationException e) {
-            logger.warn("Validation failed: {}", e.getMessage());
-            handleError(request, response, e.getMessage());
-        } catch (DatabaseException e) {
-            logger.error("Database error when adding car", e);
-            handleError(request, response, "Lỗi cơ sở dữ liệu. Vui lòng thử lại.");
         } catch (Exception e) {
             logger.error("Unexpected error in add car", e);
             handleError(request, response, "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
         }
     }
 
-    private Integer parseOptionalInt(String param, String fieldName) throws ValidationException {
+    private Integer parseOptionalInt(String param, String fieldName) throws Exception {
         if (param == null || param.trim().isEmpty()) return null;
         return ValidationUtil.validatePositiveInt(param, fieldName);
     }
@@ -152,10 +135,9 @@ public class AddCarServlet extends HttpServlet {
         try {
             List<Brand> brandList = brandDAO.getAllBrands();
             request.setAttribute("brandList", brandList);
-        } catch (DatabaseException e) {
+        } catch (Exception e) {
             logger.error("Failed to reload brand list after error", e);
         }
-
 
         request.getRequestDispatcher("/WEB-INF/views/Admin/add-car.jsp").forward(request, response);
     }

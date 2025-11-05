@@ -1,8 +1,8 @@
 <%--
   Created by IntelliJ IDEA.
-  User: HungNB
-  Date: 10/15/2025
-  Time: 8:55 PM
+  User: hungn
+  Date: 11/3/2025
+  Time: 9:54 AM
   To change this template use File | Settings | File Templates.
 --%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
@@ -84,39 +84,30 @@
         <thead>
         <tr>
             <th>ID</th>
-            <th>Tên xe</th>
-            <th>Hãng</th>
-            <th>Giá</th>
-            <th>Tồn kho</th>
-            <th>Trạng thái</th>
+            <th>Tên hãng</th>
+            <th>Quốc Gia</th>
+            <th>Ngày tạo</th>
             <th>Hành động</th>
         </tr>
         </thead>
         <tbody>
-        <c:forEach var="car" items="${cars}">
+        <c:forEach var="brand" items="${brands}">
             <tr>
-                <td>${car.id}</td>
-                <td class="text-start">${car.name}</td>
-                <td>${car.brandName}</td>
-                <td>
-                    <fmt:formatNumber value="${car.price}" type="number" groupingUsed="true"/> ₫
-                </td>
-                <td>${car.stock}</td>
-                <td>
-                    <span class="badge ${car.status == 'AVAILABLE' ? 'bg-success' : 'bg-danger'}">
-                            ${car.status == 'AVAILABLE' ? 'Còn hàng' : 'Hết hàng'}
-                    </span>
-                </td>
+                <td>${brand.id}</td>
+                <td class="text-start">${brand.name}</td>
+                <td>${brand.brandName}</td>
+                <td>${brand.brandLegion}</td>
+                <td><fmt:formatDate value="${user.createdAt}" pattern="dd/MM/yyyy"/></td>
                 <td class="action-buttons">
-                    <a href="${pageContext.request.contextPath}/Admin/update-car?id=${car.id}"
+                    <a href="${pageContext.request.contextPath}/Admin/update-car?id=${brand.id}"
                        class="btn btn-warning btn-sm">
                         <i class="fas fa-edit"></i>
                     </a>
                     <form action="${pageContext.request.contextPath}/Admin/delete-car"
                           method="post" style="display:inline;">
-                        <input type="hidden" name="id" value="${car.id}">
+                        <input type="hidden" name="id" value="${brand.id}">
                         <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Bạn có chắc muốn xóa xe này?');">
+                                onclick="return confirm('Bạn có chắc muốn hãng xe này?');">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>

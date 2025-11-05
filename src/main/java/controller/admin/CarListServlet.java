@@ -10,7 +10,7 @@ import dao.CarDAO;
 
 @WebServlet("/Admin/car-list")
 public class CarListServlet extends HttpServlet {
-    private CarDAO carDAO = new CarDAO();
+    private final CarDAO carDAO = new CarDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
