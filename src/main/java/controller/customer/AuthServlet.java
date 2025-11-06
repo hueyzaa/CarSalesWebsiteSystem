@@ -294,7 +294,7 @@ public class AuthServlet extends HttpServlet {
             // Redirect based on role
             String redirectUrl;
             if (user.isAdmin()) {
-                redirectUrl = request.getContextPath() + "/admin/dashboard";
+                redirectUrl = request.getContextPath() + "/Admin/dashboard";
             } else if (user.isStaff()) {
                 redirectUrl = request.getContextPath() + "/staff/dashboard";
             } else {
