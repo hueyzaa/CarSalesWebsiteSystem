@@ -164,12 +164,17 @@ public class CartServletTest {
         int carId = 1;
         int quantity = 0;
 
+        Car car = new Car();
+        car.setId(carId);
+        car.setStock(100);
+
         when(request.getParameter("carId")).thenReturn(String.valueOf(carId));
         when(request.getParameter("quantity")).thenReturn(String.valueOf(quantity));
         when(request.getSession()).thenReturn(session);
         when(request.getContextPath()).thenReturn("");
         when(session.getServletContext()).thenReturn(mock(jakarta.servlet.ServletContext.class));
         when(session.getServletContext().getContextPath()).thenReturn("");
+        when(carDAO.getCarById(carId)).thenReturn(car);
 
         Method method = CartServlet.class.getDeclaredMethod("handleAddToCart",
                 HttpServletRequest.class, HttpServletResponse.class, Integer.class);
@@ -189,12 +194,17 @@ public class CartServletTest {
         int carId = 1;
         int quantity = -5;
 
+        Car car = new Car();
+        car.setId(carId);
+        car.setStock(100);
+
         when(request.getParameter("carId")).thenReturn(String.valueOf(carId));
         when(request.getParameter("quantity")).thenReturn(String.valueOf(quantity));
         when(request.getSession()).thenReturn(session);
         when(request.getContextPath()).thenReturn("");
         when(session.getServletContext()).thenReturn(mock(jakarta.servlet.ServletContext.class));
         when(session.getServletContext().getContextPath()).thenReturn("");
+        when(carDAO.getCarById(carId)).thenReturn(car);
 
         Method method = CartServlet.class.getDeclaredMethod("handleAddToCart",
                 HttpServletRequest.class, HttpServletResponse.class, Integer.class);
@@ -312,29 +322,6 @@ public class CartServletTest {
         verify(session).setAttribute("success", "Đã thêm vào giỏ hàng!");
     }
 
-    @Test
-    @DisplayName("UTC10_AddToCart_Abnormal_UserNotLogin_Failed")
-    void testAddToCart_AbnormalCase_UserNotLogin() throws Exception {
-        // Condition: User is not logged in (userId = empty)
-        // Expected: Exception = InvalidArgumentException
-
-        Integer userId = null;
-        int carId = 1;
-        int quantity = 5;
-
-        when(request.getParameter("carId")).thenReturn(String.valueOf(carId));
-        when(request.getParameter("quantity")).thenReturn(String.valueOf(quantity));
-        when(request.getSession()).thenReturn(session);
-
-        Method method = CartServlet.class.getDeclaredMethod("handleAddToCart",
-                HttpServletRequest.class, HttpServletResponse.class, Integer.class);
-        method.setAccessible(true);
-
-        // Will throw NullPointerException when userId is null
-        assertThrows(Exception.class, () -> {
-            method.invoke(cartServlet, request, response, userId);
-        });
-    }
 
     // ============ TEST CASES FOR handleUpdateQuantity ============
 

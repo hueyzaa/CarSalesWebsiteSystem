@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<jsp:useBean id="order" type="dto.OrderDTO" scope="request"/>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -772,7 +773,7 @@
                     </c:if>
 
                     <!-- Only allow cancel if order is PENDING and not yet paid -->
-                    <c:if test="${order.canBeCancelled()}">
+                    <c:if test="${order.canBeCancelled}">
                         <form method="post" action="${pageContext.request.contextPath}/order-cancel">
                             <input type="hidden" name="orderId" value="${order.orderId}">
                             <button type="submit" class="btn btn-cancel-order"

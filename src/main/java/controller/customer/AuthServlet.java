@@ -34,6 +34,22 @@ public class AuthServlet extends HttpServlet {
         logger.info("AuthServlet initialized");
     }
 
+    // ============ BUSINESS LOGIC (moved from Model) ============
+
+    /**
+     * Check if user is an admin
+     */
+    private boolean isAdmin(User user) {
+        return user != null && "ADMIN".equalsIgnoreCase(user.getRole());
+    }
+
+    /**
+     * Check if user is a staff member
+     */
+    private boolean isStaff(User user) {
+        return user != null && "STAFF".equalsIgnoreCase(user.getRole());
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -291,11 +307,11 @@ public class AuthServlet extends HttpServlet {
 
             logger.info("User logged in: {} (Role: {})", email, user.getRole());
 
-            // Redirect based on role
+            // Redirect based on role - Using local helper methods instead of user.isAdmin()
             String redirectUrl;
-            if (user.isAdmin()) {
+            if (isAdmin(user)) {
                 redirectUrl = request.getContextPath() + "/admin/dashboard";
-            } else if (user.isStaff()) {
+            } else if (isStaff(user)) {
                 redirectUrl = request.getContextPath() + "/staff/dashboard";
             } else {
                 String redirect = request.getParameter("redirect");

@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * SessionUtils - Utility class for session management and user authentication
- * UPDATED: Fixed getCustomer(), getStaff(), getAdmin() to support User object conversion
+ * UPDATED: Moved all business logic from model classes to this utility class
  */
 public class SessionUtils {
     private static final Logger logger = LoggerFactory.getLogger(SessionUtils.class);
@@ -22,6 +22,62 @@ public class SessionUtils {
     // Private constructor to prevent instantiation
     private SessionUtils() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
+
+    // ============ BUSINESS LOGIC (moved from Model) ============
+
+    /**
+     * Check if user is a customer
+     */
+    private static boolean isUserCustomer(User user) {
+        return user != null && "CUSTOMER".equalsIgnoreCase(user.getRole());
+    }
+
+    /**
+     * Check if user is a staff member
+     */
+    private static boolean isUserStaff(User user) {
+        return user != null && "STAFF".equalsIgnoreCase(user.getRole());
+    }
+
+    /**
+     * Check if user is an admin
+     */
+    private static boolean isUserAdmin(User user) {
+        return user != null && "ADMIN".equalsIgnoreCase(user.getRole());
+    }
+
+    /**
+     * Check if user uses OAuth authentication
+     */
+    private static boolean isUserOAuth(User user) {
+        return user != null
+                && user.getOauthProvider() != null
+                && !user.getOauthProvider().trim().isEmpty();
+    }
+
+    /**
+     * Get user initials for avatar display
+     */
+    private static String getUserInitialsFromUser(User user) {
+        if (user == null) {
+            return "?";
+        }
+
+        String name = user.getName();
+        String email = user.getEmail();
+
+        if (name == null || name.trim().isEmpty()) {
+            return email != null && !email.isEmpty()
+                    ? email.substring(0, 1).toUpperCase()
+                    : "?";
+        }
+
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length >= 2) {
+            return (parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1)).toUpperCase();
+        }
+        return name.substring(0, Math.min(2, name.length())).toUpperCase();
     }
 
 
@@ -259,7 +315,7 @@ public class SessionUtils {
      */
     public static boolean isCustomer(HttpSession session) {
         User user = getUser(session);
-        return user != null && user.isCustomer();
+        return isUserCustomer(user);
     }
 
     /**
@@ -270,7 +326,7 @@ public class SessionUtils {
      */
     public static boolean isStaff(HttpSession session) {
         User user = getUser(session);
-        return user != null && user.isStaff();
+        return isUserStaff(user);
     }
 
     /**
@@ -281,7 +337,7 @@ public class SessionUtils {
      */
     public static boolean isAdmin(HttpSession session) {
         User user = getUser(session);
-        return user != null && user.isAdmin();
+        return isUserAdmin(user);
     }
 
     /**
@@ -293,7 +349,7 @@ public class SessionUtils {
      */
     public static boolean isStaffOrAdmin(HttpSession session) {
         User user = getUser(session);
-        return user != null && (user.isStaff() || user.isAdmin());
+        return user != null && (isUserStaff(user) || isUserAdmin(user));
     }
 
     /**
@@ -337,7 +393,7 @@ public class SessionUtils {
             User user = (User) userObject;
 
             // Only convert if user is actually a customer
-            if (!"CUSTOMER".equalsIgnoreCase(user.getRole())) {
+            if (!isUserCustomer(user)) {
                 return null;
             }
 
@@ -385,7 +441,7 @@ public class SessionUtils {
             User user = (User) userObject;
 
             // Only convert if user is actually staff
-            if (!"STAFF".equalsIgnoreCase(user.getRole())) {
+            if (!isUserStaff(user)) {
                 return null;
             }
 
@@ -432,7 +488,7 @@ public class SessionUtils {
             User user = (User) userObject;
 
             // Only convert if user is actually admin
-            if (!"ADMIN".equalsIgnoreCase(user.getRole())) {
+            if (!isUserAdmin(user)) {
                 return null;
             }
 
@@ -656,7 +712,7 @@ public class SessionUtils {
      */
     public static boolean isOAuthUser(HttpSession session) {
         User user = getUser(session);
-        return user != null && user.isOAuthUser();
+        return isUserOAuth(user);
     }
 
     // ============================================
@@ -715,10 +771,7 @@ public class SessionUtils {
      */
     public static String getUserInitials(HttpSession session) {
         User user = getUser(session);
-        if (user == null) {
-            return "?";
-        }
-        return user.getInitials();
+        return getUserInitialsFromUser(user);
     }
 
     /**

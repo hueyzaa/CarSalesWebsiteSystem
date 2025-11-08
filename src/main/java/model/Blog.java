@@ -1,21 +1,20 @@
 package model;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Blog {
+public class Blog implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private int blogId;
     private String title;
     private String content;
     private int authorId;
     private Date createdAt;
-    private String imageUrl;  // NEW: Thêm trường hình ảnh
-
-    // Additional fields for display
+    private String imageUrl;
     private String authorName;
 
-    // Constructors
-    public Blog() {
-    }
+    public Blog() {}
 
     public Blog(int blogId, String title, String content, int authorId, Date createdAt) {
         this.blogId = blogId;
@@ -34,7 +33,6 @@ public class Blog {
         this.imageUrl = imageUrl;
     }
 
-    // Getters and Setters
     public int getBlogId() {
         return blogId;
     }
@@ -89,36 +87,5 @@ public class Blog {
 
     public void setAuthorName(String authorName) {
         this.authorName = authorName;
-    }
-
-    // Utility methods
-    public String getExcerpt(int maxLength) {
-        if (content == null || content.length() <= maxLength) {
-            return content;
-        }
-        return content.substring(0, maxLength) + "...";
-    }
-
-    public String getShortTitle(int maxLength) {
-        if (title == null || title.length() <= maxLength) {
-            return title;
-        }
-        return title.substring(0, maxLength) + "...";
-    }
-
-    public boolean hasImage() {
-        return imageUrl != null && !imageUrl.trim().isEmpty();
-    }
-
-    @Override
-    public String toString() {
-        return "Blog{" +
-                "blogId=" + blogId +
-                ", title='" + title + '\'' +
-                ", authorId=" + authorId +
-                ", authorName='" + authorName + '\'' +
-                ", imageUrl='" + imageUrl + '\'' +
-                ", createdAt=" + createdAt +
-                '}';
     }
 }

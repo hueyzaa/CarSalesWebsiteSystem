@@ -1,8 +1,11 @@
 package model;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class CarImage {
+public class CarImage implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private int imageId;
     private int carId;
     private String imageURL;
@@ -18,19 +21,43 @@ public class CarImage {
         this.mainImage = mainImage;
     }
 
-    // Getters and Setters
-    public int getImageId() { return imageId; }
-    public void setImageId(int imageId) { this.imageId = imageId; }
+    public int getImageId() {
+        return imageId;
+    }
 
-    public int getCarId() { return carId; }
-    public void setCarId(int carId) { this.carId = carId; }
+    public void setImageId(int imageId) {
+        this.imageId = imageId;
+    }
 
-    public String getImageURL() { return imageURL; }
-    public void setImageURL(String imageURL) { this.imageURL = imageURL; }
+    public int getCarId() {
+        return carId;
+    }
 
-    public boolean isMainImage() { return mainImage; }
-    public void setMainImage(boolean mainImage) { this.mainImage = mainImage; }
+    public void setCarId(int carId) {
+        this.carId = carId;
+    }
 
-    public Date getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+    public String getImageURL() {
+        return imageURL;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
+    }
+
+    public boolean isMainImage() {
+        return mainImage;
+    }
+
+    public void setMainImage(boolean mainImage) {
+        this.mainImage = mainImage;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
 }

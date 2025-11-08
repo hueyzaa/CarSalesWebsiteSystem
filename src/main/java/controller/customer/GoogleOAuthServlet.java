@@ -19,6 +19,7 @@ import java.util.UUID;
 
 /**
  * Google OAuth 2.0 Servlet
+ * UPDATED: Removed admin/staff OAuth login support - OAuth is for customers only
  */
 @WebServlet(urlPatterns = {"/oauth2/google", "/oauth2/callback/google"})
 public class GoogleOAuthServlet extends HttpServlet {
@@ -179,23 +180,26 @@ public class GoogleOAuthServlet extends HttpServlet {
                 return;
             }
 
+            // SECURITY CHECK: Only customers can use OAuth login
+            // Admin and Staff must use password authentication
+            if (!"CUSTOMER".equalsIgnoreCase(user.getRole())) {
+                logger.warn("Non-customer role attempting Google OAuth: {} ({})",
+                        email, user.getRole());
+                session.setAttribute("error",
+                        "Tài khoản " + user.getRole() + " không thể đăng nhập bằng Google. " +
+                                "Vui lòng sử dụng email và mật khẩu.");
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
+
             // Login successful - Create session
             SessionUtils.setUser(session, user);
             SessionUtils.preventSessionFixation(request);
 
             logger.info("Google login successful: {} (Role: {})", email, user.getRole());
 
-            // Redirect based on role
-            String redirectUrl;
-            if (user.isAdmin()) {
-                redirectUrl = request.getContextPath() + "/admin/dashboard";
-            } else if (user.isStaff()) {
-                redirectUrl = request.getContextPath() + "/staff/dashboard";
-            } else {
-                redirectUrl = request.getContextPath() + "/home";
-            }
-
-            response.sendRedirect(redirectUrl);
+            // Redirect to home (customers only)
+            response.sendRedirect(request.getContextPath() + "/home");
 
         } catch (Exception e) {
             logger.error("Error in Google OAuth callback", e);

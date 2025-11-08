@@ -2,12 +2,15 @@ package service;
 
 import dao.PromotionDAO;
 import dao.CarDAO;
+import dto.CarWithDiscountDTO;
+import dto.PromotionDTO;
 import model.Promotion;
 import model.Car;
 import model.CartItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
 /**
  * Service layer for promotion business logic
  * Handles promotion validation, calculation, and application
+ * UPDATED: Added DTO conversion methods for view layer
  */
 public class PromotionService {
     private static final Logger logger = LoggerFactory.getLogger(PromotionService.class);
@@ -32,6 +36,217 @@ public class PromotionService {
         this.promotionDAO = promotionDAO;
         this.carDAO = carDAO;
     }
+
+    /**
+     * Check if promotion is currently active
+     */
+    private boolean isPromotionActive(Promotion promotion) {
+        if (promotion == null) {
+            return false;
+        }
+        Date now = new Date();
+        return promotion.getStartDate() != null
+                && promotion.getEndDate() != null
+                && now.after(promotion.getStartDate())
+                && now.before(promotion.getEndDate());
+    }
+
+    /**
+     * Check if promotion is expired
+     */
+    private boolean isPromotionExpired(Promotion promotion) {
+        if (promotion == null || promotion.getEndDate() == null) {
+            return false;
+        }
+        Date now = new Date();
+        return now.after(promotion.getEndDate());
+    }
+
+    /**
+     * Calculate discount value for a car
+     */
+    private double calculateCarDiscountValue(Car car) {
+        if (car == null) {
+            return 0;
+        }
+
+        double price = car.getPrice();
+
+        if (car.getDiscountPercentage() > 0) {
+            return price * (car.getDiscountPercentage() / 100);
+        } else if (car.getDiscountAmount() > 0) {
+            return Math.min(car.getDiscountAmount(), price);
+        }
+        return 0;
+    }
+
+    // ============ DTO CONVERSION METHODS (NEW) ============
+
+    /**
+     * Convert Promotion to PromotionDTO with pre-calculated values
+     * This ensures JSP views don't need to call business logic methods
+     */
+    public PromotionDTO toPromotionDTO(Promotion promotion) {
+        if (promotion == null) {
+            return null;
+        }
+
+        PromotionDTO dto = new PromotionDTO();
+
+        // Basic information
+        dto.setPromotionId(promotion.getPromotionId());
+        dto.setTitle(promotion.getTitle());
+        dto.setDescription(promotion.getDescription());
+        dto.setStartDate(promotion.getStartDate());
+        dto.setEndDate(promotion.getEndDate());
+        dto.setDiscountPercentage(promotion.getDiscountPercentage());
+        dto.setDiscountAmount(promotion.getDiscountAmount());
+
+        // User-specific flags (already available in model)
+        dto.setClaimedByUser(promotion.isClaimedByUser());
+        dto.setUsedByUser(promotion.isUsedByUser());
+
+        // Status flags (pre-calculated)
+        dto.setActive(isPromotionActive(promotion));
+        dto.setExpired(isPromotionExpired(promotion));
+
+        // Convert applicable cars with pre-calculated discounts
+        if (promotion.getApplicableCars() != null && !promotion.getApplicableCars().isEmpty()) {
+            List<CarWithDiscountDTO> carDTOs = promotion.getApplicableCars().stream()
+                    .map(car -> toCarWithDiscountDTO(car, promotion))
+                    .collect(Collectors.toList());
+            dto.setApplicableCars(carDTOs);
+
+            logger.debug("Converted {} cars for promotion {}", carDTOs.size(), promotion.getPromotionId());
+        }
+
+        return dto;
+    }
+
+    /**
+     * Convert list of Promotions to list of PromotionDTOs
+     */
+    public List<PromotionDTO> toPromotionDTOs(List<Promotion> promotions) {
+        if (promotions == null) {
+            return null;
+        }
+
+        return promotions.stream()
+                .map(this::toPromotionDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Convert Car to CarWithDiscountDTO with pre-calculated discount values
+     * All discount calculations are done here, so JSP only displays values
+     */
+    public CarWithDiscountDTO toCarWithDiscountDTO(Car car, Promotion promotion) {
+        if (car == null) {
+            return null;
+        }
+
+        CarWithDiscountDTO dto = new CarWithDiscountDTO();
+
+        // Basic car information - FIXED: Use correct Car model method names
+        dto.setCarId(car.getId());              // getId() not getCarId()
+        dto.setName(car.getName());             // getName() (alias for getModel())
+        dto.setBrandName(car.getBrandName());
+        dto.setYear(car.getYear());
+        dto.setColor(car.getColor());
+        dto.setPrice(car.getPrice());
+        dto.setStatus(car.getStatus());
+        dto.setQuantity(car.getStock());        // getStock() not getQuantity()
+        dto.setImageUrl(car.getImageUrl());     // ADD THIS - imageUrl
+
+        // Pre-calculate discount information
+        boolean hasDiscount = car.getDiscountPercentage() > 0 || car.getDiscountAmount() > 0;
+        dto.setHasDiscount(hasDiscount);
+        dto.setDiscountPercentage(car.getDiscountPercentage());
+        dto.setDiscountAmount(car.getDiscountAmount());
+
+        if (hasDiscount) {
+            // Calculate discount value using service method
+            double discountValue = calculateCarDiscountValue(car);
+            double discountedPrice = car.getPrice() - discountValue;
+
+            dto.setDiscountValue(discountValue);
+            dto.setDiscountedPrice(discountedPrice);
+
+            logger.debug("Car {} discount: {} -> {} (saved: {})",
+                    car.getName(), car.getPrice(), discountedPrice, discountValue);
+        } else {
+            // No discount
+            dto.setDiscountValue(0.0);
+            dto.setDiscountedPrice(car.getPrice());
+        }
+
+        return dto;
+    }
+
+    /**
+     * Convert Car to CarWithDiscountDTO without promotion context
+     */
+    public CarWithDiscountDTO toCarWithDiscountDTO(Car car) {
+        return toCarWithDiscountDTO(car, null);
+    }
+
+    /**
+     * Convert list of Cars to list of CarWithDiscountDTOs
+     */
+    public List<CarWithDiscountDTO> toCarWithDiscountDTOs(List<Car> cars) {
+        if (cars == null) {
+            return null;
+        }
+
+        return cars.stream()
+                .map(this::toCarWithDiscountDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Convert CartItem to CartItemDTO with pre-calculated subtotal
+     */
+    public dto.CartItemDTO toCartItemDTO(model.CartItem cartItem) {
+        if (cartItem == null) {
+            return null;
+        }
+
+        dto.CartItemDTO dto = new dto.CartItemDTO();
+        dto.setId(cartItem.getId());              // getId() not getCartItemId()
+        dto.setCartId(cartItem.getCartId());      // getCartId() not getUserId()
+        dto.setCarId(cartItem.getCarId());
+        dto.setQuantity(cartItem.getQuantity());
+
+        // Convert car to DTO
+        if (cartItem.getCar() != null) {
+            CarWithDiscountDTO carDTO = toCarWithDiscountDTO(cartItem.getCar());
+            dto.setCar(carDTO);
+
+            // Pre-calculate subtotal
+            double subtotal = cartItem.getCar().getPrice() * cartItem.getQuantity();
+            dto.setSubtotal(subtotal);
+
+            logger.debug("Cart item subtotal: {} x {} = {}",
+                    cartItem.getCar().getPrice(), cartItem.getQuantity(), subtotal);
+        }
+
+        return dto;
+    }
+
+    /**
+     * Convert list of CartItems to list of CartItemDTOs
+     */
+    public List<dto.CartItemDTO> toCartItemDTOs(List<model.CartItem> cartItems) {
+        if (cartItems == null) {
+            return null;
+        }
+
+        return cartItems.stream()
+                .map(this::toCartItemDTO)
+                .collect(Collectors.toList());
+    }
+
+    // ============ EXISTING BUSINESS LOGIC METHODS ============
 
     /**
      * Get available promotions that user can apply to their cart
@@ -56,7 +271,7 @@ public class PromotionService {
 
         // Filter: only unused and active promotions
         List<Promotion> availablePromotions = userPromotions.stream()
-                .filter(p -> !p.isUsedByUser() && p.isActive())
+                .filter(p -> !p.isUsedByUser() && isPromotionActive(p))
                 .collect(Collectors.toList());
 
         logger.debug("Found {} unused active promotions", availablePromotions.size());
@@ -110,7 +325,7 @@ public class PromotionService {
             return discounts;
         }
 
-        if (!promotion.isActive()) {
+        if (!isPromotionActive(promotion)) {
             logger.warn("Promotion {} is not active", promotionId);
             return discounts;
         }
@@ -200,7 +415,7 @@ public class PromotionService {
             return "Khuyến mãi không tồn tại!";
         }
 
-        if (!promotion.isActive()) {
+        if (!isPromotionActive(promotion)) {
             logger.warn("Promotion {} is not active", promotionId);
             return "Khuyến mãi đã hết hạn hoặc chưa có hiệu lực!";
         }
@@ -227,6 +442,11 @@ public class PromotionService {
         logger.info("Getting active promotions for car {}", carId);
 
         List<Promotion> promotions = promotionDAO.getPromotionsByCar(carId);
+
+        // Filter only active promotions
+        promotions = promotions.stream()
+                .filter(this::isPromotionActive)
+                .collect(Collectors.toList());
 
         // If user is logged in, check claim status for each promotion
         if (userId != null) {
@@ -299,7 +519,7 @@ public class PromotionService {
                 continue;
             }
 
-            double discountValue = carWithDiscount.getDiscountValue();
+            double discountValue = calculateCarDiscountValue(carWithDiscount);
 
             if (discountValue > maxDiscount) {
                 maxDiscount = discountValue;

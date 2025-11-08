@@ -17,6 +17,15 @@ import java.util.Map;
 public class AuthDAO {
     private static final Logger logger = LoggerFactory.getLogger(AuthDAO.class);
 
+    // ============ BUSINESS LOGIC (moved from Model) ============
+
+    /**
+     * Check if user is a customer
+     */
+    private boolean isCustomer(User user) {
+        return user != null && "CUSTOMER".equalsIgnoreCase(user.getRole());
+    }
+
     // ============================================
     // REGISTER
     // ============================================
@@ -563,7 +572,7 @@ public class AuthDAO {
      */
     public Customer getCustomerByEmail(String email) {
         User user = getUserByEmail(email);
-        if (user != null && user.isCustomer()) {
+        if (user != null && isCustomer(user)) {
             // Convert User to Customer
             Customer customer = new Customer();
             customer.setCustomerId(user.getUserId());

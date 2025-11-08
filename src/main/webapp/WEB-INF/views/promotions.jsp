@@ -10,6 +10,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* All existing styles remain the same */
         * {
             margin: 0;
             padding: 0;
@@ -49,12 +50,10 @@
             margin-bottom: 3rem;
         }
 
-        /* Content Area */
         .content-area {
             width: 100%;
         }
 
-        /* Notification Banner */
         .notification-banner {
             background: #1a1a1a;
             border: 2px solid #ffd700;
@@ -109,7 +108,6 @@
             color: #000;
         }
 
-        /* Results Header */
         .results-header {
             display: flex;
             justify-content: space-between;
@@ -133,7 +131,6 @@
             font-size: 1.2rem;
         }
 
-        /* Alerts */
         .alert {
             border-radius: 10px;
             border: none;
@@ -166,7 +163,6 @@
             color: #5bc0de;
         }
 
-        /* Promotion Card */
         .promotion-card {
             background: #1a1a1a;
             border: 1px solid #2a2a2a;
@@ -240,7 +236,6 @@
             font-size: 1rem;
         }
 
-        /* Cars Section */
         .cars-section {
             margin-top: 1.25rem;
             padding: 1.25rem;
@@ -351,7 +346,6 @@
             font-weight: 500;
         }
 
-        /* Action Buttons */
         .action-buttons {
             margin-top: 1.25rem;
             display: flex;
@@ -421,7 +415,6 @@
             opacity: 0.7;
         }
 
-        /* Empty State */
         .no-promotions {
             text-align: center;
             padding: 4rem 2rem;
@@ -451,7 +444,6 @@
             margin-top: auto;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .page-header h1 {
                 font-size: 1.5rem;
@@ -506,12 +498,6 @@
                 justify-content: center;
             }
         }
-
-        @media (max-width: 576px) {
-            .main-container {
-                gap: 1rem;
-            }
-        }
     </style>
 </head>
 <body>
@@ -527,7 +513,6 @@
 
 <div class="container">
     <div class="main-container">
-        <!-- Content Area -->
         <div class="content-area">
             <!-- Notification Banner for Logged-in Users -->
             <c:if test="${isLoggedIn}">
@@ -620,7 +605,7 @@
                                 </c:if>
                             </div>
 
-                            <!-- Cars Section -->
+                            <!-- Cars Section - UPDATED: Using DTO properties -->
                             <c:if test="${not empty promotion.applicableCars}">
                                 <div class="cars-section">
                                     <div class="cars-section-title">
@@ -637,7 +622,8 @@
                                                         <span><i class="far fa-calendar"></i> ${car.year}</span>
                                                         <span><i class="fas fa-palette"></i> ${car.color}</span>
                                                     </div>
-                                                    <c:if test="${car.hasDiscount()}">
+                                                        <%-- CHANGED: car.hasDiscount() → car.hasDiscount (property access) --%>
+                                                    <c:if test="${car.hasDiscount}">
                                                         <div class="car-discount-badge">
                                                             <i class="fas fa-tag"></i>
                                                             <c:choose>
@@ -652,15 +638,18 @@
                                                     </c:if>
                                                 </div>
 
+                                                    <%-- CHANGED: Use pre-calculated DTO values --%>
                                                 <div class="car-price-section">
                                                     <c:choose>
-                                                        <c:when test="${car.hasDiscount()}">
+                                                        <c:when test="${car.hasDiscount}">
                                                             <div class="car-price-original">
                                                                 <fmt:formatNumber value="${car.price}" type="number" maxFractionDigits="0"/>₫
                                                             </div>
+                                                            <%-- CHANGED: Use pre-calculated discountedPrice from DTO --%>
                                                             <div class="car-price-discounted">
                                                                 <fmt:formatNumber value="${car.discountedPrice}" type="number" maxFractionDigits="0"/>₫
                                                             </div>
+                                                            <%-- CHANGED: Use pre-calculated discountValue from DTO --%>
                                                             <div class="car-savings">
                                                                 Tiết kiệm: <fmt:formatNumber value="${car.discountValue}" type="number" maxFractionDigits="0"/>₫
                                                             </div>
@@ -719,8 +708,7 @@
                         <i class="fas fa-gift"></i>
                         <h3>Không Tìm Thấy Khuyến Mãi Nào</h3>
                         <p>Các chương trình khuyến mãi mới sẽ được cập nhật sớm. Vui lòng quay lại sau!</p>
-                        <a href="${pageContext.request.contextPath}/cars" class="btn-view-cars">Xem Danh Sách Xe
-                        </a>
+                        <a href="${pageContext.request.contextPath}/cars" class="btn-view-cars">Xem Danh Sách Xe</a>
                     </div>
                 </c:otherwise>
             </c:choose>

@@ -14,9 +14,7 @@ public class CartItem implements Serializable {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
-    // Constructors
-    public CartItem() {
-    }
+    public CartItem() {}
 
     public CartItem(int id, int cartId, int carId, int quantity) {
         this.id = id;
@@ -25,7 +23,6 @@ public class CartItem implements Serializable {
         this.quantity = quantity;
     }
 
-    // Getters and Setters
     public int getId() {
         return id;
     }
@@ -80,57 +77,5 @@ public class CartItem implements Serializable {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    // Convenience methods
-    public double getSubtotal() {
-        if (car != null) {
-            return car.getPrice() * quantity;
-        }
-        return 0.0;
-    }
-
-    // Legacy setters for backward compatibility
-    public void setCartItemId(int id) {
-        this.id = id;
-    }
-
-    public void setCarModel(String model) {
-        if (this.car == null) {
-            this.car = new Car();
-        }
-        this.car.setName(model);
-    }
-
-    public void setCarPrice(java.math.BigDecimal price) {
-        if (this.car == null) {
-            this.car = new Car();
-        }
-        this.car.setPrice(price.doubleValue());
-    }
-
-    public void setImageUrl(String imageUrl) {
-        if (this.car == null) {
-            this.car = new Car();
-        }
-        this.car.setImageUrl(imageUrl);
-    }
-
-    public void setBrandName(String brandName) {
-        if (this.car == null) {
-            this.car = new Car();
-        }
-        this.car.setBrandName(brandName);
-    }
-
-    @Override
-    public String toString() {
-        return "CartItem{" +
-                "id=" + id +
-                ", cartId=" + cartId +
-                ", carId=" + carId +
-                ", quantity=" + quantity +
-                ", car=" + (car != null ? car.getName() : "null") +
-                '}';
     }
 }

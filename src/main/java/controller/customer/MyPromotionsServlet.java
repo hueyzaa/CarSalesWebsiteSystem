@@ -1,7 +1,9 @@
 package controller.customer;
 
 import dao.PromotionDAO;
+import dto.PromotionDTO;
 import model.Promotion;
+import service.PromotionService;
 import util.SessionUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -18,16 +20,28 @@ import java.util.List;
 /**
  * MyPromotionsServlet - Display user's claimed promotions
  * Only accessible by customers
+ * UPDATED: Uses DTOs with pre-calculated values for view layer
  */
 @WebServlet("/my-promotions")
 public class MyPromotionsServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(MyPromotionsServlet.class);
     private PromotionDAO promotionDAO;
+    private PromotionService promotionService;
 
     @Override
     public void init() {
         promotionDAO = new PromotionDAO();
+        promotionService = new PromotionService();
         logger.info("MyPromotionsServlet initialized");
+    }
+
+    // ============ BUSINESS LOGIC (moved from Model) ============
+
+    /**
+     * Check if promotion is used by user
+     */
+    private boolean isPromotionUsedByUser(Promotion promotion) {
+        return promotion != null && promotion.isUsedByUser();
     }
 
     @Override
@@ -54,15 +68,22 @@ public class MyPromotionsServlet extends HttpServlet {
             logger.info("Loading promotions for user {} ({})",
                     userId, SessionUtils.getUserEmail(session));
 
+            // Get promotions from DAO (returns Model objects)
             List<Promotion> claimedPromotions = promotionDAO.getUserClaimedPromotions(userId);
+
+            // Convert Models to DTOs with pre-calculated values
+            List<PromotionDTO> promotionDTOs = promotionService.toPromotionDTOs(claimedPromotions);
+
+            logger.debug("Converted {} promotions to DTOs", promotionDTOs.size());
 
             long unusedCount = countUnused(claimedPromotions);
             long usedCount = countUsed(claimedPromotions);
 
             logger.info("User {} has {} promotions ({} unused, {} used)",
-                    userId, claimedPromotions.size(), unusedCount, usedCount);
+                    userId, promotionDTOs.size(), unusedCount, usedCount);
 
-            setPromotionAttributes(request, claimedPromotions, unusedCount, usedCount);
+            // Set attributes - IMPORTANT: Use DTOs for view
+            setPromotionAttributes(request, promotionDTOs, unusedCount, usedCount);
             forward(request, response, "/WEB-INF/views/my-promotions.jsp");
 
         } catch (RuntimeException e) {
@@ -80,23 +101,27 @@ public class MyPromotionsServlet extends HttpServlet {
 
     private long countUnused(List<Promotion> promotions) {
         return promotions.stream()
-                .filter(p -> !p.isUsedByUser())
+                .filter(p -> !isPromotionUsedByUser(p))
                 .count();
     }
 
     private long countUsed(List<Promotion> promotions) {
         return promotions.stream()
-                .filter(Promotion::isUsedByUser)
+                .filter(this::isPromotionUsedByUser)
                 .count();
     }
 
+    /**
+     * Set all request attributes for JSP
+     * IMPORTANT: Pass DTOs to view, not Models
+     */
     private void setPromotionAttributes(HttpServletRequest request,
-                                        List<Promotion> promotions,
+                                        List<PromotionDTO> promotionDTOs,
                                         long unusedCount, long usedCount) {
-        request.setAttribute("claimedPromotions", promotions);
+        request.setAttribute("claimedPromotions", promotionDTOs);  // Use DTOs
         request.setAttribute("unusedCount", unusedCount);
         request.setAttribute("usedCount", usedCount);
-        request.setAttribute("totalPromotions", promotions.size());
+        request.setAttribute("totalPromotions", promotionDTOs.size());
         request.setAttribute("isCustomer", true);
     }
 
