@@ -48,7 +48,6 @@ public class AuthDAO {
                 String storedHash = rs.getString("password_hash");
                 String oauthProvider = rs.getString("oauth_provider");
 
-                // ✅ FIX: Block password login for OAuth accounts
                 if (oauthProvider != null && !oauthProvider.isEmpty()) {
                     logger.warn("Attempted password login for OAuth account: {} ({})", email, oauthProvider);
                     return null;
@@ -409,7 +408,6 @@ public class AuthDAO {
         return false;
     }
 
-    // ✅ RESTORED: Check if email uses OAuth
     public boolean isOAuthAccount(String email) {
         String sql = "SELECT c.oauth_provider FROM AppUsers u " +
                 "JOIN Customers c ON u.user_id = c.customer_id " +

@@ -1,0 +1,300 @@
+2025-11-08 10:13:02.805 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 2147483647
+2025-11-08 10:13:02.834 [main] WARN  controller.customer.CartServlet - Insufficient stock for cart update: requested 101, available 100
+2025-11-08 10:13:02.852 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 1
+2025-11-08 10:13:02.856 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 1
+2025-11-08 10:13:02.860 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 0
+2025-11-08 10:13:02.868 [main] WARN  controller.customer.CartServlet - Failed to update cart item 1 for user 1
+2025-11-08 10:13:02.871 [main] WARN  controller.customer.CartServlet - Failed to remove cart item -1
+2025-11-08 10:13:02.876 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 100
+2025-11-08 10:13:02.880 [main] WARN  controller.customer.CartServlet - Insufficient stock for car 1: requested 101, available 100
+2025-11-08 10:13:02.884 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 1) to cart
+2025-11-08 10:13:02.887 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 5) to cart
+2025-11-08 10:13:02.891 [main] INFO  controller.customer.CartServlet - Removed cart item 1
+2025-11-08 10:13:02.895 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 999
+2025-11-08 10:13:02.898 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 100) to cart
+2025-11-08 10:13:02.904 [main] INFO  controller.customer.CartServlet - Removed cart item 5
+2025-11-08 10:13:02.906 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 99) to cart
+2025-11-08 10:13:02.909 [main] WARN  controller.customer.CartServlet - Cart item 999 not found for user 1
+2025-11-08 10:13:02.911 [main] WARN  controller.customer.CartServlet - Attempted to add non-existent car 999
+2025-11-08 10:13:02.915 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 5
+2025-11-08 10:13:02.918 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 99
+2025-11-08 10:13:02.973 [main] INFO  service.EmailService - Loaded .env from resources
+2025-11-08 10:13:02.974 [main] INFO  service.EmailService - Email config loaded - Host: smtp.gmail.com, Port: 587, From: noreply@carshowroom.com
+2025-11-08 10:13:03.230 [main] INFO  controller.customer.AuthServlet - Verification email sent to: newuser@test.com
+2025-11-08 10:13:03.235 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên quá dài (tối đa 100 ký tự)
+2025-11-08 10:13:03.242 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu xác nhận không khớp
+2025-11-08 10:13:03.245 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu phải có ít nhất 8 ký tự
+2025-11-08 10:13:03.249 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu phải có ít nhất 8 ký tự
+2025-11-08 10:13:03.253 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên không được để trống
+2025-11-08 10:13:03.481 [main] INFO  controller.customer.AuthServlet - Verification email sent to: user@test.com
+2025-11-08 10:13:03.710 [main] ERROR controller.customer.AuthServlet - Failed to send verification email
+java.lang.RuntimeException: Email service error
+	at service.EmailService.sendVerificationEmail(EmailService.java:165)
+	at controller.customer.AuthServlet.handleRegister(AuthServlet.java:166)
+	at controller.customer.AuthServlet.doPost(AuthServlet.java:92)
+	at controller.customer.HandleRegisterTest.testEmailSendFailure(HandleRegisterTest.java:325)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:787)
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:479)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:161)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:152)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:91)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:112)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:94)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:87)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$4(TestMethodTestDescriptor.java:221)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:217)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:159)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:157)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:230)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:204)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:172)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:101)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:64)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:150)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:63)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:109)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:91)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$1(InterceptingLauncher.java:39)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:38)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.junit.platform.launcher.core.SessionPerRequestLauncher.execute(SessionPerRequestLauncher.java:66)
+	at com.intellij.junit5.JUnit5IdeaTestRunner.startRunnerWithArgs(JUnit5IdeaTestRunner.java:66)
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater$1.execute(IdeaTestRunner.java:38)
+	at com.intellij.rt.execution.junit.TestsRepeater.repeat(TestsRepeater.java:11)
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:35)
+	at com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:237)
+	at com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:58)
+2025-11-08 10:13:03.718 [main] WARN  controller.customer.AuthServlet - Register error: Không thể gửi email xác thực. Vui lòng thử lại.
+2025-11-08 10:13:03.945 [main] INFO  controller.customer.AuthServlet - Verification email sent to: new@test.com
+2025-11-08 10:13:03.949 [main] WARN  controller.customer.AuthServlet - Register error: Email không hợp lệ
+2025-11-08 10:13:03.952 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên không được để trống
+2025-11-08 10:13:03.955 [main] WARN  controller.customer.AuthServlet - Register error: Yêu cầu không hợp lệ (CSRF)
+2025-11-08 10:13:03.959 [main] WARN  controller.customer.AuthServlet - Register error: Email đã được sử dụng
+2025-11-08 10:13:04.190 [main] INFO  controller.customer.AuthServlet - Verification email sent to: user@test.com
+2025-11-08 10:13:04.421 [main] INFO  controller.customer.AuthServlet - Verification email sent to: user@test.com
+2025-11-08 10:13:04.425 [main] WARN  controller.customer.AuthServlet - Register error: Email đã được sử dụng
+2025-11-08 10:13:04.429 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-08 10:13:04.434 [main] INFO  util.SessionUtils - User logged in: admin@test.com (Role: ADMIN, ID: 3)
+2025-11-08 10:13:04.434 [main] INFO  controller.customer.AuthServlet - User logged in: admin@test.com (Role: ADMIN)
+2025-11-08 10:13:04.436 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-08 10:13:04.438 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-08 10:13:04.441 [main] INFO  util.SessionUtils - User logged in: user@test.com (Role: CUSTOMER, ID: 1)
+2025-11-08 10:13:04.442 [main] INFO  controller.customer.AuthServlet - User logged in: user@test.com (Role: CUSTOMER)
+2025-11-08 10:13:04.445 [main] INFO  util.SessionUtils - User logged in: admin@test.com (Role: ADMIN, ID: 1)
+2025-11-08 10:13:04.445 [main] INFO  controller.customer.AuthServlet - User logged in: admin@test.com (Role: ADMIN)
+2025-11-08 10:13:04.447 [main] INFO  util.SessionUtils - User logged in: staff@test.com (Role: STAFF, ID: 2)
+2025-11-08 10:13:04.448 [main] INFO  controller.customer.AuthServlet - User logged in: staff@test.com (Role: STAFF)
+2025-11-08 10:13:04.450 [main] WARN  controller.customer.AuthServlet - Login error: Email không hợp lệ
+2025-11-08 10:13:04.452 [main] WARN  controller.customer.AuthServlet - Login error: Yêu cầu không hợp lệ (CSRF)
+2025-11-08 10:13:04.454 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-08 10:13:04.457 [main] WARN  controller.customer.AuthServlet - Login error: Yêu cầu không hợp lệ (CSRF)
+2025-11-08 10:13:04.459 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-08 10:13:04.461 [main] INFO  util.SessionUtils - User logged in: customer@test.com (Role: CUSTOMER, ID: 3)
+2025-11-08 10:13:04.461 [main] INFO  controller.customer.AuthServlet - User logged in: customer@test.com (Role: CUSTOMER)
+2025-11-08 10:13:04.463 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-08 10:13:04.465 [main] INFO  util.SessionUtils - User logged in: staff@test.com (Role: STAFF, ID: 2)
+2025-11-08 10:13:04.465 [main] INFO  controller.customer.AuthServlet - User logged in: staff@test.com (Role: STAFF)
+2025-11-08 10:13:04.466 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-08 15:26:57.979 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 2147483647
+2025-11-08 15:26:58.021 [main] WARN  controller.customer.CartServlet - Insufficient stock for cart update: requested 101, available 100
+2025-11-08 15:26:58.042 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 1
+2025-11-08 15:26:58.048 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 1
+2025-11-08 15:26:58.053 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 0
+2025-11-08 15:26:58.064 [main] WARN  controller.customer.CartServlet - Failed to update cart item 1 for user 1
+2025-11-08 15:26:58.068 [main] WARN  controller.customer.CartServlet - Failed to remove cart item -1
+2025-11-08 15:26:58.072 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 100
+2025-11-08 15:26:58.079 [main] WARN  controller.customer.CartServlet - Insufficient stock for car 1: requested 101, available 100
+2025-11-08 15:26:58.086 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 1) to cart
+2025-11-08 15:26:58.090 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 5) to cart
+2025-11-08 15:26:58.095 [main] INFO  controller.customer.CartServlet - Removed cart item 1
+2025-11-08 15:26:58.099 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 999
+2025-11-08 15:26:58.104 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 100) to cart
+2025-11-08 15:26:58.111 [main] INFO  controller.customer.CartServlet - Removed cart item 5
+2025-11-08 15:26:58.114 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 99) to cart
+2025-11-08 15:26:58.118 [main] WARN  controller.customer.CartServlet - Cart item 999 not found for user 1
+2025-11-08 15:26:58.122 [main] WARN  controller.customer.CartServlet - Attempted to add non-existent car 999
+2025-11-08 15:26:58.126 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 5
+2025-11-08 15:26:58.130 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 99
+2025-11-08 21:39:13.933 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 2147483647
+2025-11-08 21:39:13.960 [main] WARN  controller.customer.CartServlet - Insufficient stock for cart update: requested 101, available 100
+2025-11-08 21:39:13.977 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 1
+2025-11-08 21:39:13.980 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 1
+2025-11-08 21:39:13.984 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 0
+2025-11-08 21:39:13.990 [main] WARN  controller.customer.CartServlet - Failed to update cart item 1 for user 1
+2025-11-08 21:39:13.993 [main] WARN  controller.customer.CartServlet - Failed to remove cart item -1
+2025-11-08 21:39:13.997 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 100
+2025-11-08 21:39:14.003 [main] WARN  controller.customer.CartServlet - Insufficient stock for car 1: requested 101, available 100
+2025-11-08 21:39:14.006 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 1) to cart
+2025-11-08 21:39:14.009 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 5) to cart
+2025-11-08 21:39:14.012 [main] INFO  controller.customer.CartServlet - Removed cart item 1
+2025-11-08 21:39:14.015 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 999
+2025-11-08 21:39:14.018 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 100) to cart
+2025-11-08 21:39:14.023 [main] INFO  controller.customer.CartServlet - Removed cart item 5
+2025-11-08 21:39:14.026 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 99) to cart
+2025-11-08 21:39:14.028 [main] WARN  controller.customer.CartServlet - Cart item 999 not found for user 1
+2025-11-08 21:39:14.030 [main] WARN  controller.customer.CartServlet - Attempted to add non-existent car 999
+2025-11-08 21:39:14.033 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 5
+2025-11-08 21:39:14.036 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 99
+2025-11-08 21:39:14.090 [main] INFO  service.EmailService - Loaded .env from resources
+2025-11-08 21:39:14.090 [main] INFO  service.EmailService - Email config loaded - Host: smtp.gmail.com, Port: 587, From: noreply@carshowroom.com
+2025-11-08 21:39:14.348 [main] INFO  controller.customer.AuthServlet - Verification email sent to: newuser@test.com
+2025-11-08 21:39:14.351 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên quá dài (tối đa 100 ký tự)
+2025-11-08 21:39:14.354 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu xác nhận không khớp
+2025-11-08 21:39:14.359 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu phải có ít nhất 8 ký tự
+2025-11-08 21:39:14.365 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu phải có ít nhất 8 ký tự
+2025-11-08 21:39:14.370 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên không được để trống
+2025-11-08 21:39:14.602 [main] INFO  controller.customer.AuthServlet - Verification email sent to: user@test.com
+2025-11-08 21:39:14.836 [main] ERROR controller.customer.AuthServlet - Failed to send verification email
+java.lang.RuntimeException: Email service error
+	at service.EmailService.sendVerificationEmail(EmailService.java:165)
+	at controller.customer.AuthServlet.handleRegister(AuthServlet.java:166)
+	at controller.customer.AuthServlet.doPost(AuthServlet.java:92)
+	at controller.customer.HandleRegisterTest.testEmailSendFailure(HandleRegisterTest.java:325)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:787)
+	at org.junit.platform.commons.support.ReflectionSupport.invokeMethod(ReflectionSupport.java:479)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:161)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:152)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:91)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:112)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:94)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:87)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$4(TestMethodTestDescriptor.java:221)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:217)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:159)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:70)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:157)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:161)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:147)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:145)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:144)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:101)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.executeEngine(EngineExecutionOrchestrator.java:230)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.failOrExecuteEngine(EngineExecutionOrchestrator.java:204)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:172)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:101)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:64)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:150)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:63)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:109)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:91)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.junit.platform.launcher.core.InterceptingLauncher.lambda$execute$1(InterceptingLauncher.java:39)
+	at org.junit.platform.launcher.core.ClasspathAlignmentCheckingLauncherInterceptor.intercept(ClasspathAlignmentCheckingLauncherInterceptor.java:25)
+	at org.junit.platform.launcher.core.InterceptingLauncher.execute(InterceptingLauncher.java:38)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.junit.platform.launcher.core.SessionPerRequestLauncher.execute(SessionPerRequestLauncher.java:66)
+	at com.intellij.junit5.JUnit5IdeaTestRunner.startRunnerWithArgs(JUnit5IdeaTestRunner.java:66)
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater$1.execute(IdeaTestRunner.java:38)
+	at com.intellij.rt.execution.junit.TestsRepeater.repeat(TestsRepeater.java:11)
+	at com.intellij.rt.junit.IdeaTestRunner$Repeater.startRunnerWithArgs(IdeaTestRunner.java:35)
+	at com.intellij.rt.junit.JUnitStarter.prepareStreamsAndStart(JUnitStarter.java:237)
+	at com.intellij.rt.junit.JUnitStarter.main(JUnitStarter.java:58)
+2025-11-08 21:39:14.845 [main] WARN  controller.customer.AuthServlet - Register error: Không thể gửi email xác thực. Vui lòng thử lại.
+2025-11-08 21:39:15.084 [main] INFO  controller.customer.AuthServlet - Verification email sent to: new@test.com
+2025-11-08 21:39:15.086 [main] WARN  controller.customer.AuthServlet - Register error: Email không hợp lệ
+2025-11-08 21:39:15.090 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên không được để trống
+2025-11-08 21:39:15.093 [main] WARN  controller.customer.AuthServlet - Register error: Yêu cầu không hợp lệ (CSRF)
+2025-11-08 21:39:15.096 [main] WARN  controller.customer.AuthServlet - Register error: Email đã được sử dụng
+2025-11-08 21:39:15.324 [main] INFO  controller.customer.AuthServlet - Verification email sent to: user@test.com
+2025-11-08 21:39:15.554 [main] INFO  controller.customer.AuthServlet - Verification email sent to: user@test.com
+2025-11-08 21:39:15.557 [main] WARN  controller.customer.AuthServlet - Register error: Email đã được sử dụng
+2025-11-08 21:39:15.559 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-08 21:39:15.561 [main] INFO  util.SessionUtils - User logged in: admin@test.com (Role: ADMIN, ID: 3)
+2025-11-08 21:39:15.561 [main] INFO  controller.customer.AuthServlet - User logged in: admin@test.com (Role: ADMIN)
+2025-11-08 21:39:15.565 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-08 21:39:15.567 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-08 21:39:15.569 [main] INFO  util.SessionUtils - User logged in: user@test.com (Role: CUSTOMER, ID: 1)
+2025-11-08 21:39:15.570 [main] INFO  controller.customer.AuthServlet - User logged in: user@test.com (Role: CUSTOMER)
+2025-11-08 21:39:15.572 [main] INFO  util.SessionUtils - User logged in: admin@test.com (Role: ADMIN, ID: 1)
+2025-11-08 21:39:15.572 [main] INFO  controller.customer.AuthServlet - User logged in: admin@test.com (Role: ADMIN)
+2025-11-08 21:39:15.575 [main] INFO  util.SessionUtils - User logged in: staff@test.com (Role: STAFF, ID: 2)
+2025-11-08 21:39:15.575 [main] INFO  controller.customer.AuthServlet - User logged in: staff@test.com (Role: STAFF)
+2025-11-08 21:39:15.576 [main] WARN  controller.customer.AuthServlet - Login error: Email không hợp lệ
+2025-11-08 21:39:15.578 [main] WARN  controller.customer.AuthServlet - Login error: Yêu cầu không hợp lệ (CSRF)
+2025-11-08 21:39:15.579 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-08 21:39:15.581 [main] WARN  controller.customer.AuthServlet - Login error: Yêu cầu không hợp lệ (CSRF)
+2025-11-08 21:39:15.584 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-08 21:39:15.586 [main] INFO  util.SessionUtils - User logged in: customer@test.com (Role: CUSTOMER, ID: 3)
+2025-11-08 21:39:15.587 [main] INFO  controller.customer.AuthServlet - User logged in: customer@test.com (Role: CUSTOMER)
+2025-11-08 21:39:15.589 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-08 21:39:15.592 [main] INFO  util.SessionUtils - User logged in: staff@test.com (Role: STAFF, ID: 2)
+2025-11-08 21:39:15.592 [main] INFO  controller.customer.AuthServlet - User logged in: staff@test.com (Role: STAFF)
+2025-11-08 21:39:15.593 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
