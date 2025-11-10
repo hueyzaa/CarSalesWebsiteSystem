@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * VNPay Payment Service
- * ⚠️ TEST MODE: Signature verification bypassed for development
+ * TEST MODE: Signature verification bypassed for development
  */
 public class VNPayService {
     private static final Logger logger = LoggerFactory.getLogger(VNPayService.class);
@@ -68,30 +68,30 @@ public class VNPayService {
             String paymentUrl = VNPayConfig.buildPaymentUrl(vnpParams);
 
             if (paymentUrl != null) {
-                logger.info("✅ Payment URL created successfully for order {}", orderId);
+                logger.info("Payment URL created successfully for order {}", orderId);
                 logger.info("URL length: {}", paymentUrl.length());
             } else {
-                logger.error("❌ Failed to create payment URL for order {}", orderId);
+                logger.error("Failed to create payment URL for order {}", orderId);
             }
 
             return paymentUrl;
 
         } catch (Exception e) {
-            logger.error("❌ Error creating VNPay payment URL for order {}", orderId, e);
+            logger.error("Error creating VNPay payment URL for order {}", orderId, e);
             return null;
         }
     }
 
     /**
      * Verify payment callback from VNPay
-     * ⚠️ TEST MODE - Skip signature verification for development
+     * TEST MODE - Skip signature verification for development
      */
     public PaymentResult verifyPaymentCallback(Map<String, String> params) {
         PaymentResult result = new PaymentResult();
 
         try {
             logger.info("=== Verifying VNPay Payment Callback ===");
-            logger.warn("⚠️ TEST MODE: Signature verification bypassed for development");
+            logger.warn("TEST MODE: Signature verification bypassed for development");
 
             // Get response code
             String responseCode = params.get("vnp_ResponseCode");
@@ -127,18 +127,18 @@ public class VNPayService {
                 result.setSuccess(true);
                 result.setValidSignature(true); // ⚠️ Force true for test mode
                 result.setMessage("Giao dịch thành công");
-                logger.info("✅ Payment successful (TEST MODE): orderId={}, amount={}, txnNo={}",
+                logger.info("Payment successful (TEST MODE): orderId={}, amount={}, txnNo={}",
                         result.getOrderId(), result.getAmount(), result.getTransactionNo());
             } else {
                 result.setSuccess(false);
                 result.setValidSignature(false);
                 result.setMessage(getResponseMessage(responseCode));
-                logger.warn("❌ Payment failed: orderId={}, code={}, message={}",
+                logger.warn("Payment failed: orderId={}, code={}, message={}",
                         result.getOrderId(), responseCode, result.getMessage());
             }
 
         } catch (Exception e) {
-            logger.error("❌ Error verifying VNPay payment callback", e);
+            logger.error("Error verifying VNPay payment callback", e);
             result.setSuccess(false);
             result.setMessage("Lỗi xử lý callback: " + e.getMessage());
         }

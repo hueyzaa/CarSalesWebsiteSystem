@@ -237,6 +237,52 @@ public class OrdersDAO {
             throw new DatabaseException("Failed to update order payment info", e);
         }
     }
+    /**
+     * Update order notes after successful payment
+     */
+    public boolean updateOrderNotesAfterPayment(int orderId, String paymentType, double paidAmount) {
+        String sql = "UPDATE Orders SET notes = ? WHERE order_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            String updatedNotes;
+
+            if ("FULL".equals(paymentType)) {
+                updatedNotes = String.format("Đã thanh toán toàn bộ %,.0f₫ qua VNPay thành công. " +
+                        "Đơn hàng đang được xử lý.", paidAmount);
+            } else if ("DEPOSIT".equals(paymentType)) {
+                // Get order to check if fully paid
+                Order order = getOrderById(orderId);
+                if (order != null && order.getRemainingAmount() != null && order.getRemainingAmount() <= 0) {
+                    // Fully paid after remaining payment
+                    updatedNotes = String.format("Đã thanh toán toàn bộ đơn hàng qua VNPay thành công. " +
+                            "Đơn hàng đã hoàn tất thanh toán.");
+                } else {
+                    // First deposit payment
+                    updatedNotes = String.format("Đã thanh toán đặt cọc %,.0f₫ qua VNPay thành công. " +
+                            "Vui lòng thanh toán phần còn lại khi nhận xe.", paidAmount);
+                }
+            } else {
+                updatedNotes = "Đã thanh toán thành công qua VNPay.";
+            }
+
+            stmt.setString(1, updatedNotes);
+            stmt.setInt(2, orderId);
+
+            boolean success = stmt.executeUpdate() > 0;
+
+            if (success) {
+                logger.info("Updated notes for order {}: {}", orderId, updatedNotes);
+            }
+
+            return success;
+
+        } catch (SQLException e) {
+            logger.error("Error updating order notes for orderId: {}", orderId, e);
+            throw new DatabaseException("Failed to update order notes", e);
+        }
+    }
 
     /**
      * Update order notes

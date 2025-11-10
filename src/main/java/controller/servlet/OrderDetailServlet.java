@@ -78,25 +78,22 @@ public class OrderDetailServlet extends HttpServlet {
             order.setOrderDetails(orderDetailDAO.getOrderDetailsByOrderId(orderId));
             order.setTransactions(transactionDAO.getTransactionsByOrderId(orderId));
 
-            // Calculate totals
+            // Calculate totals for display
             double total = orderDetailDAO.calculateOrderTotal(orderId);
             double paid = transactionDAO.getTotalPaidAmount(orderId);
 
-            // Set amounts
+            // Set amounts for display
             order.setTotalAmount(total);
             order.setPaidAmount(paid);
 
-            // ✅ KHÔNG GHI ĐÈ remainingAmount từ database
-            // remainingAmount đã được set từ ordersDAO.getOrderById()
-            if (order.getRemainingAmount() == null) {
-                order.setRemainingAmount(Math.max(0, total - paid));
-            }
+            // ✅ remainingAmount is already calculated by trigger in database
+            // No need to recalculate or override!
 
-            logger.info("Order {} details:", orderId);
+            logger.info("Order {} details (with trigger-calculated remaining):", orderId);
             logger.info("  - Payment Type: {}", order.getPaymentType());
             logger.info("  - Total: {}", total);
             logger.info("  - Paid: {}", paid);
-            logger.info("  - Remaining (DB): {}", order.getRemainingAmount());
+            logger.info("  - Remaining (from trigger): {}", order.getRemainingAmount());
             logger.info("  - Status: {}", order.getStatus());
             logger.info("  - Fully Paid: {}", order.isFullyPaid());
 
