@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  * AuthDAO - All authentication operations
- * FIXED: OAuth password reset vulnerability + optimized code
+ * UPDATED: Database-based email verification
  */
 public class AuthDAO {
     private static final Logger logger = LoggerFactory.getLogger(AuthDAO.class);
@@ -42,6 +42,12 @@ public class AuthDAO {
             if (rs.next()) {
                 if (!rs.getBoolean("is_active")) {
                     logger.warn("Login attempt for inactive account: {}", email);
+                    return null;
+                }
+
+                // Check email verification
+                if (!rs.getBoolean("email_verified")) {
+                    logger.warn("Login attempt for unverified account: {}", email);
                     return null;
                 }
 
@@ -83,9 +89,166 @@ public class AuthDAO {
     }
 
     // ============================================
-    // CUSTOMER REGISTRATION (Session-based verification)
+    // CUSTOMER REGISTRATION (Database-based verification)
     // ============================================
 
+    /**
+     * Register customer with unverified email (email_verified = 0)
+     * Returns userId if successful, -1 if failed
+     */
+    public int registerCustomerUnverified(String email, String hashedPassword,
+                                          String name, String phone, String address) {
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
+
+            // Insert into AppUsers with email_verified = 0
+            int userId = insertUnverifiedUser(conn, email, hashedPassword);
+
+            // Insert into Customers
+            insertCustomer(conn, userId, name, phone, address);
+
+            conn.commit();
+            logger.info("Unverified customer registered: {} (ID: {})", email, userId);
+            return userId;
+
+        } catch (SQLException e) {
+            logger.error("Error registering unverified customer: {}", email, e);
+            rollbackConnection(conn);
+            return -1;
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
+    private int insertUnverifiedUser(Connection conn, String email, String hashedPassword)
+            throws SQLException {
+        String sql = "INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified, created_at) " +
+                "OUTPUT INSERTED.user_id " +
+                "VALUES (?, ?, 'CUSTOMER', 1, 0, GETDATE())";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email.toLowerCase().trim());
+            ps.setString(2, hashedPassword);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            throw new SQLException("Failed to create user");
+        }
+    }
+
+    /**
+     * Generate email verification token using stored procedure
+     */
+    public Map<String, Object> generateEmailVerificationToken(int userId, String token,
+                                                              String ipAddress, String userAgent) {
+        String sql = "{CALL sp_GenerateEmailVerificationToken(?, ?, 24, ?, ?)}";
+        Map<String, Object> result = new HashMap<>();
+
+        try (Connection conn = DBContext.getConnection();
+             CallableStatement stmt = conn.prepareCall(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setString(2, token);
+            stmt.setString(3, ipAddress);
+            stmt.setString(4, userAgent);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String status = rs.getString("Result");
+                boolean success = "SUCCESS".equals(status);
+                result.put("success", success);
+                result.put("message", rs.getString("Message"));
+
+                if (success) {
+                    result.put("token", rs.getString("Token"));
+                    result.put("expiryDate", rs.getTimestamp("ExpiryDate"));
+                    logger.info("Verification token generated for user: {}", userId);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error generating verification token for user: {}", userId, e);
+            result.put("success", false);
+            result.put("message", "Lỗi hệ thống");
+        }
+
+        return result;
+    }
+
+    /**
+     * Verify email using stored procedure
+     */
+    public Map<String, Object> verifyEmail(String token, String ipAddress) {
+        String sql = "{CALL sp_VerifyEmail(?, ?)}";
+        Map<String, Object> result = new HashMap<>();
+
+        try (Connection conn = DBContext.getConnection();
+             CallableStatement stmt = conn.prepareCall(sql)) {
+
+            stmt.setString(1, token);
+            stmt.setString(2, ipAddress);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String status = rs.getString("Result");
+                boolean success = "SUCCESS".equals(status);
+                result.put("success", success);
+                result.put("message", rs.getString("Message"));
+
+                if (success) {
+                    result.put("userId", rs.getInt("UserId"));
+                    logger.info("Email verified for user: {}", rs.getInt("UserId"));
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error verifying email with token", e);
+            result.put("success", false);
+            result.put("message", "Lỗi hệ thống");
+        }
+
+        return result;
+    }
+
+    /**
+     * Resend verification email using stored procedure
+     */
+    public Map<String, Object> resendVerificationEmail(String email, String newToken,
+                                                       String ipAddress, String userAgent) {
+        String sql = "{CALL sp_ResendVerificationEmail(?, ?, ?, ?)}";
+        Map<String, Object> result = new HashMap<>();
+
+        try (Connection conn = DBContext.getConnection();
+             CallableStatement stmt = conn.prepareCall(sql)) {
+
+            stmt.setString(1, email.toLowerCase().trim());
+            stmt.setString(2, newToken);
+            stmt.setString(3, ipAddress);
+            stmt.setString(4, userAgent);
+
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                String status = rs.getString("Result");
+                boolean success = "SUCCESS".equals(status);
+                result.put("success", success);
+                result.put("message", rs.getString("Message"));
+
+                logger.info("Verification email resent for: {}", email);
+            }
+        } catch (SQLException e) {
+            logger.error("Error resending verification email for: {}", email, e);
+            result.put("success", false);
+            result.put("message", "Lỗi hệ thống");
+        }
+
+        return result;
+    }
+
+    /**
+     * DEPRECATED: Use registerCustomerUnverified() instead
+     */
+    @Deprecated
     public boolean registerVerifiedCustomer(String email, String hashedPassword,
                                             String name, String phone, String address,
                                             @SuppressWarnings("unused") String ipAddress) {

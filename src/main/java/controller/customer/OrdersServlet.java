@@ -1,7 +1,9 @@
 package controller.customer;
 
 import dao.OrdersDAO;
+import dao.OrderDetailDAO;
 import model.Order;
+import model.OrderDetail;
 import util.SessionUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -17,17 +19,19 @@ import java.util.List;
 
 /**
  * OrdersServlet - Display orders for customers and admins
- * Customers: View their own orders
+ * Customers: View their own orders with order details
  * Admins: View all orders with filtering
  */
 @WebServlet("/orders")
 public class OrdersServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(OrdersServlet.class);
     private OrdersDAO ordersDAO;
+    private OrderDetailDAO orderDetailDAO;
 
     @Override
     public void init() {
         ordersDAO = new OrdersDAO();
+        orderDetailDAO = new OrderDetailDAO();
         logger.info("OrdersServlet initialized");
     }
 
@@ -52,7 +56,35 @@ public class OrdersServlet extends HttpServlet {
 
             List<Order> orders = getOrders(userId, isAdmin, statusFilter);
 
-            logger.info("Retrieved {} orders", orders.size());
+            // Load order details and calculate totals for each order
+            for (Order order : orders) {
+                // Load order details (with car info, images)
+                List<OrderDetail> orderDetails = orderDetailDAO.getOrderDetailsByOrderId(order.getOrderId());
+                order.setOrderDetails(orderDetails);
+
+                // Calculate total amount
+                double totalAmount = ordersDAO.getOrderTotal(order.getOrderId());
+                order.setTotalAmount(totalAmount);
+
+                // Calculate paid amount (totalAmount - remainingAmount)
+                double paidAmount = 0.0;
+                if (order.getRemainingAmount() != null) {
+                    paidAmount = totalAmount - order.getRemainingAmount();
+                } else {
+                    // If no remaining amount, assume fully paid
+                    paidAmount = totalAmount;
+                }
+                order.setPaidAmount(paidAmount);
+
+                logger.debug("Order {}: {} items, total: {}, paid: {}, remaining: {}",
+                        order.getOrderId(),
+                        orderDetails.size(),
+                        totalAmount,
+                        paidAmount,
+                        order.getRemainingAmount());
+            }
+
+            logger.info("Retrieved {} orders with details", orders.size());
 
             setOrderAttributes(request, session, orders, isAdmin, userId, statusFilter);
             forward(request, response, "/WEB-INF/views/Customer/orders.jsp");
