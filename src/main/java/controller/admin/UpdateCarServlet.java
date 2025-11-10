@@ -1,4 +1,4 @@
-package controller.servlet.admin;
+package controller.admin;
 
 import dao.BrandDAO;
 import dao.CarDAO;

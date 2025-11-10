@@ -1,4 +1,4 @@
-package controller.servlet.admin;
+package controller.admin;
 
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
@@ -8,8 +8,8 @@ import java.util.List;
 import model.Car;
 import dao.CarDAO;
 
-@WebServlet("/Admin/car-list")
-public class CarListServlet extends HttpServlet {
+@WebServlet("/admin/load-cars")
+public class LoadCarsServlet extends HttpServlet {
     private CarDAO carDAO = new CarDAO();
 
     @Override

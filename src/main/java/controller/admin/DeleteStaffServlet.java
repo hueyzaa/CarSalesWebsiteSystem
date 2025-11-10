@@ -1,4 +1,4 @@
-package controller.servlet.admin;
+package controller.admin;
 
 import dao.UserDAO;
 import exception.DatabaseException;
