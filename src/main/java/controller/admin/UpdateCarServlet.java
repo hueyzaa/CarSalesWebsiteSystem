@@ -2,8 +2,6 @@ package controller.admin;
 
 import dao.BrandDAO;
 import dao.CarDAO;
-import exception.DatabaseException;
-import exception.ValidationException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -37,15 +35,9 @@ public class UpdateCarServlet extends HttpServlet {
         try {
             int id = Integer.parseInt(request.getParameter("id"));
             Car car = carDAO.getCarById(id);
-
-            if (car == null) {
-                throw new DatabaseException("Không tìm thấy xe với ID: " + id);
-            }
-
             List<Brand> brandList = brandDAO.getAllBrands();
             request.setAttribute("car", car);
             request.setAttribute("brandList", brandList);
-
             request.getRequestDispatcher("/WEB-INF/views/Admin/update-car.jsp").forward(request, response);
 
         } catch (Exception e) {
@@ -93,20 +85,10 @@ public class UpdateCarServlet extends HttpServlet {
 
             boolean updated = carDAO.updateCar(car);
             if (!updated) {
-                throw new DatabaseException("Không thể cập nhật xe, vui lòng thử lại.");
+                throw new Exception("Không thể cập nhật xe, vui lòng thử lại.");
             }
-
-
             request.getSession().setAttribute("success", "Cập nhật xe thành công!");
             response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
-
-        } catch (ValidationException e) {
-            logger.warn("Lỗi xác thực dữ liệu: {}", e.getMessage());
-            handleError(request, response, e.getMessage());
-
-        } catch (DatabaseException e) {
-            logger.error("Lỗi cơ sở dữ liệu khi cập nhật xe", e);
-            handleError(request, response, e.getMessage());
 
         } catch (Exception e) {
             logger.error("Lỗi không xác định khi cập nhật xe", e);

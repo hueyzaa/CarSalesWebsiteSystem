@@ -5,9 +5,6 @@
   Time: 8:55 PM
   To change this template use File | Settings | File Templates.
 --%>
-
-
-
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -182,7 +179,6 @@
         <h6>Kinh doanh</h6>
         <a href="#" class="menu-item" id="btnManageOrders"><i class="fas fa-shopping-cart"></i> Quản lý đơn hàng</a>
         <a href="#" class="menu-item" id="btnManagePromotion"><i class="fas fa-bullhorn"></i> Quản lý khuyến mãi</a>
-        <a href="#" class="menu-item" id="btnRevenue"><i class="fas fa-chart-line"></i> Thống kê doanh thu</a>
     </div>
 
     <div class="menu-section">
@@ -289,6 +285,27 @@
         document.getElementById("viewStaffBtn").addEventListener("click", function() {
             loadSection("${pageContext.request.contextPath}/Admin/staff-list");
         });
+        document.getElementById("btnManageUsers").addEventListener("click", function(e) {
+            e.preventDefault();
+            loadSection("${pageContext.request.contextPath}/Admin/user-list");
+        });
+
+        document.getElementById("btnManageBrands").addEventListener("click", function(e) {
+            e.preventDefault();
+            loadSection("${pageContext.request.contextPath}/Admin/brand-list");
+        });
+
+        document.getElementById("btnManagePromotion").addEventListener("click", function(e) {
+            e.preventDefault();
+            loadSection("${pageContext.request.contextPath}/Admin/promotion-list");
+        });
+
+        document.getElementById("btnManageOrders").addEventListener("click", function(e) {
+            e.preventDefault();
+            loadSection("${pageContext.request.contextPath}/Admin/order-list");
+        });
+
+
 
 
         const params = new URLSearchParams(window.location.search);

@@ -313,9 +313,9 @@ public class AuthServlet extends HttpServlet {
 
     private String determineRedirectUrl(HttpServletRequest request, User user) {
         if (isAdmin(user)) {
-            return request.getContextPath() + "/admin/dashboard";
+            return request.getContextPath() + "/Admin/dashboard";
         } else if (isStaff(user)) {
-            return request.getContextPath() + "/staff/dashboard";
+            return request.getContextPath() + "/Staff/dashboard";
         } else {
             String redirect = request.getParameter("redirect");
             if (redirect != null && !redirect.isEmpty()) {

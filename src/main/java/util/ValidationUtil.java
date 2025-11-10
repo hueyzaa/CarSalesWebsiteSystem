@@ -37,6 +37,19 @@ public class ValidationUtil {
     }
 
     /**
+     * Validate String of Brand
+     */
+    public static String validateBrand(String input) throws Exception {
+        if(input == null || input.trim().isEmpty()){
+            throw new Exception(input + " hãng xe không được để trống");
+        } else if(input.length() < 2 || input.length() > 50) {
+            throw new Exception(input + " hãng xe không được quá ngắn hơn 2 kí tự");
+        } else{
+            throw new Exception("Lỗi khi thêm hãng xe");
+        }
+    }
+
+    /**
      * Validate string field with alphanumeric characters only
      */
     public static String validateAlphanumeric(String input, String fieldName, int maxLength) {

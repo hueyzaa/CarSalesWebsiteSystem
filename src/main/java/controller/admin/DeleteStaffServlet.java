@@ -1,7 +1,7 @@
 package controller.admin;
 
-import dao.UserDAO;
-import exception.DatabaseException;
+import dao.AdminDAO;
+import model.Admin;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,40 +15,49 @@ import java.io.IOException;
 @WebServlet("/Admin/delete-staff")
 public class DeleteStaffServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(DeleteStaffServlet.class);
-    private final UserDAO userDAO = new UserDAO();
+    private final AdminDAO adminDAO = new AdminDAO();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         try {
+
+            Admin admin = (Admin) request.getSession().getAttribute("adminAccount");
+            if (admin == null) {
+                logger.warn("Unauthorized attempt to delete staff — no admin session found");
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
+
             String idParam = request.getParameter("id");
             if (idParam == null || idParam.isEmpty()) {
                 logger.warn("Thiếu ID nhân viên trong yêu cầu xóa");
                 response.sendRedirect(request.getContextPath() + "/Admin/dashboard?section=staff&error=missingId");
                 return;
             }
-            int userId = Integer.parseInt(idParam);
-            boolean deleted = userDAO.deleteUser(userId);
-            if (deleted) {
-                logger.info("Đã xóa nhân viên có ID = {}", userId);
+
+            int staffId = Integer.parseInt(idParam);
+            int adminId = admin.getAdminId();
+
+
+            boolean success = adminDAO.toggleStaffStatus(adminId, staffId, false);
+
+            if (success) {
+                logger.info("Admin {} đã vô hiệu hóa nhân viên ID = {}", adminId, staffId);
                 response.sendRedirect(request.getContextPath() + "/Admin/dashboard?section=staff&success=deleted");
             } else {
-                logger.warn("Không tìm thấy hoặc không thể xóa nhân viên ID = {}", userId);
+                logger.warn("Không thể vô hiệu hóa nhân viên ID = {}", staffId);
                 response.sendRedirect(request.getContextPath() + "/Admin/dashboard?section=staff&error=notFound");
             }
 
         } catch (NumberFormatException e) {
-            logger.error("ID không hợp lệ khi xóa nhân viên", e);
+            logger.error("ID nhân viên không hợp lệ khi xóa", e);
             response.sendRedirect(request.getContextPath() + "/Admin/dashboard?section=staff&error=invalidId");
 
-        } catch (DatabaseException e) {
-            logger.error("Lỗi cơ sở dữ liệu khi xóa nhân viên", e);
-            response.sendRedirect(request.getContextPath() + "/Admin/dashboard?section=staff&error=dbError");
-
         } catch (Exception e) {
-            logger.error("Lỗi không mong muốn khi xóa nhân viên", e);
+            logger.error("Lỗi không mong muốn khi vô hiệu hóa nhân viên", e);
             response.sendRedirect(request.getContextPath() + "/Admin/dashboard?section=staff&error=unexpected");
         }
     }
 }
-

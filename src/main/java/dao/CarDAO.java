@@ -111,6 +111,25 @@ public class CarDAO {
         }
     }
 
+    public List<CarImage> getImagesByCarId(int carId) {
+        List<CarImage> list = new ArrayList<>();
+        String sql = "SELECT image_id, car_id, image_url FROM CarImages WHERE car_id = ? ORDER BY image_id";
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, carId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    CarImage img = new CarImage();
+                    img.setImageId(rs.getInt("image_id"));
+                    img.setCarId(rs.getInt("car_id"));
+                    img.setImageURL(rs.getString("image_url")); // khớp getter JSP
+                    list.add(img);
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return list;
+    }
+
     /**
      * Search cars by keyword
      */

@@ -40,7 +40,6 @@ public class DeleteCarServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/cars?error=invalidId");
 
         } catch (Exception e) {
-
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/admin/cars?error=exception");
         }

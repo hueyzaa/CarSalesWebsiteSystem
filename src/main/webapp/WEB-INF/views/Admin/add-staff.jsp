@@ -71,6 +71,10 @@
         .btn-secondary:hover {
             background-color: #555;
         }
+        .form-label{
+            color: #fff;
+        }
+
     </style>
 </head>
 <body>
