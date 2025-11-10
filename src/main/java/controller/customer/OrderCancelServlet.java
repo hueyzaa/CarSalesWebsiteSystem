@@ -3,8 +3,10 @@ package controller.customer;
 import dao.OrdersDAO;
 import dao.OrderDetailDAO;
 import dao.CarDAO;
+import dto.OrderDTO;
 import model.Order;
 import model.OrderDetail;
+import service.OrderService;
 import util.SessionUtils;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,6 +21,7 @@ import java.util.List;
 
 /**
  * OrderCancelServlet - Handle order cancellation
+ * Uses OrderService for business logic validation
  * Customers: Cancel their own orders (if eligible)
  * Admins: Cancel any order
  */
@@ -29,13 +32,15 @@ public class OrderCancelServlet extends HttpServlet {
     private OrdersDAO ordersDAO;
     private OrderDetailDAO orderDetailDAO;
     private CarDAO carDAO;
+    private OrderService orderService;
 
     @Override
     public void init() {
         ordersDAO = new OrdersDAO();
         orderDetailDAO = new OrderDetailDAO();
         carDAO = new CarDAO();
-        logger.info("OrderCancelServlet initialized");
+        orderService = new OrderService();
+        logger.info("OrderCancelServlet initialized with OrderService");
     }
 
     @Override
@@ -80,7 +85,8 @@ public class OrderCancelServlet extends HttpServlet {
                 return;
             }
 
-            if (!validateCancellation(request, order, session, response)) {
+            // Use OrderService for validation
+            if (!validateCancellation(order, session, response)) {
                 return;
             }
 
@@ -88,7 +94,17 @@ public class OrderCancelServlet extends HttpServlet {
 
             if (ordersDAO.cancelOrder(orderId)) {
                 logger.info("Order {} cancelled successfully", orderId);
-                session.setAttribute("success", "Đơn hàng #" + orderId + " đã được hủy thành công!");
+
+                // TEMPORARY: Add note if order had payment
+                if (order.getPaidAmount() > 0) {
+                    logger.warn("Order {} cancelled with payment: {}. MANUAL REFUND REQUIRED!",
+                            orderId, order.getPaidAmount());
+                    session.setAttribute("success",
+                            "Đơn hàng #" + orderId + " đã được hủy. LƯU Ý: Đơn hàng có thanh toán " +
+                                    String.format("%,.0f", order.getPaidAmount()) + " ₫, cần hoàn tiền thủ công!");
+                } else {
+                    session.setAttribute("success", "Đơn hàng #" + orderId + " đã được hủy thành công!");
+                }
             } else {
                 logger.error("Failed to cancel order: {}", orderId);
                 session.setAttribute("error", "Không thể hủy đơn hàng. Vui lòng thử lại!");
@@ -125,27 +141,34 @@ public class OrderCancelServlet extends HttpServlet {
         return isAdmin || order.getUserId() == userId;
     }
 
-    private boolean validateCancellation(HttpServletRequest request, Order order,
-                                         HttpSession session, HttpServletResponse response)
-            throws IOException {
-        String redirectUrl = request.getContextPath() + "/order-detail?id=" + order.getOrderId();
+    /**
+     * Validate cancellation using OrderService
+     * TEMPORARY: Allow cancel even with payment (should implement refund)
+     */
+    private boolean validateCancellation(Order order, HttpSession session,
+                                         HttpServletResponse response) throws IOException {
+        String redirectUrl = session.getServletContext().getContextPath() +
+                "/order-detail?id=" + order.getOrderId();
 
-        if (!order.canBeCancelled()) {
-            logger.warn("Order {} cannot be cancelled. Status: {}",
-                    order.getOrderId(), order.getStatus());
-            session.setAttribute("error",
-                    "Không thể hủy đơn hàng với trạng thái: " + order.getStatusDisplay());
+        // Convert to DTO - OrderService handles business logic
+        OrderDTO orderDTO = orderService.toOrderDTO(order);
+
+        if (!orderDTO.isCanBeCancelled()) {
+            logger.warn("Order {} cannot be cancelled. Status: {}, PaidAmount: {}",
+                    order.getOrderId(), order.getStatus(), order.getPaidAmount());
+
+            // Status-based error message
+            String errorMsg = "Không thể hủy đơn hàng với trạng thái: " + orderDTO.getStatusDisplay();
+
+            session.setAttribute("error", errorMsg);
             redirect(response, redirectUrl);
             return false;
         }
 
+        // TEMPORARY: Warning if cancelling order with payment
         if (order.getPaidAmount() > 0) {
-            logger.warn("Order {} has payment: {}, cannot cancel",
+            logger.warn("TEMPORARY: Cancelling order {} with payment: {}. Should implement refund!",
                     order.getOrderId(), order.getPaidAmount());
-            session.setAttribute("error",
-                    "Đơn hàng đã có giao dịch thanh toán. Vui lòng liên hệ quản trị viên để hoàn tiền!");
-            redirect(response, redirectUrl);
-            return false;
         }
 
         return true;

@@ -1,6 +1,5 @@
 package dao;
 
-import model.Customer;
 import model.User;
 import util.DBContext;
 import org.mindrot.jbcrypt.BCrypt;
@@ -13,59 +12,15 @@ import java.util.Map;
 
 /**
  * AuthDAO - All authentication operations
+ * FIXED: OAuth password reset vulnerability + optimized code
  */
 public class AuthDAO {
     private static final Logger logger = LoggerFactory.getLogger(AuthDAO.class);
 
     // ============================================
-    // REGISTER
+    // LOGIN - All roles (CUSTOMER, STAFF, ADMIN)
     // ============================================
 
-    public Map<String, Object> register(String email, String password, String name,
-                                        String phone, String address,
-                                        String verificationToken, String ipAddress, String userAgent) {
-        String sql = "{CALL sp_RegisterCustomer(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
-        Map<String, Object> result = new HashMap<>();
-
-        try (Connection conn = DBContext.getConnection();
-             CallableStatement stmt = conn.prepareCall(sql)) {
-
-            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
-
-            stmt.setString(1, email.toLowerCase().trim());
-            stmt.setString(2, hashedPassword);
-            stmt.setString(3, name.trim());
-            stmt.setString(4, phone);
-            stmt.setString(5, address);
-            stmt.setString(6, null); // oauthProvider
-            stmt.setString(7, null); // oauthId
-            stmt.setString(8, verificationToken);
-            stmt.setString(9, ipAddress);
-            stmt.setString(10, userAgent);
-
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String status = rs.getString("Result");
-                result.put("success", "SUCCESS".equals(status));
-                result.put("message", rs.getString("Message"));
-                if ("SUCCESS".equals(status)) {
-                    result.put("customerId", rs.getInt("CustomerId"));
-                    logger.info("User registered: {} (ID: {})", email, rs.getInt("CustomerId"));
-                }
-            }
-        } catch (SQLException e) {
-            logger.error("Registration error for: {}", email, e);
-            result.put("success", false);
-            result.put("message", "Lỗi hệ thống: " + e.getMessage());
-        }
-
-        return result;
-    }
-
-
-    /**
-     * Login user - Returns User object for ALL roles (ADMIN, STAFF, CUSTOMER)
-     */
     public User login(String email, String password) {
         String sql = "SELECT u.user_id, u.email, u.password_hash, u.role, u.is_active, u.email_verified, " +
                 "u.created_at, u.last_login, " +
@@ -91,24 +46,16 @@ public class AuthDAO {
                 }
 
                 String storedHash = rs.getString("password_hash");
-                if (BCrypt.checkpw(password, storedHash)) {
-                    // Update last login
+                String oauthProvider = rs.getString("oauth_provider");
+
+                if (oauthProvider != null && !oauthProvider.isEmpty()) {
+                    logger.warn("Attempted password login for OAuth account: {} ({})", email, oauthProvider);
+                    return null;
+                }
+
+                if (storedHash != null && !storedHash.isEmpty() && BCrypt.checkpw(password, storedHash)) {
                     updateLastLogin(rs.getInt("user_id"));
-
-                    // Build User object
-                    User user = new User();
-                    user.setUserId(rs.getInt("user_id"));
-                    user.setEmail(rs.getString("email"));
-                    user.setRole(rs.getString("role"));
-                    user.setName(rs.getString("name"));
-                    user.setPhone(rs.getString("phone"));
-                    user.setAddress(rs.getString("address"));
-                    user.setOauthProvider(rs.getString("oauth_provider"));
-                    user.setActive(true);
-                    user.setEmailVerified(rs.getBoolean("email_verified"));
-                    user.setCreatedAt(rs.getTimestamp("created_at"));
-                    user.setLastLogin(rs.getTimestamp("last_login"));
-
+                    User user = mapUserFromResultSet(rs);
                     logger.info("User logged in: {} (Role: {})", email, user.getRole());
                     return user;
                 } else {
@@ -136,69 +83,66 @@ public class AuthDAO {
     }
 
     // ============================================
-    // EMAIL VERIFICATION
+    // CUSTOMER REGISTRATION (Session-based verification)
     // ============================================
 
-    public Map<String, Object> verifyEmail(String token, String ipAddress) {
-        String sql = "{CALL sp_VerifyEmail(?, ?)}";
-        Map<String, Object> result = new HashMap<>();
+    public boolean registerVerifiedCustomer(String email, String hashedPassword,
+                                            String name, String phone, String address,
+                                            @SuppressWarnings("unused") String ipAddress) {
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
 
-        try (Connection conn = DBContext.getConnection();
-             CallableStatement stmt = conn.prepareCall(sql)) {
+            int userId = insertAppUser(conn, email, hashedPassword);
+            insertCustomer(conn, userId, name, phone, address);
 
-            stmt.setString(1, token);
-            stmt.setString(2, ipAddress);
+            conn.commit();
+            logger.info("Verified customer registered: {} (ID: {})", email, userId);
+            return true;
 
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String status = rs.getString("Result");
-                result.put("success", "SUCCESS".equals(status));
-                result.put("message", rs.getString("Message"));
-                if ("SUCCESS".equals(status)) {
-                    result.put("userId", rs.getInt("UserId"));
-                    logger.info("Email verified for user: {}", rs.getInt("UserId"));
-                } else {
-                    logger.warn("Email verification failed: {}", rs.getString("Message"));
-                }
-            }
         } catch (SQLException e) {
-            logger.error("Email verification error", e);
-            result.put("success", false);
-            result.put("message", "Lỗi hệ thống");
+            logger.error("Error registering verified customer: {}", email, e);
+            rollbackConnection(conn);
+            return false;
+        } finally {
+            closeConnection(conn);
         }
-
-        return result;
     }
 
-    public Map<String, Object> resendVerification(String email, String newToken,
-                                                  String ipAddress, String userAgent) {
-        String sql = "{CALL sp_ResendVerificationEmail(?, ?, ?, ?)}";
-        Map<String, Object> result = new HashMap<>();
+    private int insertAppUser(Connection conn, String email, String hashedPassword) throws SQLException {
+        String sql = "INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified, created_at) " +
+                "OUTPUT INSERTED.user_id " +
+                "VALUES (?, ?, 'CUSTOMER', 1, 1, GETDATE())";
 
-        try (Connection conn = DBContext.getConnection();
-             CallableStatement stmt = conn.prepareCall(sql)) {
-
-            stmt.setString(1, email);
-            stmt.setString(2, newToken);
-            stmt.setString(3, ipAddress);
-            stmt.setString(4, userAgent);
-
-            ResultSet rs = stmt.executeQuery();
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email.toLowerCase().trim());
+            ps.setString(2, hashedPassword);
+            ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                String status = rs.getString("Result");
-                result.put("success", "SUCCESS".equals(status));
-                result.put("message", rs.getString("Message"));
-                logger.info("Resent verification to: {}", email);
+                return rs.getInt(1);
             }
-        } catch (SQLException e) {
-            logger.error("Resend verification error for: {}", email, e);
-            result.put("success", false);
-            result.put("message", "Lỗi hệ thống");
+            throw new SQLException("Failed to create user");
         }
-
-        return result;
     }
 
+    private void insertCustomer(Connection conn, int userId, String name, String phone, String address)
+            throws SQLException {
+        String sql = "INSERT INTO Customers (customer_id, name, phone, address, oauth_provider, oauth_id) " +
+                "VALUES (?, ?, ?, ?, NULL, NULL)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setString(2, name);
+            ps.setString(3, phone);
+            ps.setString(4, address);
+            ps.executeUpdate();
+        }
+    }
+
+    // ============================================
+    // PASSWORD RESET (Database-based tokens)
+    // ============================================
 
     public Map<String, Object> requestPasswordReset(String email, String token,
                                                     String ipAddress, String userAgent) {
@@ -216,9 +160,10 @@ public class AuthDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 String status = rs.getString("Result");
-                result.put("success", "SUCCESS".equals(status));
+                boolean success = "SUCCESS".equals(status);
+                result.put("success", success);
                 result.put("message", rs.getString("Message"));
-                if ("SUCCESS".equals(status)) {
+                if (success) {
                     result.put("userId", rs.getInt("UserId"));
                     logger.info("Password reset requested for: {}", email);
                 }
@@ -248,9 +193,10 @@ public class AuthDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 String status = rs.getString("Result");
-                result.put("success", "SUCCESS".equals(status));
+                boolean success = "SUCCESS".equals(status);
+                result.put("success", success);
                 result.put("message", rs.getString("Message"));
-                if ("SUCCESS".equals(status)) {
+                if (success) {
                     result.put("userId", rs.getInt("UserId"));
                     logger.info("Password reset for user: {}", rs.getInt("UserId"));
                 }
@@ -264,14 +210,13 @@ public class AuthDAO {
         return result;
     }
 
+    // ============================================
+    // GOOGLE OAUTH (CUSTOMER only)
+    // ============================================
 
-    /**
-     * Login or register user with Google OAuth
-     */
     public User loginOrRegisterWithGoogle(String email, String name, String googleId) {
         try (Connection conn = DBContext.getConnection()) {
 
-            // Check if user exists and their auth method
             String checkSql = "SELECT u.user_id, u.password_hash, u.role, " +
                     "c.oauth_provider, c.oauth_id " +
                     "FROM AppUsers u " +
@@ -289,33 +234,27 @@ public class AuthDAO {
                     String oauthProvider = rs.getString("oauth_provider");
                     String oauthId = rs.getString("oauth_id");
 
-                    // BLOCK: Non-customer roles
                     if (!"CUSTOMER".equals(role)) {
                         logger.warn("Non-customer role attempting Google OAuth: {} ({})", email, role);
                         return null;
                     }
 
-                    // Case 1: User already uses Google OAuth with same ID
                     if ("GOOGLE".equals(oauthProvider) && googleId.equals(oauthId)) {
                         logger.info("Existing Google OAuth user login: {}", email);
                         updateLastLogin(userId);
                         return getUserById(userId);
                     }
 
-                    // Case 2: User has PASSWORD set (registered via email/password)
-                    // BLOCK: Don't allow Google login for password users
                     if (passwordHash != null && !passwordHash.isEmpty() && oauthProvider == null) {
                         logger.warn("Email registered with password, blocking Google OAuth: {}", email);
-                        return null; // Will show error message in servlet
+                        return null;
                     }
 
-                    // Case 3: User linked to different OAuth provider
                     if (oauthProvider != null && !"GOOGLE".equals(oauthProvider)) {
                         logger.warn("Email already linked to: {}", oauthProvider);
                         return null;
                     }
 
-                    // Case 4: Google ID mismatch (shouldn't happen normally)
                     if ("GOOGLE".equals(oauthProvider) && !googleId.equals(oauthId)) {
                         logger.error("Google ID mismatch for user: {}", email);
                         return null;
@@ -323,7 +262,6 @@ public class AuthDAO {
                 }
             }
 
-            // New user - register with Google OAuth
             logger.info("Registering new Google OAuth user: {}", email);
             return registerGoogleUser(conn, email, name, googleId);
 
@@ -333,44 +271,16 @@ public class AuthDAO {
         }
     }
 
-    /**
-     * Register new Google OAuth user
-     */
     private User registerGoogleUser(Connection conn, String email, String name, String googleId)
             throws SQLException {
 
         conn.setAutoCommit(false);
 
         try {
-            // Insert into AppUsers (empty password for OAuth users)
-            String userSql = "INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified, created_at) " +
-                    "OUTPUT INSERTED.user_id " +
-                    "VALUES (?, '', 'CUSTOMER', 1, 1, GETDATE())";
-
-            int userId;
-            try (PreparedStatement ps = conn.prepareStatement(userSql)) {
-                ps.setString(1, email);
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    userId = rs.getInt(1);
-                } else {
-                    throw new SQLException("Failed to create user");
-                }
-            }
-
-            // Insert into Customers with Google OAuth info
-            String customerSql = "INSERT INTO Customers (customer_id, name, oauth_provider, oauth_id) " +
-                    "VALUES (?, ?, 'GOOGLE', ?)";
-
-            try (PreparedStatement ps = conn.prepareStatement(customerSql)) {
-                ps.setInt(1, userId);
-                ps.setString(2, name);
-                ps.setString(3, googleId);
-                ps.executeUpdate();
-            }
+            int userId = insertOAuthUser(conn, email);
+            insertOAuthCustomer(conn, userId, name, googleId);
 
             conn.commit();
-
             logger.info("Google user registered: {}", email);
             return getUserById(userId);
 
@@ -382,15 +292,64 @@ public class AuthDAO {
         }
     }
 
-    /**
-     * Get user by ID
-     */
+    private int insertOAuthUser(Connection conn, String email) throws SQLException {
+        String sql = "INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified, created_at) " +
+                "OUTPUT INSERTED.user_id " +
+                "VALUES (?, '', 'CUSTOMER', 1, 1, GETDATE())";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            throw new SQLException("Failed to create OAuth user");
+        }
+    }
+
+    private void insertOAuthCustomer(Connection conn, int userId, String name, String googleId)
+            throws SQLException {
+        String sql = "INSERT INTO Customers (customer_id, name, oauth_provider, oauth_id) " +
+                "VALUES (?, ?, 'GOOGLE', ?)";
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setString(2, name);
+            ps.setString(3, googleId);
+            ps.executeUpdate();
+        }
+    }
+
+    // ============================================
+    // HELPER METHODS
+    // ============================================
+
+    private User mapUserFromResultSet(ResultSet rs) throws SQLException {
+        User user = new User();
+        user.setUserId(rs.getInt("user_id"));
+        user.setEmail(rs.getString("email"));
+        user.setRole(rs.getString("role"));
+        user.setName(rs.getString("name"));
+        user.setPhone(rs.getString("phone"));
+        user.setAddress(rs.getString("address"));
+        user.setOauthProvider(rs.getString("oauth_provider"));
+        user.setActive(rs.getBoolean("is_active"));
+        user.setEmailVerified(rs.getBoolean("email_verified"));
+        user.setCreatedAt(rs.getTimestamp("created_at"));
+        user.setLastLogin(rs.getTimestamp("last_login"));
+        return user;
+    }
+
     private User getUserById(int userId) throws SQLException {
         String sql = "SELECT u.user_id, u.email, u.role, u.is_active, u.email_verified, " +
                 "u.created_at, u.last_login, " +
-                "c.name, c.phone, c.address, c.oauth_provider, c.oauth_id " +
+                "COALESCE(c.name, s.name) as name, " +
+                "COALESCE(c.phone, s.phone) as phone, " +
+                "COALESCE(c.address, s.address) as address, " +
+                "c.oauth_provider, c.oauth_id " +
                 "FROM AppUsers u " +
                 "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
+                "LEFT JOIN Staff s ON u.user_id = s.staff_id " +
                 "WHERE u.user_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -400,58 +359,55 @@ public class AuthDAO {
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
-                User user = new User();
-                user.setUserId(rs.getInt("user_id"));
-                user.setEmail(rs.getString("email"));
-                user.setRole(rs.getString("role"));
-                user.setName(rs.getString("name"));
-                user.setPhone(rs.getString("phone"));
-                user.setAddress(rs.getString("address"));
-                user.setOauthProvider(rs.getString("oauth_provider"));
-                user.setActive(rs.getBoolean("is_active"));
-                user.setEmailVerified(rs.getBoolean("email_verified"));
-                user.setCreatedAt(rs.getTimestamp("created_at"));
-                user.setLastLogin(rs.getTimestamp("last_login"));
-                return user;
+                return mapUserFromResultSet(rs);
             }
         }
 
         return null;
     }
 
-    /**
-     * Check if email uses password authentication
-     */
-    public boolean isPasswordAccount(String email) {
-        String sql = "SELECT u.password_hash, c.oauth_provider " +
+    public User getUserByEmail(String email) {
+        String sql = "SELECT u.user_id, u.email, u.role, u.is_active, u.email_verified, " +
+                "u.created_at, u.last_login, " +
+                "COALESCE(c.name, s.name) as name, " +
+                "COALESCE(c.phone, s.phone) as phone, " +
+                "COALESCE(c.address, s.address) as address, " +
+                "c.oauth_provider, c.oauth_id " +
                 "FROM AppUsers u " +
                 "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
+                "LEFT JOIN Staff s ON u.user_id = s.staff_id " +
                 "WHERE u.email = ?";
 
         try (Connection conn = DBContext.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            ps.setString(1, email);
-            ResultSet rs = ps.executeQuery();
+            stmt.setString(1, email);
+            ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                String passwordHash = rs.getString("password_hash");
-                String oauthProvider = rs.getString("oauth_provider");
-
-                // Has password and NO OAuth provider = password account
-                return (passwordHash != null && !passwordHash.isEmpty() && oauthProvider == null);
+                return mapUserFromResultSet(rs);
             }
-
         } catch (SQLException e) {
-            logger.error("Error checking account type", e);
+            logger.error("Error getting user by email", e);
         }
+        return null;
+    }
 
+    public boolean emailExists(String email) {
+        String sql = "SELECT COUNT(*) FROM AppUsers WHERE email = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, email.toLowerCase().trim());
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            logger.error("Error checking email exists", e);
+        }
         return false;
     }
 
-    /**
-     * Check if email uses OAuth
-     */
     public boolean isOAuthAccount(String email) {
         String sql = "SELECT c.oauth_provider FROM AppUsers u " +
                 "JOIN Customers c ON u.user_id = c.customer_id " +
@@ -475,9 +431,31 @@ public class AuthDAO {
         return false;
     }
 
-    /**
-     * Get OAuth provider name
-     */
+    public boolean isPasswordAccount(String email) {
+        String sql = "SELECT u.password_hash, c.oauth_provider " +
+                "FROM AppUsers u " +
+                "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
+                "WHERE u.email = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String passwordHash = rs.getString("password_hash");
+                String oauthProvider = rs.getString("oauth_provider");
+                return (passwordHash != null && !passwordHash.isEmpty() && oauthProvider == null);
+            }
+
+        } catch (SQLException e) {
+            logger.error("Error checking account type", e);
+        }
+
+        return false;
+    }
+
     public String getOAuthProvider(String email) {
         String sql = "SELECT c.oauth_provider FROM AppUsers u " +
                 "JOIN Customers c ON u.user_id = c.customer_id " +
@@ -500,150 +478,27 @@ public class AuthDAO {
         return null;
     }
 
+    // ============================================
+    // CONNECTION UTILITIES
+    // ============================================
 
-    public boolean emailExists(String email) {
-        String sql = "SELECT COUNT(*) FROM AppUsers WHERE email = ?";
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, email.toLowerCase().trim());
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
+    private void rollbackConnection(Connection conn) {
+        if (conn != null) {
+            try {
+                conn.rollback();
+            } catch (SQLException ex) {
+                logger.error("Rollback failed", ex);
             }
-        } catch (SQLException e) {
-            logger.error("Error checking email exists", e);
         }
-        return false;
     }
 
-    /**
-     * Get user by email - Returns User object
-     */
-    public User getUserByEmail(String email) {
-        String sql = "SELECT u.user_id, u.email, u.role, u.is_active, u.email_verified, " +
-                "u.created_at, u.last_login, " +
-                "COALESCE(c.name, s.name) as name, " +
-                "COALESCE(c.phone, s.phone) as phone, " +
-                "COALESCE(c.address, s.address) as address, " +
-                "c.oauth_provider, c.oauth_id " +
-                "FROM AppUsers u " +
-                "LEFT JOIN Customers c ON u.user_id = c.customer_id " +
-                "LEFT JOIN Staff s ON u.user_id = s.staff_id " +
-                "WHERE u.email = ?";
-
-        try (Connection conn = DBContext.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, email);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                User user = new User();
-                user.setUserId(rs.getInt("user_id"));
-                user.setEmail(rs.getString("email"));
-                user.setRole(rs.getString("role"));
-                user.setName(rs.getString("name"));
-                user.setPhone(rs.getString("phone"));
-                user.setAddress(rs.getString("address"));
-                user.setOauthProvider(rs.getString("oauth_provider"));
-                user.setActive(rs.getBoolean("is_active"));
-                user.setEmailVerified(rs.getBoolean("email_verified"));
-                user.setCreatedAt(rs.getTimestamp("created_at"));
-                user.setLastLogin(rs.getTimestamp("last_login"));
-                return user;
-            }
-        } catch (SQLException e) {
-            logger.error("Error getting user by email", e);
-        }
-        return null;
-    }
-
-    /**
-     * Get customer by email - Backward compatibility
-     */
-    public Customer getCustomerByEmail(String email) {
-        User user = getUserByEmail(email);
-        if (user != null && user.isCustomer()) {
-            // Convert User to Customer
-            Customer customer = new Customer();
-            customer.setCustomerId(user.getUserId());
-            customer.setEmail(user.getEmail());
-            customer.setName(user.getName());
-            customer.setPhone(user.getPhone());
-            customer.setAddress(user.getAddress());
-            customer.setOauthProvider(user.getOauthProvider());
-            customer.setActive(user.isActive());
-            customer.setEmailVerified(user.isEmailVerified());
-            customer.setCreatedAt(user.getCreatedAt());
-            customer.setLastLogin(user.getLastLogin());
-            return customer;
-        }
-        return null;
-    }
-
-    /**
-     * Register verified customer (after email verification)
-     * Simple registration - no tokens needed, email already verified
-     */
-    public boolean registerVerifiedCustomer(String email, String hashedPassword,
-                                            String name, String phone, String address,
-                                            String ipAddress) {
-        Connection conn = null;
-        try {
-            conn = DBContext.getConnection();
-            conn.setAutoCommit(false);
-
-            // Insert into AppUsers
-            String userSql = "INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified, created_at) " +
-                    "OUTPUT INSERTED.user_id " +
-                    "VALUES (?, ?, 'CUSTOMER', 1, 1, GETDATE())";
-
-            int userId;
-            try (PreparedStatement ps = conn.prepareStatement(userSql)) {
-                ps.setString(1, email.toLowerCase().trim());
-                ps.setString(2, hashedPassword);
-                ResultSet rs = ps.executeQuery();
-                if (rs.next()) {
-                    userId = rs.getInt(1);
-                } else {
-                    throw new SQLException("Failed to create user");
-                }
-            }
-
-            // Insert into Customers
-            String customerSql = "INSERT INTO Customers (customer_id, name, phone, address, oauth_provider, oauth_id) " +
-                    "VALUES (?, ?, ?, ?, NULL, NULL)";
-
-            try (PreparedStatement ps = conn.prepareStatement(customerSql)) {
-                ps.setInt(1, userId);
-                ps.setString(2, name);
-                ps.setString(3, phone);
-                ps.setString(4, address);
-                ps.executeUpdate();
-            }
-
-            conn.commit();
-            logger.info("Verified customer registered: {} (ID: {})", email, userId);
-            return true;
-
-        } catch (SQLException e) {
-            logger.error("Error registering verified customer: {}", email, e);
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException ex) {
-                    logger.error("Rollback failed", ex);
-                }
-            }
-            return false;
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                } catch (SQLException e) {
-                    logger.error("Error closing connection", e);
-                }
+    private void closeConnection(Connection conn) {
+        if (conn != null) {
+            try {
+                conn.setAutoCommit(true);
+                conn.close();
+            } catch (SQLException e) {
+                logger.error("Error closing connection", e);
             }
         }
     }

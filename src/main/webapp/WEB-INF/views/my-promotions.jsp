@@ -256,6 +256,8 @@
             <div class="row">
                 <c:forEach var="promotion" items="${claimedPromotions}">
                     <div class="col-12">
+                            <%-- CHANGED: promotion.usedByUser (property) instead of method call --%>
+                            <%-- CHANGED: promotion.active (property) instead of method call --%>
                         <a href="${pageContext.request.contextPath}/checkout"
                            class="promotion-card ${promotion.usedByUser ? 'used' : 'unused'}"
                            onclick="${promotion.usedByUser || !promotion.active ? 'return false;' : ''}"
@@ -282,6 +284,7 @@
                                 </div>
                                 <div class="meta-item">
                                     <i class="far fa-clock"></i>
+                                        <%-- CHANGED: Use pre-calculated active/expired flags from DTO --%>
                                     <c:choose>
                                         <c:when test="${promotion.expired}">
                                             <span style="color: #e74c3c;">Đã hết hạn</span>
@@ -310,6 +313,7 @@
                                 </div>
                             </c:if>
 
+                                <%-- CHANGED: Use pre-calculated flags --%>
                             <c:if test="${!promotion.usedByUser && promotion.active}">
                                 <div class="use-promotion-hint">
                                     <i class="fas fa-hand-pointer"></i>

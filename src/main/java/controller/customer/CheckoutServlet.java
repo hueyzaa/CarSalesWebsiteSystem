@@ -46,21 +46,61 @@ public class CheckoutServlet extends HttpServlet {
         if (userId == null) return;
 
         try {
+            // Get Models from DAO (this method DOES load Car details)
             List<CartItem> cartItems = cartDAO.getCartItemsByUserId(userId);
+            logger.info("CHECKOUT DEBUG: Retrieved {} cart items for userId {}",
+                    cartItems != null ? cartItems.size() : 0, userId);
 
             if (hasCartValidationError(cartItems, request, response)) {
                 return;
             }
 
+            // Debug: Check if car objects are populated
+            if (cartItems != null && !cartItems.isEmpty()) {
+                for (CartItem item : cartItems) {
+                    logger.debug("CHECKOUT DEBUG: CartItem {} - Car: {}, Price: {}",
+                            item.getId(),
+                            item.getCar() != null ? item.getCar().getName() : "NULL",
+                            item.getCar() != null ? item.getCar().getPrice() : 0);
+                }
+            }
+
             double total = calculateTotal(cartItems);
+            logger.info("CHECKOUT DEBUG: Total calculated: {}", total);
+
+            // Get promotions (Models)
             List<Promotion> promotions = promotionService
                     .getAvailablePromotionsForCart(userId, cartItems);
+            logger.info("CHECKOUT DEBUG: Retrieved {} promotions",
+                    promotions != null ? promotions.size() : 0);
 
-            setCheckoutAttributes(request, cartItems, total, promotions);
+            // Convert Models to DTOs
+            List<dto.CartItemDTO> cartItemDTOs = promotionService.toCartItemDTOs(cartItems);
+            logger.info("CHECKOUT DEBUG: Converted to {} CartItemDTOs",
+                    cartItemDTOs != null ? cartItemDTOs.size() : 0);
+
+            List<dto.PromotionDTO> promotionDTOs = promotionService.toPromotionDTOs(promotions);
+            logger.info("CHECKOUT DEBUG: Converted to {} PromotionDTOs",
+                    promotionDTOs != null ? promotionDTOs.size() : 0);
+
+            // Debug: Check DTOs
+            if (cartItemDTOs != null && !cartItemDTOs.isEmpty()) {
+                for (dto.CartItemDTO dto : cartItemDTOs) {
+                    logger.debug("CHECKOUT DEBUG: CartItemDTO {} - Car: {}, Subtotal: {}",
+                            dto.getId(),
+                            dto.getCar() != null ? dto.getCar().getName() : "NULL",
+                            dto.getSubtotal());
+                }
+            }
+
+            // Pass DTOs to view (not Models)
+            setCheckoutAttributes(request, cartItemDTOs, total, promotionDTOs);
+            logger.info("CHECKOUT DEBUG: Set attributes - forwarding to JSP");
+
             forward(request, response, "/WEB-INF/views/checkout.jsp");
 
         } catch (Exception e) {
-            logger.error("Error in checkout GET", e);
+            logger.error("CHECKOUT ERROR: Exception in doGet", e);
             forwardToError(request, response, "Không thể tải trang thanh toán.");
         }
     }
@@ -85,6 +125,18 @@ public class CheckoutServlet extends HttpServlet {
             redirectWithError(response, request.getSession(),
                     contextPath + "/checkout", "Đã xảy ra lỗi không mong muốn!");
         }
+    }
+
+    // ============ BUSINESS LOGIC (moved from Model) ============
+
+    /**
+     * Calculate subtotal for a cart item
+     */
+    private double calculateCartItemSubtotal(CartItem item) {
+        if (item == null || item.getCar() == null) {
+            return 0.0;
+        }
+        return item.getCar().getPrice() * item.getQuantity();
     }
 
     // USER VALIDATION
@@ -208,24 +260,30 @@ public class CheckoutServlet extends HttpServlet {
         cartDAO.clearCart(userId);
         session.setAttribute("cartCount", 0);
 
+        logger.info("Order {} created for user {} with {} items (payment type: {})",
+                orderId, userId, cartItems.size(), paymentType);
+
         redirectAfterCheckout(response, session, paymentType, orderId,
                 data.successMessage, contextPath);
     }
 
     // CART VALIDATION
 
-    private boolean hasCartValidationError(List<CartItem> cartItems, HttpServletRequest request,
+    private boolean hasCartValidationError(List<CartItem> cartItems,
+                                           HttpServletRequest request,
                                            HttpServletResponse response) throws IOException {
-        String contextPath = request.getContextPath();
-
         if (isEmpty(cartItems)) {
+            logger.warn("Cart is empty during checkout");
+            String contextPath = request.getContextPath();
             redirectWithError(response, request.getSession(),
-                    contextPath + "/cart", "Giỏ hàng của bạn đang trống!");
+                    contextPath + "/cart", "Giỏ hàng trống!");
             return true;
         }
 
         String stockError = validateStock(cartItems);
         if (stockError != null) {
+            logger.warn("Stock validation failed: {}", stockError);
+            String contextPath = request.getContextPath();
             redirectWithError(response, request.getSession(),
                     contextPath + "/cart", stockError);
             return true;
@@ -239,7 +297,6 @@ public class CheckoutServlet extends HttpServlet {
 
         for (CartItem item : cartItems) {
             if (item.getCar() == null) {
-                logger.error("CartItem {} has null Car!", item.getId());
                 continue;
             }
 
@@ -248,7 +305,7 @@ public class CheckoutServlet extends HttpServlet {
 
             if (stock < quantity) {
                 if (!errors.isEmpty()) errors.append(" ");
-                errors.append(item.getCar().getName())
+                errors.append(item.getCar().getModel())
                         .append(" chỉ còn ")
                         .append(stock)
                         .append(" xe.");
@@ -387,17 +444,19 @@ public class CheckoutServlet extends HttpServlet {
 
     private double calculateTotal(List<CartItem> cartItems) {
         return cartItems.stream()
-                .mapToDouble(CartItem::getSubtotal)
+                .mapToDouble(this::calculateCartItemSubtotal)
                 .sum();
     }
 
-    private void setCheckoutAttributes(HttpServletRequest request, List<CartItem> cartItems,
-                                       double total, List<Promotion> promotions) {
-        request.setAttribute("cartItems", cartItems);
+    private void setCheckoutAttributes(HttpServletRequest request,
+                                       List<dto.CartItemDTO> cartItemDTOs,
+                                       double total,
+                                       List<dto.PromotionDTO> promotionDTOs) {
+        request.setAttribute("cartItems", cartItemDTOs);  // Pass DTOs
         request.setAttribute("total", total);
         request.setAttribute("depositAmount", total * DEPOSIT_PERCENTAGE);
         request.setAttribute("depositPercentage", DEPOSIT_PERCENTAGE * 100);
-        request.setAttribute("availablePromotions", promotions);
+        request.setAttribute("availablePromotions", promotionDTOs);  // Pass DTOs
     }
 
     // UTILITY METHODS

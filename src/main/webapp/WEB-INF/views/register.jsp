@@ -464,7 +464,7 @@
                                     <i class="fas fa-lock"></i> Xác Nhận Mật Khẩu <span class="text-danger">*</span>
                                 </label>
                                 <input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
-                                       required minlength="6" maxlength="100"
+                                       required minlength="8" maxlength="100"
                                        placeholder="Nhập lại mật khẩu">
                                 <div id="confirmPasswordHelp" class="form-text"></div>
                             </div>
@@ -540,7 +540,7 @@
 
         // Calculate strength
         let strength = 0;
-        if (password.length >= 6) strength++;
+        if (password.length >= 8) strength++;
         if (password.length >= 10) strength++;
         if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
         if (/\d/.test(password)) strength++;

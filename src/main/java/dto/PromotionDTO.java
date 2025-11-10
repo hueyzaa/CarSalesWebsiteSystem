@@ -1,12 +1,15 @@
-package model;
+package dto;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-public class Promotion implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+/**
+ * PromotionDTO - Data Transfer Object for Promotion with pre-calculated values
+ * Used to pass promotion data with applicable cars to JSP views
+ * All business logic calculations are done before creating this DTO
+ */
+public class PromotionDTO {
+    // Basic promotion information
     private int promotionId;
     private String title;
     private String description;
@@ -14,13 +17,24 @@ public class Promotion implements Serializable {
     private Date endDate;
     private double discountPercentage;
     private double discountAmount;
+
+    // User-specific flags (pre-calculated)
     private boolean claimedByUser;
     private boolean usedByUser;
-    private List<Car> applicableCars;
 
-    public Promotion() {}
+    // Status flags (pre-calculated)
+    private boolean active;      // Is promotion currently active
+    private boolean expired;     // Is promotion expired
 
-    public Promotion(int promotionId, String title, String description, Date startDate, Date endDate) {
+    // Applicable cars with pre-calculated discounts
+    private List<CarWithDiscountDTO> applicableCars;
+
+    // Constructors
+    public PromotionDTO() {
+    }
+
+    public PromotionDTO(int promotionId, String title, String description,
+                        Date startDate, Date endDate) {
         this.promotionId = promotionId;
         this.title = title;
         this.description = description;
@@ -28,6 +42,7 @@ public class Promotion implements Serializable {
         this.endDate = endDate;
     }
 
+    // Getters and Setters
     public int getPromotionId() {
         return promotionId;
     }
@@ -100,11 +115,43 @@ public class Promotion implements Serializable {
         this.usedByUser = usedByUser;
     }
 
-    public List<Car> getApplicableCars() {
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public boolean isExpired() {
+        return expired;
+    }
+
+    public void setExpired(boolean expired) {
+        this.expired = expired;
+    }
+
+    public List<CarWithDiscountDTO> getApplicableCars() {
         return applicableCars;
     }
 
-    public void setApplicableCars(List<Car> applicableCars) {
+    public void setApplicableCars(List<CarWithDiscountDTO> applicableCars) {
         this.applicableCars = applicableCars;
+    }
+
+    @Override
+    public String toString() {
+        return "PromotionDTO{" +
+                "promotionId=" + promotionId +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", discountPercentage=" + discountPercentage +
+                ", discountAmount=" + discountAmount +
+                ", claimedByUser=" + claimedByUser +
+                ", usedByUser=" + usedByUser +
+                ", applicableCars=" + (applicableCars != null ? applicableCars.size() + " cars" : "null") +
+                '}';
     }
 }

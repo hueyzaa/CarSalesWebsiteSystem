@@ -234,11 +234,13 @@
                 </div>
 
                 <!-- Cart Items -->
+                <%-- UPDATED: Now using CartItemDTO with pre-calculated subtotal --%>
                 <div class="checkout-container">
                     <h3 class="section-title"><i class="fas fa-shopping-cart"></i> Sản Phẩm</h3>
                     <c:forEach var="item" items="${cartItems}">
                         <div style="display: flex; gap: 15px; padding: 15px; background: #0f0f0f;
                              border-radius: 10px; margin-bottom: 15px; border: 1px solid #333;">
+                                <%-- Access DTO properties (car is CarWithDiscountDTO) --%>
                             <img src="${item.car.imageUrl}" alt="${item.car.name}"
                                  style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
                             <div style="flex: 1;">
@@ -253,6 +255,7 @@
                                     × ${item.quantity}
                                 </div>
                             </div>
+                                <%-- Pre-calculated subtotal from DTO --%>
                             <div style="text-align: right; color: #ffd700; font-weight: 700; font-size: 1.1rem;">
                                 <fmt:formatNumber value="${item.subtotal}" pattern="#,##0" /> ₫
                             </div>
@@ -280,6 +283,7 @@
                 </div>
 
                 <!-- Promotion Selection -->
+                <%-- UPDATED: Now using PromotionDTO with pre-calculated properties --%>
                 <c:if test="${not empty availablePromotions}">
                     <div class="checkout-container" id="promotionContainer">
                         <h3 class="section-title"><i class="fas fa-ticket-alt"></i> Áp Dụng Khuyến Mãi</h3>
@@ -303,7 +307,7 @@
                             </label>
                         </div>
 
-                        <!-- Available Promotions -->
+                        <!-- Available Promotions - Using DTO properties -->
                         <c:forEach var="promo" items="${availablePromotions}" varStatus="status">
                             <div class="promotion-option-card" onclick="selectPromotion(${promo.promotionId}, this)">
                                 <input type="radio" name="promotionSelection" value="${promo.promotionId}"

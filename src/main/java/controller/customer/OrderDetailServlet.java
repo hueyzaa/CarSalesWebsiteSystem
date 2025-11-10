@@ -4,8 +4,10 @@ import dao.OrdersDAO;
 import dao.OrderDetailDAO;
 import dao.TransactionDAO;
 import dao.CustomerDAO;
+import dto.OrderDTO;
 import model.Order;
 import model.Customer;
+import service.OrderService;
 import util.SessionUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -20,6 +22,7 @@ import java.io.IOException;
 
 /**
  * OrderDetailServlet - Display detailed order information
+ * UPDATED: Uses OrderDTO with pre-calculated business logic
  * Customers: View their own orders
  * Admins: View any order
  */
@@ -31,6 +34,7 @@ public class OrderDetailServlet extends HttpServlet {
     private OrderDetailDAO orderDetailDAO;
     private TransactionDAO transactionDAO;
     private CustomerDAO customerDAO;
+    private OrderService orderService;
 
     @Override
     public void init() {
@@ -38,7 +42,8 @@ public class OrderDetailServlet extends HttpServlet {
         orderDetailDAO = new OrderDetailDAO();
         transactionDAO = new TransactionDAO();
         customerDAO = new CustomerDAO();
-        logger.info("OrderDetailServlet initialized");
+        orderService = new OrderService();
+        logger.info("OrderDetailServlet initialized with OrderService");
     }
 
     @Override
@@ -67,6 +72,7 @@ public class OrderDetailServlet extends HttpServlet {
             logger.info("Loading order {} for user {} (isAdmin: {})",
                     orderId, currentUserId, isAdmin);
 
+            // Get Order Model from DAO
             Order order = ordersDAO.getOrderById(orderId);
             if (order == null) {
                 logger.warn("Order not found: {}", orderId);
@@ -82,13 +88,21 @@ public class OrderDetailServlet extends HttpServlet {
                 return;
             }
 
+            // Enrich order with details
             enrichOrder(order);
+
+            // Convert Model to DTO with pre-calculated values
+            OrderDTO orderDTO = orderService.toOrderDTO(order);
+
+            logger.debug("Converted order {} to DTO - canCancel: {}, fullyPaid: {}",
+                    orderId, orderDTO.isCanBeCancelled(), orderDTO.isFullyPaid());
 
             Customer customer = customerDAO.getCustomerById(order.getUserId());
 
-            logOrderSummary(orderId, order, customer);
+            logOrderSummary(orderId, orderDTO, customer);
 
-            setOrderAttributes(request, session, order, customer, isAdmin, currentUserId);
+            // Pass DTO to view (not Model)
+            setOrderAttributes(request, session, orderDTO, customer, isAdmin, currentUserId);
             forward(request, response, "/WEB-INF/views/order-detail.jsp");
 
         } catch (NumberFormatException e) {
@@ -101,6 +115,16 @@ public class OrderDetailServlet extends HttpServlet {
             logger.error("Unexpected error in OrderDetailServlet", e);
             handleError(request, response, "Đã xảy ra lỗi không mong muốn.");
         }
+    }
+
+    // ============ BUSINESS LOGIC (moved from Model) ============
+
+    /**
+     * Check if order is fully paid
+     * NOTE: This is now pre-calculated in OrderDTO
+     */
+    private boolean isOrderFullyPaid(Order order) {
+        return order.getPaidAmount() >= order.getTotalAmount();
     }
 
     // ============ ORDER PROCESSING ============
@@ -117,9 +141,9 @@ public class OrderDetailServlet extends HttpServlet {
     }
 
     private void setOrderAttributes(HttpServletRequest request, HttpSession session,
-                                    Order order, Customer customer,
+                                    OrderDTO orderDTO, Customer customer,
                                     boolean isAdmin, Integer currentUserId) {
-        request.setAttribute("order", order);
+        request.setAttribute("order", orderDTO);  // Pass DTO
         request.setAttribute("customer", customer);
         request.setAttribute("isAdmin", isAdmin);
         request.setAttribute("currentUserId", currentUserId);
@@ -134,15 +158,18 @@ public class OrderDetailServlet extends HttpServlet {
 
     // ============ LOGGING ============
 
-    private void logOrderSummary(int orderId, Order order, Customer customer) {
+    private void logOrderSummary(int orderId, OrderDTO orderDTO, Customer customer) {
         logger.info("Order {} details:", orderId);
         logger.info("  Customer: {} (ID: {})",
-                customer != null ? customer.getName() : "Unknown", order.getUserId());
-        logger.info("  Payment Type: {}, Status: {}", order.getPaymentType(), order.getStatus());
+                customer != null ? customer.getName() : "Unknown", orderDTO.getUserId());
+        logger.info("  Payment Type: {}, Status: {}",
+                orderDTO.getPaymentType(), orderDTO.getStatus());
         logger.info("  Total: {}, Paid: {}, Remaining: {}",
-                order.getTotalAmount(), order.getPaidAmount(), order.getRemainingAmount());
+                orderDTO.getTotalAmount(), orderDTO.getPaidAmount(), orderDTO.getRemainingAmount());
         logger.info("  Items: {}, Transactions: {}, Fully Paid: {}",
-                order.getOrderDetails().size(), order.getTransactions().size(), order.isFullyPaid());
+                orderDTO.getOrderDetails().size(), orderDTO.getTransactions().size(),
+                orderDTO.isFullyPaid());
+        logger.info("  Can be cancelled: {}", orderDTO.isCanBeCancelled());
     }
 
     // ============ UTILITY METHODS ============

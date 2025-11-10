@@ -14,6 +14,18 @@ import java.util.List;
 public class OrdersDAO {
     private static final Logger logger = LoggerFactory.getLogger(OrdersDAO.class);
 
+    // ============ BUSINESS LOGIC (moved from Model) ============
+
+    /**
+     * Calculate subtotal for a cart item
+     */
+    private double calculateCartItemSubtotal(CartItem item) {
+        if (item == null || item.getCar() == null) {
+            return 0.0;
+        }
+        return item.getCar().getPrice() * item.getQuantity();
+    }
+
     /**
      * Get orders by user ID
      */
@@ -83,9 +95,9 @@ public class OrdersDAO {
             throw new IllegalArgumentException("Cart items cannot be null or empty");
         }
 
-        // Calculate total and remaining amount
+        // Calculate total and remaining amount using local helper method
         double totalAmount = cartItems.stream()
-                .mapToDouble(CartItem::getSubtotal)
+                .mapToDouble(this::calculateCartItemSubtotal)
                 .sum();
 
         Double remainingAmount = null;
@@ -189,9 +201,9 @@ public class OrdersDAO {
             throw new IllegalArgumentException("Cart items cannot be null or empty");
         }
 
-        // Calculate total and remaining amount
+        // Calculate total and remaining amount using local helper method
         double totalAmount = cartItems.stream()
-                .mapToDouble(CartItem::getSubtotal)
+                .mapToDouble(this::calculateCartItemSubtotal)
                 .sum();
 
         Double remainingAmount = null;

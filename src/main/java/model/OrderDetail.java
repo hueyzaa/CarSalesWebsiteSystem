@@ -12,8 +12,7 @@ public class OrderDetail implements Serializable {
     private int quantity;
     private Car car;
 
-    public OrderDetail() {
-    }
+    public OrderDetail() {}
 
     public OrderDetail(int orderId, int carId, double price, int quantity) {
         this.orderId = orderId;
@@ -22,7 +21,6 @@ public class OrderDetail implements Serializable {
         this.quantity = quantity;
     }
 
-    // Getters and Setters
     public int getOrderDetailId() {
         return orderDetailId;
     }
@@ -69,29 +67,5 @@ public class OrderDetail implements Serializable {
 
     public void setCar(Car car) {
         this.car = car;
-    }
-
-    // Convenience methods
-    public double getSubtotal() {
-        return price * quantity;
-    }
-
-    public String getFormattedPrice() {
-        return String.format("%,.0f ₫", price);
-    }
-
-    public String getFormattedSubtotal() {
-        return String.format("%,.0f ₫", getSubtotal());
-    }
-
-    @Override
-    public String toString() {
-        return "OrderDetail{" +
-                "orderDetailId=" + orderDetailId +
-                ", orderId=" + orderId +
-                ", carId=" + carId +
-                ", price=" + price +
-                ", quantity=" + quantity +
-                '}';
     }
 }
