@@ -312,4 +312,104 @@ public class TransactionDAO {
             throw new RuntimeException("Failed to retrieve pending showroom payments", e);
         }
     }
+    // ... phần import & class TransactionDAO giữ nguyên
+
+    /** Struct tham số query cho list giao dịch */
+    public static class TxnQuery {
+        public String status;            // PENDING | PAID | CANCELLED
+        public String type;              // FULL | DEPOSIT | SHOWROOM
+        public String keyword;           // tìm theo transaction_id hoặc order_id
+        public Date from;                // created_at >= from (DATE)
+        public Date to;                  // created_at <= to (DATE)
+        public String sort;              // "t.created_at DESC" | "t.amount DESC" ...
+        public int page = 1;             // 1-based
+        public int size = 10;            // page size
+    }
+
+    /** Tìm kiếm + phân trang danh sách giao dịch */
+    public List<Transaction> find(TxnQuery q) {
+        // Nếu bạn có bảng Orders/Users muốn join để lấy thêm tên KH, có thể mở comment phần JOIN
+        StringBuilder sql = new StringBuilder(
+                "SELECT t.transaction_id, t.order_id, t.amount, t.type, t.payment_status, t.created_at " +
+                        // ", o.order_code, u.full_name " +     // <-- mở nếu có cột này
+                        "FROM Transactions t "
+                        // + "JOIN Orders o ON o.order_id = t.order_id "
+                        // + "LEFT JOIN Users u ON u.user_id = o.user_id "
+                        + "WHERE 1=1 "
+        );
+
+        List<Object> params = new ArrayList<>();
+
+        if (q.status != null && !q.status.isBlank()) { sql.append(" AND t.payment_status = ?"); params.add(q.status); }
+        if (q.type != null && !q.type.isBlank())     { sql.append(" AND t.type = ?");           params.add(q.type); }
+        if (q.from != null)                          { sql.append(" AND CAST(t.created_at AS date) >= ?"); params.add(q.from); }
+        if (q.to != null)                            { sql.append(" AND CAST(t.created_at AS date) <= ?"); params.add(q.to); }
+        if (q.keyword != null && !q.keyword.isBlank()){
+            sql.append(" AND (CAST(t.transaction_id AS VARCHAR(20)) LIKE ? OR CAST(t.order_id AS VARCHAR(20)) LIKE ?)");
+            String kw = "%" + q.keyword.trim() + "%";
+            params.add(kw); params.add(kw);
+        }
+
+        String sort = (q.sort == null || q.sort.isBlank()) ? "t.created_at DESC" : q.sort;
+        sql.append(" ORDER BY ").append(sort);
+
+        int size = Math.max(q.size, 1);
+        int offset = (Math.max(q.page, 1) - 1) * size;
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        params.add(offset); params.add(size);
+
+        List<Transaction> list = new ArrayList<>();
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement st = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) st.setObject(i + 1, params.get(i));
+            try (ResultSet rs = st.executeQuery()) {
+                while (rs.next()) {
+                    Transaction t = new Transaction();
+                    t.setTransactionId(rs.getInt("transaction_id"));
+                    t.setOrderId(rs.getInt("order_id"));
+                    t.setAmount(rs.getDouble("amount"));
+                    t.setType(rs.getString("type"));
+                    t.setPaymentStatus(rs.getString("payment_status"));
+                    t.setCreatedAt(rs.getTimestamp("created_at"));
+                    // Nếu có join, thêm view-only fields:
+                    // t.setOrderCode(rs.getString("order_code"));
+                    // t.setCustomerName(rs.getString("full_name"));
+                    list.add(t);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Error find transactions", e);
+            throw new RuntimeException("Failed to query transactions", e);
+        }
+        return list;
+    }
+
+    /** Đếm tổng bản ghi cho trang */
+    public int count(TxnQuery q) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM Transactions t WHERE 1=1 "
+        );
+        List<Object> params = new ArrayList<>();
+        if (q.status != null && !q.status.isBlank()) { sql.append(" AND t.payment_status = ?"); params.add(q.status); }
+        if (q.type != null && !q.type.isBlank())     { sql.append(" AND t.type = ?");           params.add(q.type); }
+        if (q.from != null)                          { sql.append(" AND CAST(t.created_at AS date) >= ?"); params.add(q.from); }
+        if (q.to != null)                            { sql.append(" AND CAST(t.created_at AS date) <= ?"); params.add(q.to); }
+        if (q.keyword != null && !q.keyword.isBlank()){
+            sql.append(" AND (CAST(t.transaction_id AS VARCHAR(20)) LIKE ? OR CAST(t.order_id AS VARCHAR(20)) LIKE ?)");
+            String kw = "%" + q.keyword.trim() + "%";
+            params.add(kw); params.add(kw);
+        }
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement st = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) st.setObject(i + 1, params.get(i));
+            try (ResultSet rs = st.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.error("Error count transactions", e);
+        }
+        return 0;
+    }
+
 }

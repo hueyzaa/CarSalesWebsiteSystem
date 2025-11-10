@@ -43,11 +43,9 @@ public class AddBrandServlet extends HttpServlet {
         try {
             int brandId = ValidationUtil.validatePositiveInt(request.getParameter("brandId"), "Hãng xe");
             String brandName = ValidationUtil.validateBrand(request.getParameter("brandName"));
-            String brandCountry = ValidationUtil.validateBrand(request.getParameter("brandLegion"));
             Brand br = new Brand();
             br.setBrandId(brandId);
             br.setBrandName(brandName);
-            br.setBrandCountry(br.getBrandCountry());
             response.sendRedirect(request.getContextPath() + "/Admin/dashboard?section=cars");
         } catch (Exception e) {
             handleError(request, response, "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.");
@@ -60,7 +58,7 @@ public class AddBrandServlet extends HttpServlet {
         request.setAttribute("error", errorMessage);
         request.setAttribute("brandId", request.getParameter("brandId"));
         request.setAttribute("brandName", request.getParameter("brandName"));
-        request.setAttribute("brandCountry", request.getParameter("brandCountry"));
+
 
         try {
             List<Brand> brandList = brandDAO.getAllBrands();

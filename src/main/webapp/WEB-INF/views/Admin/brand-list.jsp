@@ -7,6 +7,7 @@
 --%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
 <style>
     .admin-table-container {
         background: #1a1a1a;
@@ -32,22 +33,7 @@
         vertical-align: middle;
     }
 
-    .badge {
-        padding: 8px 14px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        border-radius: 10px;
-    }
-
-    .bg-success {
-        background-color: #28a745 !important;
-    }
-
-    .bg-danger {
-        background-color: #dc3545 !important;
-    }
-
-    .btn-add-car {
+    .btn-add-brand {
         background-color: #ffd700;
         color: #1a1a1a;
         font-weight: 600;
@@ -57,7 +43,7 @@
         transition: all 0.2s ease;
     }
 
-    .btn-add-car:hover {
+    .btn-add-brand:hover {
         background-color: #ffed4e;
         transform: translateY(-2px);
     }
@@ -74,9 +60,9 @@
 
 <div class="admin-table-container">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4><i class="fas fa-car"></i> Danh sách xe</h4>
-        <a href="${pageContext.request.contextPath}/Admin/add-car" class="btn btn-add-car">
-            <i class="fas fa-plus-circle"></i> Thêm xe mới
+        <h4><i class="fas fa-tags"></i> Danh sách hãng xe</h4>
+        <a href="${pageContext.request.contextPath}/Admin/add-brand" class="btn btn-add-brand">
+            <i class="fas fa-plus-circle"></i> Thêm hãng xe
         </a>
     </div>
 
@@ -85,30 +71,25 @@
         <tr>
             <th>ID</th>
             <th>Tên hãng</th>
-            <th>Quốc Gia</th>
-            <th>Ngày tạo</th>
             <th>Hành động</th>
         </tr>
         </thead>
         <tbody>
         <c:forEach var="brand" items="${brands}">
             <tr>
-                <td>${brand.id}</td>
-                <td class="text-start">${brand.name}</td>
+                <td>${brand.brandId}</td>
                 <td>${brand.brandName}</td>
-                <td>${brand.brandLegion}</td>
-                <td><fmt:formatDate value="${user.createdAt}" pattern="dd/MM/yyyy"/></td>
                 <td class="action-buttons">
-                    <a href="${pageContext.request.contextPath}/Admin/update-car?id=${brand.id}"
+                    <a href="${pageContext.request.contextPath}/Admin/update-brand?id=${brand.brandId}"
                        class="btn btn-warning btn-sm">
-                        <i class="fas fa-edit"></i>
+                        <i class="fas fa-edit"></i> Sửa
                     </a>
-                    <form action="${pageContext.request.contextPath}/Admin/delete-car"
+                    <form action="${pageContext.request.contextPath}/Admin/delete-brand"
                           method="post" style="display:inline;">
-                        <input type="hidden" name="id" value="${brand.id}">
+                        <input type="hidden" name="brandId" value="${brand.brandId}">
                         <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Bạn có chắc muốn hãng xe này?');">
-                            <i class="fas fa-trash"></i>
+                                onclick="return confirm('Bạn có chắc muốn xóa hãng xe này?');">
+                            <i class="fas fa-trash"></i> Xóa
                         </button>
                     </form>
                 </td>
@@ -116,4 +97,11 @@
         </c:forEach>
         </tbody>
     </table>
+
+    <c:if test="${empty brands}">
+        <div class="alert alert-warning text-center mt-3">
+            Chưa có hãng xe nào trong hệ thống.
+        </div>
+    </c:if>
 </div>
+

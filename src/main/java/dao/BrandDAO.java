@@ -12,7 +12,7 @@ public class BrandDAO {
     // Lấy tất cả thương hiệu
     public List<Brand> getAllBrands() {
         List<Brand> brands = new ArrayList<>();
-        String sql = "SELECT brand_id, brand_name, brand_legion FROM Brand ORDER BY brand_name ASC";
+        String sql = "SELECT brand_id, brand_name FROM Brand ORDER BY brand_name ASC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -22,7 +22,6 @@ public class BrandDAO {
                 Brand brand = new Brand();
                 brand.setBrandId(rs.getInt("brand_id"));
                 brand.setBrandName(rs.getString("brand_name"));
-                brand.setBrandCountry(rs.getString("brand_legion"));
                 brands.add(brand);
             }
         } catch (SQLException e) {
@@ -31,7 +30,7 @@ public class BrandDAO {
         return brands;
     }
 
-    // Lấy brand theo ID
+
     public Brand getBrandById(int brandId) {
         String sql = "SELECT brand_id, brand_name FROM Brand WHERE brand_id = ?";
 
@@ -53,7 +52,7 @@ public class BrandDAO {
         return null;
     }
 
-    // Thêm brand mới
+  //Thêm brand mới
     public boolean addBrand(String brandName) {
         String sql = "INSERT INTO Brand (brand_name) VALUES (?)";
 
@@ -86,7 +85,41 @@ public class BrandDAO {
         }
         return false;
     }
-    
+
+    //Update Brand theo ID
+    public boolean updateBrand(int brandId, String newName) {
+        String sql = "UPDATE Brand SET brand_name = ? WHERE brand_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, newName);
+            stmt.setInt(2, brandId);
+
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    //Delete brand theo ID brand
+    public boolean deleteBrand(int brandId) {
+        String sql = "DELETE FROM Brand WHERE brand_id = ?";
+
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, brandId);
+
+            return stmt.executeUpdate() > 0; // Trả về true nếu có bản ghi bị xóa
+        } catch (SQLException e) {
+            // Nếu thương hiệu đang được tham chiếu bởi bảng Car, có thể lỗi FOREIGN KEY
+            System.err.println("Không thể xóa thương hiệu vì đang được sử dụng ở bảng khác.");
+            e.printStackTrace();
+        }
+        return false;
+    }
 
 
 }

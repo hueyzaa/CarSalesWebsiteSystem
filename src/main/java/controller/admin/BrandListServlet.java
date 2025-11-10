@@ -16,8 +16,8 @@ public class BrandListServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        List<Brand> brans = brandDAO.getAllBrands();
-        request.setAttribute("brans", brans);
+        List<Brand> brands = brandDAO.getAllBrands();
+        request.setAttribute("brands", brands);
         request.getRequestDispatcher("/WEB-INF/views/Admin/brand-list.jsp").forward(request, response);
     }
 }
