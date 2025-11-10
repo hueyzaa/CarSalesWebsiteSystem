@@ -59,7 +59,7 @@ public class CarsServlet extends HttpServlet {
             logger.info("Loaded {} cars with filters - keyword: {}, brand: {}, sort: {}",
                     carList.size(), params.keyword, params.brandId, params.sortBy);
 
-            forward(request, response, "/WEB-INF/views/cars.jsp");
+            forward(request, response, "/WEB-INF/views/Customer/cars.jsp");
 
         } catch (RuntimeException e) {
             logger.error("Database error in CarsServlet", e);
@@ -206,7 +206,7 @@ public class CarsServlet extends HttpServlet {
     private void forwardToError(HttpServletRequest request, HttpServletResponse response,
                                 String message) throws ServletException, IOException {
         request.setAttribute("error", message);
-        forward(request, response, "/WEB-INF/views/error.jsp");
+        forward(request, response, "/WEB-INF/views/Customer/error.jsp");
     }
 
     // ============ INNER CLASS ============

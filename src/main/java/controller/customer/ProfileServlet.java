@@ -72,7 +72,7 @@ public class ProfileServlet extends HttpServlet {
             User user = SessionUtils.getUser(session);
             request.setAttribute("user", user);
 
-            request.getRequestDispatcher("/WEB-INF/views/profile.jsp")
+            request.getRequestDispatcher("/WEB-INF/views/Customer/profile.jsp")
                     .forward(request, response);
 
         } catch (Exception e) {

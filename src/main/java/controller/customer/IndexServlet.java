@@ -55,11 +55,11 @@ public class IndexServlet extends HttpServlet {
             // Route based on login status
             if (isLoggedIn) {
                 logger.debug("Logged-in user accessing index, showing home page");
-                request.getRequestDispatcher("/WEB-INF/views/home.jsp")
+                request.getRequestDispatcher("/WEB-INF/views/Customer/home.jsp")
                         .forward(request, response);
             } else {
                 logger.debug("Guest accessing index, showing landing page");
-                request.getRequestDispatcher("/WEB-INF/views/index.jsp")
+                request.getRequestDispatcher("/WEB-INF/views/Customer/index.jsp")
                         .forward(request, response);
             }
 
@@ -78,7 +78,7 @@ public class IndexServlet extends HttpServlet {
     private void handleError(HttpServletRequest request, HttpServletResponse response,
                              String errorMessage) throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
-        request.getRequestDispatcher("/WEB-INF/views/error.jsp")
+        request.getRequestDispatcher("/WEB-INF/views/Customer/error.jsp")
                 .forward(request, response);
     }
 

@@ -81,7 +81,7 @@ public class CarDetailServlet extends HttpServlet {
         setUserAttributes(request, session);
         loadRelatedCars(request, car);
 
-        forward(request, response, "/WEB-INF/views/car-detail.jsp");
+        forward(request, response, "/WEB-INF/views/Customer/car-detail.jsp");
     }
 
     private void setCarAttributes(HttpServletRequest request, Car car,
@@ -207,7 +207,7 @@ public class CarDetailServlet extends HttpServlet {
     private void forwardToError(HttpServletRequest request, HttpServletResponse response,
                                 String message) throws ServletException, IOException {
         request.setAttribute("error", message);
-        forward(request, response, "/WEB-INF/views/error.jsp");
+        forward(request, response, "/WEB-INF/views/Customer/error.jsp");
     }
 
     private void forward(HttpServletRequest request, HttpServletResponse response, String path)

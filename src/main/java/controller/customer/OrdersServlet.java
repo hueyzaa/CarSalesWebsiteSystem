@@ -55,7 +55,7 @@ public class OrdersServlet extends HttpServlet {
             logger.info("Retrieved {} orders", orders.size());
 
             setOrderAttributes(request, session, orders, isAdmin, userId, statusFilter);
-            forward(request, response, "/WEB-INF/views/orders.jsp");
+            forward(request, response, "/WEB-INF/views/Customer/orders.jsp");
 
         } catch (RuntimeException e) {
             logger.error("Database error in OrdersServlet", e);
@@ -112,7 +112,7 @@ public class OrdersServlet extends HttpServlet {
     private void handleError(HttpServletRequest request, HttpServletResponse response,
                              String errorMessage) throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
-        forward(request, response, "/WEB-INF/views/error.jsp");
+        forward(request, response, "/WEB-INF/views/Customer/error.jsp");
     }
 
     private void forward(HttpServletRequest request, HttpServletResponse response, String path)

@@ -109,7 +109,7 @@ public class AuthServlet extends HttpServlet {
             return;
         }
         setCSRFToken(request);
-        request.getRequestDispatcher("/WEB-INF/views/register.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/Customer/register.jsp").forward(request, response);
     }
 
     private void handleRegister(HttpServletRequest request, HttpServletResponse response)
@@ -146,12 +146,12 @@ public class AuthServlet extends HttpServlet {
             emailService.sendVerificationEmail(request, email, name, verifyUrl);
             logger.info("Verification email sent to: {}", email);
 
-            request.getRequestDispatcher("/WEB-INF/views/verification-pending.jsp")
+            request.getRequestDispatcher("/WEB-INF/views/Customer/verification-pending.jsp")
                     .forward(request, response);
 
         } catch (Exception e) {
             logger.warn("Register error: {}", e.getMessage());
-            handleError(request, response, "/WEB-INF/views/register.jsp", e.getMessage());
+            handleError(request, response, "/WEB-INF/views/Customer/register.jsp", e.getMessage());
         }
     }
 
@@ -227,7 +227,7 @@ public class AuthServlet extends HttpServlet {
 
             request.setAttribute("success", "Email đã được xác thực thành công!");
             request.setAttribute("email", email);
-            request.getRequestDispatcher("/WEB-INF/views/verify-success.jsp")
+            request.getRequestDispatcher("/WEB-INF/views/Customer/verify-success.jsp")
                     .forward(request, response);
 
         } catch (IllegalStateException | IllegalArgumentException e) {
@@ -261,7 +261,7 @@ public class AuthServlet extends HttpServlet {
     private void showVerifyError(HttpServletRequest request, HttpServletResponse response,
                                  String error) throws ServletException, IOException {
         request.setAttribute("error", error);
-        request.getRequestDispatcher("/WEB-INF/views/verify-error.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/Customer/verify-error.jsp").forward(request, response);
     }
 
     // ============================================
@@ -275,7 +275,7 @@ public class AuthServlet extends HttpServlet {
             return;
         }
         setCSRFToken(request);
-        request.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/Customer/login.jsp").forward(request, response);
     }
 
     private void handleLogin(HttpServletRequest request, HttpServletResponse response)
@@ -307,7 +307,7 @@ public class AuthServlet extends HttpServlet {
 
         } catch (Exception e) {
             logger.warn("Login error: {}", e.getMessage());
-            handleError(request, response, "/WEB-INF/views/login.jsp", e.getMessage());
+            handleError(request, response, "/WEB-INF/views/Customer/login.jsp", e.getMessage());
         }
     }
 
@@ -343,7 +343,7 @@ public class AuthServlet extends HttpServlet {
     private void showForgotPasswordPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         setCSRFToken(request);
-        request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/Customer/forgot-password.jsp").forward(request, response);
     }
 
     private void handleForgotPassword(HttpServletRequest request, HttpServletResponse response)
@@ -385,7 +385,7 @@ public class AuthServlet extends HttpServlet {
 
         } catch (Exception e) {
             logger.warn("Forgot password error: {}", e.getMessage());
-            handleError(request, response, "/WEB-INF/views/forgot-password.jsp", e.getMessage());
+            handleError(request, response, "/WEB-INF/views/Customer/forgot-password.jsp", e.getMessage());
         }
     }
 
@@ -393,7 +393,7 @@ public class AuthServlet extends HttpServlet {
             throws ServletException, IOException {
         request.setAttribute("success", "Nếu email tồn tại, link đặt lại mật khẩu đã được gửi");
         setCSRFToken(request);
-        request.getRequestDispatcher("/WEB-INF/views/forgot-password.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/Customer/forgot-password.jsp").forward(request, response);
     }
 
     private void showResetPasswordPage(HttpServletRequest request, HttpServletResponse response)
@@ -402,13 +402,13 @@ public class AuthServlet extends HttpServlet {
 
         if (token == null || token.isEmpty()) {
             request.setAttribute("error", "Token không hợp lệ");
-            request.getRequestDispatcher("/WEB-INF/views/reset-error.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/Customer/reset-error.jsp").forward(request, response);
             return;
         }
 
         request.setAttribute("token", token);
         setCSRFToken(request);
-        request.getRequestDispatcher("/WEB-INF/views/reset-password.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/Customer/reset-password.jsp").forward(request, response);
     }
 
     private void handleResetPassword(HttpServletRequest request, HttpServletResponse response)
@@ -427,7 +427,7 @@ public class AuthServlet extends HttpServlet {
 
             if ((boolean) result.get("success")) {
                 request.setAttribute("success", "Mật khẩu đã được đặt lại thành công!");
-                request.getRequestDispatcher("/WEB-INF/views/reset-success.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/Customer/reset-success.jsp").forward(request, response);
             } else {
                 throw new RuntimeException((String) result.get("message"));
             }
@@ -437,7 +437,7 @@ public class AuthServlet extends HttpServlet {
             request.setAttribute("error", e.getMessage());
             request.setAttribute("token", request.getParameter("token"));
             setCSRFToken(request);
-            request.getRequestDispatcher("/WEB-INF/views/reset-password.jsp").forward(request, response);
+            request.getRequestDispatcher("/WEB-INF/views/Customer/reset-password.jsp").forward(request, response);
         }
     }
 

@@ -65,7 +65,7 @@ public class HomeServlet extends HttpServlet {
                     SessionUtils.getUserRole(session),
                     cars != null ? cars.size() : 0);
 
-            request.getRequestDispatcher("/WEB-INF/views/home.jsp")
+            request.getRequestDispatcher("/WEB-INF/views/Customer/home.jsp")
                     .forward(request, response);
 
         } catch (RuntimeException e) {
@@ -83,7 +83,7 @@ public class HomeServlet extends HttpServlet {
     private void handleError(HttpServletRequest request, HttpServletResponse response,
                              String errorMessage) throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
-        request.getRequestDispatcher("/WEB-INF/views/error.jsp")
+        request.getRequestDispatcher("/WEB-INF/views/Customer/error.jsp")
                 .forward(request, response);
     }
 

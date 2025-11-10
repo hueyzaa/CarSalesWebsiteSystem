@@ -23,7 +23,7 @@ public class PaymentResultServlet extends HttpServlet {
 
         logger.info("Payment result: success={}, orderId={}", success, orderId);
 
-        request.getRequestDispatcher("/WEB-INF/views/payment-result.jsp")
+        request.getRequestDispatcher("/WEB-INF/views/Customer/payment-result.jsp")
                 .forward(request, response);
     }
 }

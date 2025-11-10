@@ -15,6 +15,6 @@ public class ErrorServlet extends HttpServlet {
         Exception exception = (Exception) request.getAttribute("jakarta.servlet.error.exception");
         String message = exception != null ? exception.getMessage() : "Đã xảy ra lỗi không xác định!";
         request.setAttribute("error", message);
-        request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/Customer/error.jsp").forward(request, response);
     }
 }

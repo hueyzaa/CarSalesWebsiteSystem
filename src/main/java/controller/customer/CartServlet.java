@@ -43,7 +43,7 @@ public class CartServlet extends HttpServlet {
             double total = calculateTotal(cartItems);
 
             setCartAttributes(request, request.getSession(), cartItems, total);
-            forward(request, response, "/WEB-INF/views/cart.jsp");
+            forward(request, response, "/WEB-INF/views/Customer/cart.jsp");
 
         } catch (Exception e) {
             logger.error("Error loading cart", e);
@@ -266,7 +266,7 @@ public class CartServlet extends HttpServlet {
     private void forwardToError(HttpServletRequest request, HttpServletResponse response,
                                 String message) throws ServletException, IOException {
         request.setAttribute("error", message);
-        forward(request, response, "/WEB-INF/views/error.jsp");
+        forward(request, response, "/WEB-INF/views/Customer/error.jsp");
     }
 
     private void forward(HttpServletRequest request, HttpServletResponse response, String path)

@@ -84,7 +84,7 @@ public class MyPromotionsServlet extends HttpServlet {
 
             // Set attributes - IMPORTANT: Use DTOs for view
             setPromotionAttributes(request, promotionDTOs, unusedCount, usedCount);
-            forward(request, response, "/WEB-INF/views/my-promotions.jsp");
+            forward(request, response, "/WEB-INF/views/Customer/my-promotions.jsp");
 
         } catch (RuntimeException e) {
             logger.error("Database error loading promotions", e);

@@ -76,7 +76,7 @@ public class PromotionServlet extends HttpServlet {
             setRequestAttributes(request, session, promotionDTOs);
 
             // Forward to JSP
-            request.getRequestDispatcher("/WEB-INF/views/promotions.jsp")
+            request.getRequestDispatcher("/WEB-INF/views/Customer/promotions.jsp")
                     .forward(request, response);
 
         } catch (RuntimeException e) {
@@ -134,7 +134,7 @@ public class PromotionServlet extends HttpServlet {
     private void handleError(HttpServletRequest request, HttpServletResponse response,
                              String errorMessage) throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
-        request.getRequestDispatcher("/WEB-INF/views/error.jsp")
+        request.getRequestDispatcher("/WEB-INF/views/Customer/error.jsp")
                 .forward(request, response);
     }
 

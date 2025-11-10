@@ -103,7 +103,7 @@ public class OrderDetailServlet extends HttpServlet {
 
             // Pass DTO to view (not Model)
             setOrderAttributes(request, session, orderDTO, customer, isAdmin, currentUserId);
-            forward(request, response, "/WEB-INF/views/order-detail.jsp");
+            forward(request, response, "/WEB-INF/views/Customer/order-detail.jsp");
 
         } catch (NumberFormatException e) {
             logger.error("Invalid order ID format", e);
@@ -193,7 +193,7 @@ public class OrderDetailServlet extends HttpServlet {
     private void handleError(HttpServletRequest request, HttpServletResponse response,
                              String errorMessage) throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
-        forward(request, response, "/WEB-INF/views/error.jsp");
+        forward(request, response, "/WEB-INF/views/Customer/error.jsp");
     }
 
     private void forward(HttpServletRequest request, HttpServletResponse response, String path)

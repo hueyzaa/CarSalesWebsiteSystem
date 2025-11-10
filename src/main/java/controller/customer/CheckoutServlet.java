@@ -97,7 +97,7 @@ public class CheckoutServlet extends HttpServlet {
             setCheckoutAttributes(request, cartItemDTOs, total, promotionDTOs);
             logger.info("CHECKOUT DEBUG: Set attributes - forwarding to JSP");
 
-            forward(request, response, "/WEB-INF/views/checkout.jsp");
+            forward(request, response, "/WEB-INF/views/Customer/checkout.jsp");
 
         } catch (Exception e) {
             logger.error("CHECKOUT ERROR: Exception in doGet", e);
@@ -489,7 +489,7 @@ public class CheckoutServlet extends HttpServlet {
     private void forwardToError(HttpServletRequest request, HttpServletResponse response,
                                 String message) throws ServletException, IOException {
         request.setAttribute("error", message);
-        forward(request, response, "/WEB-INF/views/error.jsp");
+        forward(request, response, "/WEB-INF/views/Customer/error.jsp");
     }
 
     private void forward(HttpServletRequest request, HttpServletResponse response, String path)

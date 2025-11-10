@@ -58,7 +58,7 @@ public class BlogDetailServlet extends HttpServlet {
 
             request.setAttribute("blog", blog);
             request.setAttribute("relatedBlogs", relatedBlogs);
-            request.getRequestDispatcher("/WEB-INF/views/blog-detail.jsp")
+            request.getRequestDispatcher("/WEB-INF/views/Customer/blog-detail.jsp")
                     .forward(request, response);
 
         } catch (NumberFormatException e) {
@@ -94,7 +94,7 @@ public class BlogDetailServlet extends HttpServlet {
     private void handleError(HttpServletRequest request, HttpServletResponse response,
                              String errorMessage) throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
-        request.getRequestDispatcher("/WEB-INF/views/error.jsp")
+        request.getRequestDispatcher("/WEB-INF/views/Customer/error.jsp")
                 .forward(request, response);
     }
 
