@@ -17,9 +17,10 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 /**
- * Service layer for promotion business logic
- * Handles promotion validation, calculation, and application
- * UPDATED: Added DTO conversion methods for view layer
+ * PromotionService - ALL Business Logic for Promotions
+ *
+ * @author Nguyen Gia Huy
+ * @version 2.0 - Fixed to match database
  */
 public class PromotionService {
     private static final Logger logger = LoggerFactory.getLogger(PromotionService.class);
@@ -37,10 +38,12 @@ public class PromotionService {
         this.carDAO = carDAO;
     }
 
+    // ============ BUSINESS LOGIC - PROMOTION STATUS ============
+
     /**
      * Check if promotion is currently active
      */
-    private boolean isPromotionActive(Promotion promotion) {
+    public boolean isPromotionActive(Promotion promotion) {
         if (promotion == null) {
             return false;
         }
@@ -54,7 +57,7 @@ public class PromotionService {
     /**
      * Check if promotion is expired
      */
-    private boolean isPromotionExpired(Promotion promotion) {
+    public boolean isPromotionExpired(Promotion promotion) {
         if (promotion == null || promotion.getEndDate() == null) {
             return false;
         }
@@ -63,24 +66,37 @@ public class PromotionService {
     }
 
     /**
-     * Calculate discount value for a car
+     * Check if promotion is upcoming
      */
-    private double calculateCarDiscountValue(Car car) {
-        if (car == null) {
-            return 0;
+    public boolean isPromotionUpcoming(Promotion promotion) {
+        if (promotion == null || promotion.getStartDate() == null) {
+            return false;
         }
-
-        double price = car.getPrice();
-
-        if (car.getDiscountPercentage() > 0) {
-            return price * (car.getDiscountPercentage() / 100);
-        } else if (car.getDiscountAmount() > 0) {
-            return Math.min(car.getDiscountAmount(), price);
-        }
-        return 0;
+        Date now = new Date();
+        return now.before(promotion.getStartDate());
     }
 
-    // ============ DTO CONVERSION METHODS (NEW) ============
+    // ============ BUSINESS LOGIC - DISCOUNT CALCULATION ============
+
+    /**
+     * Calculate discount value from percentage
+     */
+    public double calculateDiscountValue(double price, double percentage) {
+        if (price <= 0 || percentage <= 0) {
+            return 0;
+        }
+        return price * (percentage / 100.0);
+    }
+
+    /**
+     * Calculate final price after discount
+     */
+    public double calculateFinalPrice(double price, double percentage) {
+        double discountValue = calculateDiscountValue(price, percentage);
+        return price - discountValue;
+    }
+
+    // ============ DTO CONVERSION METHODS ============
 
     /**
      * Convert Promotion to PromotionDTO with pre-calculated values
@@ -93,20 +109,18 @@ public class PromotionService {
 
         PromotionDTO dto = new PromotionDTO();
 
-        // Basic information
+        // Copy basic information
         dto.setPromotionId(promotion.getPromotionId());
         dto.setTitle(promotion.getTitle());
         dto.setDescription(promotion.getDescription());
         dto.setStartDate(promotion.getStartDate());
         dto.setEndDate(promotion.getEndDate());
         dto.setDiscountPercentage(promotion.getDiscountPercentage());
-        dto.setDiscountAmount(promotion.getDiscountAmount());
-
-        // User-specific flags (already available in model)
+        // User-specific flags (from model)
         dto.setClaimedByUser(promotion.isClaimedByUser());
         dto.setUsedByUser(promotion.isUsedByUser());
 
-        // Status flags (pre-calculated)
+        // Pre-calculate status flags
         dto.setActive(isPromotionActive(promotion));
         dto.setExpired(isPromotionExpired(promotion));
 
@@ -147,35 +161,36 @@ public class PromotionService {
 
         CarWithDiscountDTO dto = new CarWithDiscountDTO();
 
-        // Basic car information - FIXED: Use correct Car model method names
-        dto.setCarId(car.getId());              // getId() not getCarId()
-        dto.setName(car.getName());             // getName() (alias for getModel())
+        // Copy basic car information
+        dto.setCarId(car.getId());
+        dto.setName(car.getName());
         dto.setBrandName(car.getBrandName());
         dto.setYear(car.getYear());
         dto.setColor(car.getColor());
         dto.setPrice(car.getPrice());
         dto.setStatus(car.getStatus());
-        dto.setQuantity(car.getStock());        // getStock() not getQuantity()
-        dto.setImageUrl(car.getImageUrl());     // ADD THIS - imageUrl
+        dto.setQuantity(car.getStock());
+        dto.setImageUrl(car.getImageUrl());
 
-        // Pre-calculate discount information
-        boolean hasDiscount = car.getDiscountPercentage() > 0 || car.getDiscountAmount() > 0;
-        dto.setHasDiscount(hasDiscount);
-        dto.setDiscountPercentage(car.getDiscountPercentage());
-        dto.setDiscountAmount(car.getDiscountAmount());
+        if (promotion != null && promotion.getDiscountPercentage() > 0) {
+            double percentage = promotion.getDiscountPercentage();
 
-        if (hasDiscount) {
-            // Calculate discount value using service method
-            double discountValue = calculateCarDiscountValue(car);
+            dto.setHasDiscount(true);
+            dto.setDiscountPercentage(percentage);
+
+            // Pre-calculate discount using percentage
+            double discountValue = calculateDiscountValue(car.getPrice(), percentage);
             double discountedPrice = car.getPrice() - discountValue;
 
             dto.setDiscountValue(discountValue);
             dto.setDiscountedPrice(discountedPrice);
 
-            logger.debug("Car {} discount: {} -> {} (saved: {})",
-                    car.getName(), car.getPrice(), discountedPrice, discountValue);
+            logger.debug("Car {} discount: {}% = {}₫ -> final: {}₫",
+                    car.getName(), percentage, discountValue, discountedPrice);
         } else {
             // No discount
+            dto.setHasDiscount(false);
+            dto.setDiscountPercentage(0);
             dto.setDiscountValue(0.0);
             dto.setDiscountedPrice(car.getPrice());
         }
@@ -212,8 +227,8 @@ public class PromotionService {
         }
 
         dto.CartItemDTO dto = new dto.CartItemDTO();
-        dto.setId(cartItem.getId());              // getId() not getCartItemId()
-        dto.setCartId(cartItem.getCartId());      // getCartId() not getUserId()
+        dto.setId(cartItem.getId());
+        dto.setCartId(cartItem.getCartId());
         dto.setCarId(cartItem.getCarId());
         dto.setQuantity(cartItem.getQuantity());
 
@@ -246,7 +261,7 @@ public class PromotionService {
                 .collect(Collectors.toList());
     }
 
-    // ============ EXISTING BUSINESS LOGIC METHODS ============
+    // ============ CART & PROMOTION LOGIC ============
 
     /**
      * Get available promotions that user can apply to their cart
@@ -330,48 +345,32 @@ public class PromotionService {
             return discounts;
         }
 
-        // Get cars in promotion with their specific discounts
-        List<Car> applicableCars = promotionDAO.getCarsInPromotion(promotionId);
-        Map<Integer, Car> carDiscountMap = new HashMap<>();
-        for (Car car : applicableCars) {
-            carDiscountMap.put(car.getId(), car);
+        double promotionPercentage = promotion.getDiscountPercentage();
+        if (promotionPercentage <= 0) {
+            logger.warn("Promotion {} has no discount", promotionId);
+            return discounts;
         }
 
-        logger.debug("Found {} cars applicable for promotion {}",
-                carDiscountMap.size(), promotionId);
+        // Get applicable car IDs
+        List<Integer> applicableCarIds = promotionDAO.getCarIdsInPromotion(promotionId);
+
+        logger.debug("Found {} cars applicable for promotion {} with {}% discount",
+                applicableCarIds.size(), promotionId, promotionPercentage);
 
         // Calculate discount for each cart item
         for (CartItem item : cartItems) {
             int carId = item.getCar().getId();
 
-            if (carDiscountMap.containsKey(carId)) {
-                Car carWithDiscount = carDiscountMap.get(carId);
+            if (applicableCarIds.contains(carId)) {
                 double originalPrice = item.getCar().getPrice();
-                double discountAmount = 0;
+                double discountPerItem = calculateDiscountValue(originalPrice, promotionPercentage);
+                double totalDiscount = discountPerItem * item.getQuantity();
 
-                // Priority: Car-specific discount > Promotion default discount
-                if (carWithDiscount.getDiscountPercentage() > 0) {
-                    discountAmount = originalPrice * (carWithDiscount.getDiscountPercentage() / 100);
-                    logger.debug("Applying car-specific percentage discount: {}%",
-                            carWithDiscount.getDiscountPercentage());
-                } else if (carWithDiscount.getDiscountAmount() > 0) {
-                    discountAmount = carWithDiscount.getDiscountAmount();
-                    logger.debug("Applying car-specific amount discount: {}₫", discountAmount);
-                } else if (promotion.getDiscountPercentage() > 0) {
-                    discountAmount = originalPrice * (promotion.getDiscountPercentage() / 100);
-                    logger.debug("Applying promotion percentage discount: {}%",
-                            promotion.getDiscountPercentage());
-                } else if (promotion.getDiscountAmount() > 0) {
-                    discountAmount = promotion.getDiscountAmount();
-                    logger.debug("Applying promotion amount discount: {}₫", discountAmount);
-                }
+                discounts.put(carId, totalDiscount);
 
-                // Apply discount to all quantity
-                discountAmount *= item.getQuantity();
-                discounts.put(carId, discountAmount);
-
-                logger.debug("Total discount for car {} (qty {}): {}₫",
-                        carId, item.getQuantity(), discountAmount);
+                logger.debug("Car {} (qty {}): {}% of {} = {}₫ per item, total: {}₫",
+                        carId, item.getQuantity(), promotionPercentage,
+                        originalPrice, discountPerItem, totalDiscount);
             }
         }
 
@@ -465,39 +464,7 @@ public class PromotionService {
     }
 
     /**
-     * Get discount info for a car with a specific promotion
-     */
-    public Car getCarWithPromotionInfo(int carId, int promotionId) {
-        logger.debug("Getting car {} with promotion {} info", carId, promotionId);
-
-        Car car = carDAO.getCarById(carId);
-        if (car == null) {
-            logger.warn("Car {} not found", carId);
-            return null;
-        }
-
-        // Get promotion details and car-specific discount
-        List<Car> carsInPromotion = promotionDAO.getCarsInPromotion(promotionId);
-
-        for (Car promotionCar : carsInPromotion) {
-            if (promotionCar.getId() == carId) {
-                // Copy discount info
-                car.setDiscountPercentage(promotionCar.getDiscountPercentage());
-                car.setDiscountAmount(promotionCar.getDiscountAmount());
-
-                logger.debug("Car {} has discount: {}% or {}₫",
-                        carId,
-                        promotionCar.getDiscountPercentage(),
-                        promotionCar.getDiscountAmount());
-                break;
-            }
-        }
-
-        return car;
-    }
-
-    /**
-     * Calculate best discount among multiple promotions for display
+     * Get best promotion for a car (highest discount percentage)
      */
     public Promotion getBestPromotionForCar(int carId, List<Promotion> promotions) {
 
@@ -510,28 +477,43 @@ public class PromotionService {
             return null;
         }
 
-        Promotion bestPromotion = null;
-        double maxDiscount = 0;
-
-        for (Promotion promo : promotions) {
-            Car carWithDiscount = getCarWithPromotionInfo(carId, promo.getPromotionId());
-            if (carWithDiscount == null) {
-                continue;
-            }
-
-            double discountValue = calculateCarDiscountValue(carWithDiscount);
-
-            if (discountValue > maxDiscount) {
-                maxDiscount = discountValue;
-                bestPromotion = promo;
-            }
-        }
+        Promotion bestPromotion = promotions.stream()
+                .filter(p -> isPromotionActive(p) && p.getDiscountPercentage() > 0)
+                .max((p1, p2) -> Double.compare(p1.getDiscountPercentage(), p2.getDiscountPercentage()))
+                .orElse(null);
 
         if (bestPromotion != null) {
-            logger.info("Best promotion for car {}: {} with {}₫ discount",
-                    carId, bestPromotion.getPromotionId(), maxDiscount);
+            double discountValue = calculateDiscountValue(
+                    car.getPrice(), bestPromotion.getDiscountPercentage());
+
+            logger.info("Best promotion for car {}: {} with {}% discount ({}₫)",
+                    carId, bestPromotion.getPromotionId(),
+                    bestPromotion.getDiscountPercentage(), discountValue);
         }
 
         return bestPromotion;
+    }
+
+    /**
+     * Calculate discount value for a car with a specific promotion
+     */
+    public double calculateDiscountForCar(int carId, int promotionId) {
+        Car car = carDAO.getCarById(carId);
+        if (car == null) {
+            return 0;
+        }
+
+        Promotion promotion = promotionDAO.getPromotionById(promotionId);
+        if (promotion == null || !isPromotionActive(promotion)) {
+            return 0;
+        }
+
+        // Check if promotion applies to this car
+        List<Integer> applicableCarIds = promotionDAO.getCarIdsInPromotion(promotionId);
+        if (!applicableCarIds.contains(carId)) {
+            return 0;
+        }
+
+        return calculateDiscountValue(car.getPrice(), promotion.getDiscountPercentage());
     }
 }

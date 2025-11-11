@@ -4,6 +4,11 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
+/**
+ *
+ * @author Nguyen Gia Huy
+ * @version 2.0 - Fixed to match database
+ */
 public class Promotion implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -13,20 +18,27 @@ public class Promotion implements Serializable {
     private Date startDate;
     private Date endDate;
     private double discountPercentage;
-    private double discountAmount;
+
+
     private boolean claimedByUser;
     private boolean usedByUser;
     private List<Car> applicableCars;
 
-    public Promotion() {}
+    // ============ CONSTRUCTORS ============
 
-    public Promotion(int promotionId, String title, String description, Date startDate, Date endDate) {
+    public Promotion() {
+    }
+
+    public Promotion(int promotionId, String title, String description,
+                     Date startDate, Date endDate) {
         this.promotionId = promotionId;
         this.title = title;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
     }
+
+    // ============ GETTERS & SETTERS ============
 
     public int getPromotionId() {
         return promotionId;
@@ -74,14 +86,6 @@ public class Promotion implements Serializable {
 
     public void setDiscountPercentage(double discountPercentage) {
         this.discountPercentage = discountPercentage;
-    }
-
-    public double getDiscountAmount() {
-        return discountAmount;
-    }
-
-    public void setDiscountAmount(double discountAmount) {
-        this.discountAmount = discountAmount;
     }
 
     public boolean isClaimedByUser() {

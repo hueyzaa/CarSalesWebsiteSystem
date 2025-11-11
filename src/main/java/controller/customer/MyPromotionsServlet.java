@@ -35,8 +35,6 @@ public class MyPromotionsServlet extends HttpServlet {
         logger.info("MyPromotionsServlet initialized");
     }
 
-    // ============ BUSINESS LOGIC (moved from Model) ============
-
     /**
      * Check if promotion is used by user
      */
@@ -118,7 +116,7 @@ public class MyPromotionsServlet extends HttpServlet {
     private void setPromotionAttributes(HttpServletRequest request,
                                         List<PromotionDTO> promotionDTOs,
                                         long unusedCount, long usedCount) {
-        request.setAttribute("claimedPromotions", promotionDTOs);  // Use DTOs
+        request.setAttribute("claimedPromotions", promotionDTOs);
         request.setAttribute("unusedCount", unusedCount);
         request.setAttribute("usedCount", usedCount);
         request.setAttribute("totalPromotions", promotionDTOs.size());

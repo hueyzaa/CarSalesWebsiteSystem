@@ -3,6 +3,12 @@ package model;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Car Model - PURE DATA ONLY
+ * Mapped to database Car table
+ * @author Nguyen Gia Huy
+ * @version 2.0 - Fixed to match database
+ */
 public class Car implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -18,16 +24,20 @@ public class Car implements Serializable {
     private String brandName;
     private String imageUrl;
     private List<CarImage> images;
-    private double discountPercentage;
-    private double discountAmount;
 
-    public Car() {}
+
+    // ============ CONSTRUCTORS ============
+
+    public Car() {
+    }
 
     public Car(int id, String model, double price) {
         this.id = id;
         this.model = model;
         this.price = price;
     }
+
+    // ============ GETTERS & SETTERS ============
 
     public int getId() {
         return id;
@@ -131,21 +141,5 @@ public class Car implements Serializable {
 
     public void setImages(List<CarImage> images) {
         this.images = images;
-    }
-
-    public double getDiscountPercentage() {
-        return discountPercentage;
-    }
-
-    public void setDiscountPercentage(double discountPercentage) {
-        this.discountPercentage = discountPercentage;
-    }
-
-    public double getDiscountAmount() {
-        return discountAmount;
-    }
-
-    public void setDiscountAmount(double discountAmount) {
-        this.discountAmount = discountAmount;
     }
 }

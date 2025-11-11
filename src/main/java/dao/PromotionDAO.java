@@ -10,6 +10,13 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * PromotionDAO - Database Access for Promotions
+ * FIXED: Khớp với database schema (chỉ discount_percentage)
+ *
+ * @author Nguyen Gia Huy
+ * @version 2.0 - Fixed to match database
+ */
 public class PromotionDAO {
     private static final Logger logger = LoggerFactory.getLogger(PromotionDAO.class);
 
@@ -19,7 +26,7 @@ public class PromotionDAO {
     public List<Promotion> getAllPromotions() {
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT promotion_id, title, description, start_date, end_date, " +
-                "discount_percentage, discount_amount " +
+                "discount_percentage " +
                 "FROM Promotion " +
                 "ORDER BY start_date DESC";
 
@@ -47,7 +54,7 @@ public class PromotionDAO {
     public List<Promotion> getAllActivePromotions() {
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT promotion_id, title, description, start_date, end_date, " +
-                "discount_percentage, discount_amount " +
+                "discount_percentage " +
                 "FROM Promotion " +
                 "WHERE GETDATE() BETWEEN start_date AND end_date " +
                 "ORDER BY start_date DESC";
@@ -77,7 +84,7 @@ public class PromotionDAO {
     public List<Promotion> getAllActivePromotionsWithUserStatus(Integer userId) {
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT p.promotion_id, p.title, p.description, p.start_date, p.end_date, " +
-                "p.discount_percentage, p.discount_amount" +
+                "p.discount_percentage" +
                 (userId != null ?
                         ", CASE WHEN up.user_promotion_id IS NOT NULL THEN 1 ELSE 0 END as is_claimed, " +
                                 "CASE WHEN up.is_used = 1 THEN 1 ELSE 0 END as is_used " :
@@ -122,7 +129,7 @@ public class PromotionDAO {
      */
     public Promotion getPromotionById(int promotionId) {
         String sql = "SELECT promotion_id, title, description, start_date, end_date, " +
-                "discount_percentage, discount_amount " +
+                "discount_percentage " +
                 "FROM Promotion " +
                 "WHERE promotion_id = ?";
 
@@ -154,7 +161,7 @@ public class PromotionDAO {
     public List<Promotion> getPromotionsByCar(int carId){
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT p.promotion_id, p.title, p.description, p.start_date, p.end_date, " +
-                "p.discount_percentage, p.discount_amount " +
+                "p.discount_percentage " +
                 "FROM Promotion p " +
                 "INNER JOIN CarPromotion cp ON p.promotion_id = cp.promotion_id " +
                 "WHERE cp.car_id = ? " +
@@ -187,8 +194,8 @@ public class PromotionDAO {
      */
     public int createPromotion(Promotion promotion){
         String sql = "INSERT INTO Promotion (title, description, start_date, end_date, " +
-                "discount_percentage, discount_amount) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+                "discount_percentage) " +
+                "VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -198,7 +205,6 @@ public class PromotionDAO {
             stmt.setDate(3, new java.sql.Date(promotion.getStartDate().getTime()));
             stmt.setDate(4, new java.sql.Date(promotion.getEndDate().getTime()));
             stmt.setDouble(5, promotion.getDiscountPercentage());
-            stmt.setDouble(6, promotion.getDiscountAmount());
 
             int affectedRows = stmt.executeUpdate();
 
@@ -228,7 +234,7 @@ public class PromotionDAO {
     public boolean updatePromotion(Promotion promotion) {
         String sql = "UPDATE Promotion " +
                 "SET title = ?, description = ?, start_date = ?, end_date = ?, " +
-                "discount_percentage = ?, discount_amount = ? " +
+                "discount_percentage = ? " +
                 "WHERE promotion_id = ?";
 
         try (Connection conn = DBContext.getConnection();
@@ -239,8 +245,7 @@ public class PromotionDAO {
             stmt.setDate(3, new java.sql.Date(promotion.getStartDate().getTime()));
             stmt.setDate(4, new java.sql.Date(promotion.getEndDate().getTime()));
             stmt.setDouble(5, promotion.getDiscountPercentage());
-            stmt.setDouble(6, promotion.getDiscountAmount());
-            stmt.setInt(7, promotion.getPromotionId());
+            stmt.setInt(6, promotion.getPromotionId());
 
             int affectedRows = stmt.executeUpdate();
             boolean success = affectedRows > 0;
@@ -278,38 +283,29 @@ public class PromotionDAO {
     }
 
     /**
-     * Add car to promotion with specific discount
+     * Add car to promotion (Pure Mapping - NO discount parameters)
+     * CarPromotion table chỉ có car_id và promotion_id
      */
-    public boolean addCarToPromotion(int carId, int promotionId, double discountPercentage, double discountAmount) {
-        String sql = "INSERT INTO CarPromotion (car_id, promotion_id, discount_percentage, discount_amount) " +
-                "VALUES (?, ?, ?, ?)";
+    public boolean addCarToPromotion(int carId, int promotionId) {
+        String sql = "INSERT INTO CarPromotion (car_id, promotion_id) " +
+                "VALUES (?, ?)";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, carId);
             stmt.setInt(2, promotionId);
-            stmt.setDouble(3, discountPercentage);
-            stmt.setDouble(4, discountAmount);
 
             int affectedRows = stmt.executeUpdate();
             boolean success = affectedRows > 0;
 
-            logger.info("Added car {} to promotion {} with discount: {}%, {} amount: {}",
-                    carId, promotionId, discountPercentage, discountAmount, success);
+            logger.info("Added car {} to promotion {}: {}", carId, promotionId, success);
             return success;
 
         } catch (SQLException e) {
             logger.error("Error adding car {} to promotion {}", carId, promotionId, e);
             throw new RuntimeException("Không thể thêm xe vào khuyến mãi", e);
         }
-    }
-
-    /**
-     * Add car to promotion (using default promotion discount)
-     */
-    public boolean addCarToPromotion(int carId, int promotionId) {
-        return addCarToPromotion(carId, promotionId, 0, 0);
     }
 
     /**
@@ -337,13 +333,13 @@ public class PromotionDAO {
     }
 
     /**
-     * Get all cars in a promotion (returns full Car objects with individual discounts)
+     * Get all cars in a promotion
+     * Car model không có discount fields
      */
     public List<Car> getCarsInPromotion(int promotionId)  {
         List<Car> cars = new ArrayList<>();
         String sql = "SELECT c.car_id, c.brand_id, c.model, c.price, c.status, " +
                 "c.description, c.year, c.color, c.stock, b.brand_name, " +
-                "cp.discount_percentage, cp.discount_amount, " +
                 "(SELECT TOP 1 image_url FROM CarImage WHERE car_id = c.car_id AND is_primary = 1) as image_url " +
                 "FROM Car c " +
                 "INNER JOIN CarPromotion cp ON c.car_id = cp.car_id " +
@@ -369,8 +365,6 @@ public class PromotionDAO {
                     car.setColor(rs.getString("color"));
                     car.setStock(rs.getInt("stock"));
                     car.setImageUrl(rs.getString("image_url"));
-                    car.setDiscountPercentage(rs.getDouble("discount_percentage"));
-                    car.setDiscountAmount(rs.getDouble("discount_amount"));
 
                     cars.add(car);
                 }
@@ -493,7 +487,7 @@ public class PromotionDAO {
     public List<Promotion> getUserClaimedPromotions(int userId)  {
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT p.promotion_id, p.title, p.description, p.start_date, p.end_date, " +
-                "p.discount_percentage, p.discount_amount, " +
+                "p.discount_percentage, " +
                 "up.claimed_at, up.is_used, up.used_at " +
                 "FROM Promotion p " +
                 "INNER JOIN UserPromotion up ON p.promotion_id = up.promotion_id " +
@@ -530,9 +524,7 @@ public class PromotionDAO {
     public List<Promotion> getUserAvailablePromotionsForCar(int userId, int carId)  {
         List<Promotion> promotions = new ArrayList<>();
         String sql = "SELECT p.promotion_id, p.title, p.description, p.start_date, p.end_date, " +
-                "p.discount_percentage, p.discount_amount, " +
-                "cp.discount_percentage as car_discount_percentage, " +
-                "cp.discount_amount as car_discount_amount " +
+                "p.discount_percentage " +
                 "FROM Promotion p " +
                 "INNER JOIN UserPromotion up ON p.promotion_id = up.promotion_id " +
                 "INNER JOIN CarPromotion cp ON p.promotion_id = cp.promotion_id " +
@@ -540,7 +532,7 @@ public class PromotionDAO {
                 "AND cp.car_id = ? " +
                 "AND up.is_used = 0 " +
                 "AND GETDATE() BETWEEN p.start_date AND p.end_date " +
-                "ORDER BY cp.discount_percentage DESC, cp.discount_amount DESC";
+                "ORDER BY p.discount_percentage DESC";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -655,14 +647,7 @@ public class PromotionDAO {
         promotion.setDescription(rs.getString("description"));
         promotion.setStartDate(rs.getDate("start_date"));
         promotion.setEndDate(rs.getDate("end_date"));
-
-        try {
-            promotion.setDiscountPercentage(rs.getDouble("discount_percentage"));
-            promotion.setDiscountAmount(rs.getDouble("discount_amount"));
-        } catch (SQLException e) {
-            promotion.setDiscountPercentage(0);
-            promotion.setDiscountAmount(0);
-        }
+        promotion.setDiscountPercentage(rs.getDouble("discount_percentage"));
 
         return promotion;
     }

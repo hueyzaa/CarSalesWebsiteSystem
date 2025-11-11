@@ -18,6 +18,13 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * CarDetailServlet - Customer view car details with promotions
+ * FIXED: Bỏ discountAmount, chỉ dùng discountPercentage
+ *
+ * @author Nguyen Gia Huy
+ * @version 2.0 - Fixed to match database
+ */
 @WebServlet("/car-detail")
 public class CarDetailServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(CarDetailServlet.class);
@@ -90,7 +97,6 @@ public class CarDetailServlet extends HttpServlet {
         request.setAttribute("activePromotions", promotions);
         request.setAttribute("bestPromotion", discount.bestPromotion);
         request.setAttribute("bestDiscountPercentage", discount.discountPercentage);
-        request.setAttribute("bestDiscountAmount", discount.discountAmount);
 
         if (discount.hasDiscount()) {
             request.setAttribute("discountedPrice", discount.discountedPrice);
@@ -120,7 +126,7 @@ public class CarDetailServlet extends HttpServlet {
 
         for (Promotion promo : promotions) {
             DiscountInfo current = calculatePromotionDiscount(car, promo);
-            if (current.isBetterThan(best, car.getPrice())) {
+            if (current.isBetterThan(best)) {
                 best = current;
             }
         }
@@ -130,33 +136,19 @@ public class CarDetailServlet extends HttpServlet {
 
     private DiscountInfo calculatePromotionDiscount(Car car, Promotion promo) {
         try {
-            Car carWithPromo = promotionService.getCarWithPromotionInfo(
-                    car.getId(), promo.getPromotionId());
+            double discountPercent = promo.getDiscountPercentage();
 
-            if (carWithPromo == null) {
+            if (discountPercent <= 0) {
                 return new DiscountInfo();
             }
 
-            double discountPercent = getEffectiveValue(
-                    carWithPromo.getDiscountPercentage(),
-                    promo.getDiscountPercentage());
-
-            double discountAmount = getEffectiveValue(
-                    carWithPromo.getDiscountAmount(),
-                    promo.getDiscountAmount());
-
-            return DiscountInfo.create(car.getPrice(), discountPercent,
-                    discountAmount, promo);
+            return DiscountInfo.create(car.getPrice(), discountPercent, promo);
 
         } catch (Exception e) {
             logger.error("Error calculating discount for promotion {}",
                     promo.getPromotionId(), e);
             return new DiscountInfo();
         }
-    }
-
-    private double getEffectiveValue(double carValue, double promoValue) {
-        return carValue > 0 ? carValue : promoValue;
     }
 
     // ============ RELATED CARS ============
@@ -219,41 +211,36 @@ public class CarDetailServlet extends HttpServlet {
 
     private static class DiscountInfo {
         double discountPercentage;
-        double discountAmount;
         double discountedPrice;
         double savings;
         Promotion bestPromotion;
 
-        static DiscountInfo create(double carPrice, double discountPercent,
-                                   double discountAmount, Promotion promo) {
+        static DiscountInfo create(double carPrice, double discountPercent, Promotion promo) {
             DiscountInfo info = new DiscountInfo();
             info.discountPercentage = discountPercent;
-            info.discountAmount = discountAmount;
             info.bestPromotion = promo;
 
             if (discountPercent > 0) {
-                info.savings = carPrice * (discountPercent / 100);
+                info.savings = carPrice * (discountPercent / 100.0);
                 info.discountedPrice = carPrice - info.savings;
             } else {
-                info.savings = discountAmount;
-                info.discountedPrice = carPrice - discountAmount;
+                info.savings = 0;
+                info.discountedPrice = carPrice;
             }
 
             return info;
         }
 
         boolean hasDiscount() {
-            return discountedPrice > 0;
+            return discountPercentage > 0 && savings > 0;
         }
 
         double getActualSavings(double carPrice) {
-            return (discountPercentage > 0)
-                    ? carPrice * (discountPercentage / 100)
-                    : discountAmount;
+            return carPrice * (discountPercentage / 100.0);
         }
 
-        boolean isBetterThan(DiscountInfo other, double carPrice) {
-            return this.getActualSavings(carPrice) > other.getActualSavings(carPrice);
+        boolean isBetterThan(DiscountInfo other) {
+            return this.savings > other.savings;
         }
     }
 }

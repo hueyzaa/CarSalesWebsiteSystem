@@ -11,6 +11,12 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * OrdersDAO - Database Access for Orders
+ *
+ * @author Nguyen Gia Huy
+ * @version 2.0 - Fixed to match database
+ */
 public class OrdersDAO {
     private static final Logger logger = LoggerFactory.getLogger(OrdersDAO.class);
 
@@ -317,7 +323,7 @@ public class OrdersDAO {
      */
     public Promotion getOrderPromotion(int orderId) {
         String sql = "SELECT p.promotion_id, p.title, p.description, p.start_date, p.end_date, " +
-                "p.discount_percentage, p.discount_amount " +
+                "p.discount_percentage " +
                 "FROM Promotion p " +
                 "INNER JOIN Orders o ON p.promotion_id = o.promotion_id " +
                 "WHERE o.order_id = ?";
@@ -336,7 +342,6 @@ public class OrdersDAO {
                     promotion.setStartDate(rs.getDate("start_date"));
                     promotion.setEndDate(rs.getDate("end_date"));
                     promotion.setDiscountPercentage(rs.getDouble("discount_percentage"));
-                    promotion.setDiscountAmount(rs.getDouble("discount_amount"));
 
                     logger.info("Retrieved promotion for order: {}", orderId);
                     return promotion;
@@ -357,18 +362,12 @@ public class OrdersDAO {
      */
     public double getOrderPromotionDiscount(int orderId) {
         String sql = "SELECT " +
-                "CASE " +
-                "    WHEN p.discount_percentage > 0 THEN " +
-                "        SUM(od.price * od.quantity) * (p.discount_percentage / 100) " +
-                "    WHEN p.discount_amount > 0 THEN " +
-                "        p.discount_amount " +
-                "    ELSE 0 " +
-                "END as total_discount " +
+                "SUM(od.price * od.quantity) * (p.discount_percentage / 100) as total_discount " +
                 "FROM Orders o " +
                 "INNER JOIN Promotion p ON o.promotion_id = p.promotion_id " +
                 "INNER JOIN OrderDetail od ON o.order_id = od.order_id " +
                 "WHERE o.order_id = ? " +
-                "GROUP BY p.discount_percentage, p.discount_amount";
+                "GROUP BY p.discount_percentage";
 
         try (Connection conn = DBContext.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

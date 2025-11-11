@@ -12,6 +12,11 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * AddPromotionServlet - Admin create new promotion
+ * * @author
+ * @version
+ */
 @WebServlet("/Admin/add-promotion")
 public class AddPromotionServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(AddPromotionServlet.class);
@@ -20,7 +25,8 @@ public class AddPromotionServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/WEB-INF/views/Admin/add-promotion.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/Admin/add-promotion.jsp")
+                .forward(request, response);
     }
 
     @Override
@@ -29,37 +35,68 @@ public class AddPromotionServlet extends HttpServlet {
         try {
             request.setCharacterEncoding("UTF-8");
 
+            // Get parameters
             String title = request.getParameter("title");
             String description = request.getParameter("description");
             double discountPercentage = Double.parseDouble(request.getParameter("discountPercentage"));
-            double discountAmount = Double.parseDouble(request.getParameter("discountAmount"));
 
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             Date startDate = sdf.parse(request.getParameter("startDate"));
             Date endDate = sdf.parse(request.getParameter("endDate"));
 
+            // Validate input
+            if (title == null || title.trim().isEmpty()) {
+                throw new IllegalArgumentException("Tiêu đề không được để trống");
+            }
+
+            if (discountPercentage < 0 || discountPercentage > 100) {
+                throw new IllegalArgumentException("Phần trăm giảm giá phải từ 0-100");
+            }
+
+            if (endDate.before(startDate)) {
+                throw new IllegalArgumentException("Ngày kết thúc phải sau ngày bắt đầu");
+            }
+
+            // Create promotion object
             Promotion promotion = new Promotion();
-            promotion.setTitle(title);
-            promotion.setDescription(description);
+            promotion.setTitle(title.trim());
+            promotion.setDescription(description != null ? description.trim() : "");
             promotion.setDiscountPercentage(discountPercentage);
-            promotion.setDiscountAmount(discountAmount);
             promotion.setStartDate(startDate);
             promotion.setEndDate(endDate);
 
+            // Save to database
             int promotionId = promotionDAO.createPromotion(promotion);
 
             if (promotionId > 0) {
-                request.getSession().setAttribute("success", "Thêm khuyến mãi mới thành công!");
+                logger.info("Created promotion {} successfully", promotionId);
+                request.getSession().setAttribute("success",
+                        "Thêm khuyến mãi mới thành công!");
                 response.sendRedirect(request.getContextPath() + "/Admin/promotion-list");
             } else {
+                logger.warn("Failed to create promotion");
                 request.setAttribute("error", "Không thể thêm khuyến mãi mới.");
-                request.getRequestDispatcher("/WEB-INF/views/Admin/add-promotion.jsp").forward(request, response);
+                request.getRequestDispatcher("/WEB-INF/views/Admin/add-promotion.jsp")
+                        .forward(request, response);
             }
 
+        } catch (NumberFormatException e) {
+            logger.error("Invalid number format in promotion data", e);
+            request.setAttribute("error",
+                    "Dữ liệu nhập không hợp lệ. Vui lòng kiểm tra lại!");
+            request.getRequestDispatcher("/WEB-INF/views/Admin/add-promotion.jsp")
+                    .forward(request, response);
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error: {}", e.getMessage());
+            request.setAttribute("error", e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/Admin/add-promotion.jsp")
+                    .forward(request, response);
         } catch (Exception e) {
             logger.error("Lỗi khi thêm khuyến mãi mới", e);
-            request.setAttribute("error", "Đã xảy ra lỗi trong quá trình thêm khuyến mãi!");
-            request.getRequestDispatcher("/WEB-INF/views/Admin/add-promotion.jsp").forward(request, response);
+            request.setAttribute("error",
+                    "Đã xảy ra lỗi trong quá trình thêm khuyến mãi: " + e.getMessage());
+            request.getRequestDispatcher("/WEB-INF/views/Admin/add-promotion.jsp")
+                    .forward(request, response);
         }
     }
 }

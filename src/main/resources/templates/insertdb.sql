@@ -362,8 +362,8 @@ VALUES (
            N'Ưu Đãi Học Sinh - Sinh Viên Mua Xe',
            N'Car Showroom đồng hành cùng thế hệ trẻ. Giảm ngay 50 triệu đồng khi xuất trình thẻ sinh viên còn hiệu lực. Hỗ trợ vay 90% giá trị xe, không cần chứng minh thu nhập (bảo lãnh bởi phụ huynh). Lãi suất ưu đãi 7.5%/năm, ân hạn nợ gốc 12 tháng đầu. Sinh viên xuất sắc có GPA từ 3.5 trở lên sẽ được giảm thêm 20 triệu đồng. Tặng thêm bộ phụ kiện thể thao trị giá 15 triệu đồng.',
            '2025-01-01',
-           '2025-12-31',
-           0,
+           '2026-12-31',
+           20,
            0
        );
 
@@ -373,7 +373,7 @@ VALUES (
            N'Khuyến Mãi Tết Nguyên Đán 2025',
            N'Mừng xuân Ất Tỵ, giảm giá đến 15% cho tất cả các dòng xe. Tặng kèm gói bảo hiểm VIP trị giá 30 triệu đồng. Miễn phí bảo dưỡng 2 năm đầu. Hỗ trợ trả góp lãi suất 0% trong 6 tháng đầu tiên. Tặng thêm phụ kiện cao cấp trị giá 25 triệu đồng bao gồm: camera hành trình, cảm biến lùi, thảm lót sàn 3D.',
            '2025-01-15',
-           '2025-02-28',
+           '2026-02-28',
            15.00,
            0
        );
@@ -384,7 +384,7 @@ VALUES (
            N'Ưu Đãi Mua Xe Cuối Năm',
            N'Giảm ngay 50 triệu đồng cho khách hàng mua xe trong tháng 12. Tặng kèm phụ kiện cao cấp trị giá 20 triệu. Hỗ trợ trả góp 0% lãi suất trong 12 tháng đầu. Bảo hành mở rộng 5 năm hoặc 100.000km. Miễn phí đăng ký và đăng kiểm lần đầu. Tặng thêm 1 năm bảo hiểm thân vỏ.',
            '2024-12-01',
-           '2024-12-31',
+           '2026-12-31',
            0,
            0
        );
@@ -395,7 +395,7 @@ VALUES (
            N'Flash Sale Cuối Tuần',
            N'Giảm sốc 10% cho tất cả các dòng xe chỉ trong 3 ngày cuối tuần. Áp dụng từ thứ 6 đến chủ nhật hàng tuần. Số lượng có hạn, khách hàng đặt cọc trước sẽ được ưu tiên. Tặng kèm bộ phụ kiện thể thao trị giá 10 triệu đồng. Miễn phí phủ ceramic 1 lần.',
            '2025-10-01',
-           '2025-10-31',
+           '2026-10-31',
            10.00,
            0
        );
@@ -406,7 +406,7 @@ VALUES (
            N'Tri Ân Khách Hàng Thân Thiết',
            N'Dành riêng cho khách hàng đã mua xe tại showroom. Giảm giá đặc biệt khi giới thiệu bạn bè mua xe. Tặng voucher bảo dưỡng miễn phí trị giá 5 triệu đồng. Ưu đãi mua phụ kiện giảm đến 30%. Hỗ trợ thu cũ đổi mới với giá cao nhất thị trường.',
            '2025-01-01',
-           '2025-12-31',
+           '2026-12-31',
            5.00,
            0
        );

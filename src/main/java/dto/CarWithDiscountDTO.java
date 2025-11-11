@@ -1,9 +1,11 @@
 package dto;
 
 /**
- * CarWithDiscountDTO - Data Transfer Object for Car with pre-calculated discount values
- * Used to pass car data with discount information to JSP views
- * All business logic calculations are done before creating this DTO
+ * CarWithDiscountDTO - Car with pre-calculated discount
+ * All discount calculations done by PromotionService
+ *
+ * @author Nguyen Gia Huy
+ * @version 2.0 - Fixed: Only percentage discount
  */
 public class CarWithDiscountDTO {
     // Basic car information
@@ -15,16 +17,17 @@ public class CarWithDiscountDTO {
     private double price;
     private String status;
     private int quantity;
-    private String imageUrl;  // ADD THIS
+    private String imageUrl;
 
-    // Discount information (pre-calculated)
+    // Pre-calculated discount (chỉ percentage)
     private boolean hasDiscount;
     private double discountPercentage;
-    private double discountAmount;
     private double discountedPrice;
     private double discountValue;
 
-    // Constructors
+
+    // ============ CONSTRUCTORS ============
+
     public CarWithDiscountDTO() {
     }
 
@@ -38,7 +41,8 @@ public class CarWithDiscountDTO {
         this.price = price;
     }
 
-    // Getters and Setters
+    // ============ GETTERS & SETTERS ============
+
     public int getCarId() {
         return carId;
     }
@@ -127,14 +131,6 @@ public class CarWithDiscountDTO {
         this.discountPercentage = discountPercentage;
     }
 
-    public double getDiscountAmount() {
-        return discountAmount;
-    }
-
-    public void setDiscountAmount(double discountAmount) {
-        this.discountAmount = discountAmount;
-    }
-
     public double getDiscountedPrice() {
         return discountedPrice;
     }
@@ -156,13 +152,9 @@ public class CarWithDiscountDTO {
         return "CarWithDiscountDTO{" +
                 "carId=" + carId +
                 ", name='" + name + '\'' +
-                ", brandName='" + brandName + '\'' +
-                ", year=" + year +
-                ", color='" + color + '\'' +
                 ", price=" + price +
                 ", hasDiscount=" + hasDiscount +
                 ", discountPercentage=" + discountPercentage +
-                ", discountAmount=" + discountAmount +
                 ", discountedPrice=" + discountedPrice +
                 ", discountValue=" + discountValue +
                 '}';

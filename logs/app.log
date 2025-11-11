@@ -1,60 +1,120 @@
-2025-11-09 19:16:51.335 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 2147483647
-2025-11-09 19:16:51.368 [main] WARN  controller.customer.CartServlet - Insufficient stock for cart update: requested 101, available 100
-2025-11-09 19:16:51.383 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 1
-2025-11-09 19:16:51.388 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 1
-2025-11-09 19:16:51.393 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 0
-2025-11-09 19:16:51.400 [main] WARN  controller.customer.CartServlet - Failed to update cart item 1 for user 1
-2025-11-09 19:16:51.403 [main] WARN  controller.customer.CartServlet - Failed to remove cart item -1
-2025-11-09 19:16:51.407 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 100
-2025-11-09 19:16:51.413 [main] WARN  controller.customer.CartServlet - Insufficient stock for car 1: requested 101, available 100
-2025-11-09 19:16:51.417 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 1) to cart
-2025-11-09 19:16:51.421 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 5) to cart
-2025-11-09 19:16:51.425 [main] INFO  controller.customer.CartServlet - Removed cart item 1
-2025-11-09 19:16:51.427 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 999
-2025-11-09 19:16:51.430 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 100) to cart
-2025-11-09 19:16:51.435 [main] INFO  controller.customer.CartServlet - Removed cart item 5
-2025-11-09 19:16:51.438 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 99) to cart
-2025-11-09 19:16:51.440 [main] WARN  controller.customer.CartServlet - Cart item 999 not found for user 1
-2025-11-09 19:16:51.443 [main] WARN  controller.customer.CartServlet - Attempted to add non-existent car 999
-2025-11-09 19:16:51.446 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 5
-2025-11-09 19:16:51.449 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 99
-2025-11-09 19:16:51.502 [main] INFO  service.EmailService - Loaded .env from resources
-2025-11-09 19:16:51.503 [main] INFO  service.EmailService - Email config loaded - Host: smtp.gmail.com, Port: 587, From: noreply@carshowroom.com
-2025-11-09 19:16:51.767 [main] INFO  controller.customer.AuthServlet - Verification email sent to: newuser@test.com
-2025-11-09 19:16:51.771 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên quá dài (tối đa 100 ký tự)
-2025-11-09 19:16:51.775 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu xác nhận không khớp
-2025-11-09 19:16:51.778 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu phải có ít nhất 8 ký tự
-2025-11-09 19:16:51.783 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu phải có ít nhất 8 ký tự
-2025-11-09 19:16:51.786 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên không được để trống
-2025-11-09 19:16:52.015 [main] INFO  controller.customer.AuthServlet - Verification email sent to: user@test.com
-2025-11-09 19:16:52.254 [main] WARN  controller.customer.AuthServlet - Register error: Email service error
-2025-11-09 19:16:52.503 [main] INFO  controller.customer.AuthServlet - Verification email sent to: new@test.com
-2025-11-09 19:16:52.507 [main] WARN  controller.customer.AuthServlet - Register error: Email không hợp lệ
-2025-11-09 19:16:52.509 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên không được để trống
-2025-11-09 19:16:52.514 [main] WARN  controller.customer.AuthServlet - Register error: Yêu cầu không hợp lệ (CSRF)
-2025-11-09 19:16:52.518 [main] WARN  controller.customer.AuthServlet - Register error: Email đã được sử dụng
-2025-11-09 19:16:52.748 [main] INFO  controller.customer.AuthServlet - Verification email sent to: user@test.com
-2025-11-09 19:16:52.979 [main] INFO  controller.customer.AuthServlet - Verification email sent to: user@test.com
-2025-11-09 19:16:52.981 [main] WARN  controller.customer.AuthServlet - Register error: Email đã được sử dụng
-2025-11-09 19:16:52.984 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
-2025-11-09 19:16:52.987 [main] INFO  util.SessionUtils - User logged in: admin@test.com (Role: ADMIN, ID: 3)
-2025-11-09 19:16:52.987 [main] INFO  controller.customer.AuthServlet - User logged in: admin@test.com (Role: ADMIN)
-2025-11-09 19:16:52.991 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
-2025-11-09 19:16:52.993 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
-2025-11-09 19:16:52.996 [main] INFO  util.SessionUtils - User logged in: user@test.com (Role: CUSTOMER, ID: 1)
-2025-11-09 19:16:52.996 [main] INFO  controller.customer.AuthServlet - User logged in: user@test.com (Role: CUSTOMER)
-2025-11-09 19:16:52.998 [main] INFO  util.SessionUtils - User logged in: admin@test.com (Role: ADMIN, ID: 1)
-2025-11-09 19:16:52.998 [main] INFO  controller.customer.AuthServlet - User logged in: admin@test.com (Role: ADMIN)
-2025-11-09 19:16:53.000 [main] INFO  util.SessionUtils - User logged in: staff@test.com (Role: STAFF, ID: 2)
-2025-11-09 19:16:53.000 [main] INFO  controller.customer.AuthServlet - User logged in: staff@test.com (Role: STAFF)
-2025-11-09 19:16:53.003 [main] WARN  controller.customer.AuthServlet - Login error: Email không hợp lệ
-2025-11-09 19:16:53.006 [main] WARN  controller.customer.AuthServlet - Login error: Yêu cầu không hợp lệ (CSRF)
-2025-11-09 19:16:53.008 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
-2025-11-09 19:16:53.010 [main] WARN  controller.customer.AuthServlet - Login error: Yêu cầu không hợp lệ (CSRF)
-2025-11-09 19:16:53.012 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
-2025-11-09 19:16:53.014 [main] INFO  util.SessionUtils - User logged in: customer@test.com (Role: CUSTOMER, ID: 3)
-2025-11-09 19:16:53.015 [main] INFO  controller.customer.AuthServlet - User logged in: customer@test.com (Role: CUSTOMER)
-2025-11-09 19:16:53.017 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
-2025-11-09 19:16:53.020 [main] INFO  util.SessionUtils - User logged in: staff@test.com (Role: STAFF, ID: 2)
-2025-11-09 19:16:53.020 [main] INFO  controller.customer.AuthServlet - User logged in: staff@test.com (Role: STAFF)
-2025-11-09 19:16:53.023 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-11 18:24:57.683 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 2147483647
+2025-11-11 18:24:57.715 [main] WARN  controller.customer.CartServlet - Insufficient stock for cart update: requested 101, available 100
+2025-11-11 18:24:57.731 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 1
+2025-11-11 18:24:57.736 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 1
+2025-11-11 18:24:57.740 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 0
+2025-11-11 18:24:57.747 [main] WARN  controller.customer.CartServlet - Failed to update cart item 1 for user 1
+2025-11-11 18:24:57.750 [main] WARN  controller.customer.CartServlet - Failed to remove cart item -1
+2025-11-11 18:24:57.754 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 100
+2025-11-11 18:24:57.760 [main] WARN  controller.customer.CartServlet - Insufficient stock for car 1: requested 101, available 100
+2025-11-11 18:24:57.764 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 1) to cart
+2025-11-11 18:24:57.766 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 5) to cart
+2025-11-11 18:24:57.769 [main] INFO  controller.customer.CartServlet - Removed cart item 1
+2025-11-11 18:24:57.772 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 999
+2025-11-11 18:24:57.775 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 100) to cart
+2025-11-11 18:24:57.780 [main] INFO  controller.customer.CartServlet - Removed cart item 5
+2025-11-11 18:24:57.783 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 99) to cart
+2025-11-11 18:24:57.785 [main] WARN  controller.customer.CartServlet - Cart item 999 not found for user 1
+2025-11-11 18:24:57.788 [main] WARN  controller.customer.CartServlet - Attempted to add non-existent car 999
+2025-11-11 18:24:57.792 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 5
+2025-11-11 18:24:57.795 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 99
+2025-11-11 18:24:57.847 [main] INFO  service.EmailService - Loaded .env from resources
+2025-11-11 18:24:57.847 [main] INFO  service.EmailService - Email config loaded - Host: smtp.gmail.com, Port: 587, From: noreply@carshowroom.com
+2025-11-11 18:24:58.100 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:24:58.125 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên quá dài (tối đa 100 ký tự)
+2025-11-11 18:24:58.128 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu xác nhận không khớp
+2025-11-11 18:24:58.131 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu phải có ít nhất 8 ký tự
+2025-11-11 18:24:58.134 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu phải có ít nhất 8 ký tự
+2025-11-11 18:24:58.138 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên không được để trống
+2025-11-11 18:24:58.368 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:24:58.602 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:24:58.831 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:24:58.835 [main] WARN  controller.customer.AuthServlet - Register error: Email không hợp lệ
+2025-11-11 18:24:58.839 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên không được để trống
+2025-11-11 18:24:58.843 [main] WARN  controller.customer.AuthServlet - Register error: Yêu cầu không hợp lệ (CSRF)
+2025-11-11 18:24:58.847 [main] WARN  controller.customer.AuthServlet - Register error: Email đã được sử dụng
+2025-11-11 18:24:59.079 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:24:59.308 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:24:59.311 [main] WARN  controller.customer.AuthServlet - Register error: Email đã được sử dụng
+2025-11-11 18:24:59.313 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-11 18:24:59.315 [main] INFO  util.SessionUtils - User logged in: admin@test.com (Role: ADMIN, ID: 3)
+2025-11-11 18:24:59.316 [main] INFO  controller.customer.AuthServlet - User logged in: admin@test.com (Role: ADMIN)
+2025-11-11 18:24:59.319 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-11 18:24:59.323 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-11 18:24:59.325 [main] INFO  util.SessionUtils - User logged in: user@test.com (Role: CUSTOMER, ID: 1)
+2025-11-11 18:24:59.326 [main] INFO  controller.customer.AuthServlet - User logged in: user@test.com (Role: CUSTOMER)
+2025-11-11 18:24:59.328 [main] INFO  util.SessionUtils - User logged in: admin@test.com (Role: ADMIN, ID: 1)
+2025-11-11 18:24:59.329 [main] INFO  controller.customer.AuthServlet - User logged in: admin@test.com (Role: ADMIN)
+2025-11-11 18:24:59.332 [main] INFO  util.SessionUtils - User logged in: staff@test.com (Role: STAFF, ID: 2)
+2025-11-11 18:24:59.332 [main] INFO  controller.customer.AuthServlet - User logged in: staff@test.com (Role: STAFF)
+2025-11-11 18:24:59.334 [main] WARN  controller.customer.AuthServlet - Login error: Email không hợp lệ
+2025-11-11 18:24:59.336 [main] WARN  controller.customer.AuthServlet - Login error: Yêu cầu không hợp lệ (CSRF)
+2025-11-11 18:24:59.339 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-11 18:24:59.342 [main] WARN  controller.customer.AuthServlet - Login error: Yêu cầu không hợp lệ (CSRF)
+2025-11-11 18:24:59.344 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-11 18:24:59.346 [main] INFO  util.SessionUtils - User logged in: customer@test.com (Role: CUSTOMER, ID: 3)
+2025-11-11 18:24:59.346 [main] INFO  controller.customer.AuthServlet - User logged in: customer@test.com (Role: CUSTOMER)
+2025-11-11 18:24:59.349 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-11 18:24:59.351 [main] INFO  util.SessionUtils - User logged in: staff@test.com (Role: STAFF, ID: 2)
+2025-11-11 18:24:59.351 [main] INFO  controller.customer.AuthServlet - User logged in: staff@test.com (Role: STAFF)
+2025-11-11 18:24:59.354 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-11 18:25:42.826 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 2147483647
+2025-11-11 18:25:42.856 [main] WARN  controller.customer.CartServlet - Insufficient stock for cart update: requested 101, available 100
+2025-11-11 18:25:42.871 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 1
+2025-11-11 18:25:42.875 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 1
+2025-11-11 18:25:42.878 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 0
+2025-11-11 18:25:42.885 [main] WARN  controller.customer.CartServlet - Failed to update cart item 1 for user 1
+2025-11-11 18:25:42.888 [main] WARN  controller.customer.CartServlet - Failed to remove cart item -1
+2025-11-11 18:25:42.892 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 100
+2025-11-11 18:25:42.898 [main] WARN  controller.customer.CartServlet - Insufficient stock for car 1: requested 101, available 100
+2025-11-11 18:25:42.901 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 1) to cart
+2025-11-11 18:25:42.906 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 5) to cart
+2025-11-11 18:25:42.911 [main] INFO  controller.customer.CartServlet - Removed cart item 1
+2025-11-11 18:25:42.915 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 999
+2025-11-11 18:25:42.918 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 100) to cart
+2025-11-11 18:25:42.925 [main] INFO  controller.customer.CartServlet - Removed cart item 5
+2025-11-11 18:25:42.928 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 99) to cart
+2025-11-11 18:25:42.932 [main] WARN  controller.customer.CartServlet - Cart item 999 not found for user 1
+2025-11-11 18:25:42.935 [main] WARN  controller.customer.CartServlet - Attempted to add non-existent car 999
+2025-11-11 18:25:42.937 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 5
+2025-11-11 18:25:42.941 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 99
+2025-11-11 18:25:42.994 [main] INFO  service.EmailService - Loaded .env from resources
+2025-11-11 18:25:42.995 [main] INFO  service.EmailService - Email config loaded - Host: smtp.gmail.com, Port: 587, From: noreply@carshowroom.com
+2025-11-11 18:25:43.262 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:25:43.282 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên quá dài (tối đa 100 ký tự)
+2025-11-11 18:25:43.286 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu xác nhận không khớp
+2025-11-11 18:25:43.289 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu phải có ít nhất 8 ký tự
+2025-11-11 18:25:43.293 [main] WARN  controller.customer.AuthServlet - Register error: Mật khẩu phải có ít nhất 8 ký tự
+2025-11-11 18:25:43.296 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên không được để trống
+2025-11-11 18:25:43.523 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:25:43.754 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:25:43.981 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:25:43.985 [main] WARN  controller.customer.AuthServlet - Register error: Email không hợp lệ
+2025-11-11 18:25:43.989 [main] WARN  controller.customer.AuthServlet - Register error: Họ và tên không được để trống
+2025-11-11 18:25:43.993 [main] WARN  controller.customer.AuthServlet - Register error: Yêu cầu không hợp lệ (CSRF)
+2025-11-11 18:25:43.996 [main] WARN  controller.customer.AuthServlet - Register error: Email đã được sử dụng
+2025-11-11 18:25:44.224 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:25:44.450 [main] WARN  controller.customer.AuthServlet - Register error: Không thể tạo tài khoản. Vui lòng thử lại.
+2025-11-11 18:25:44.455 [main] WARN  controller.customer.AuthServlet - Register error: Email đã được sử dụng
+2025-11-11 18:25:44.458 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-11 18:25:44.462 [main] INFO  util.SessionUtils - User logged in: admin@test.com (Role: ADMIN, ID: 3)
+2025-11-11 18:25:44.463 [main] INFO  controller.customer.AuthServlet - User logged in: admin@test.com (Role: ADMIN)
+2025-11-11 18:25:44.466 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-11 18:25:44.469 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-11 18:25:44.472 [main] INFO  util.SessionUtils - User logged in: user@test.com (Role: CUSTOMER, ID: 1)
+2025-11-11 18:25:44.472 [main] INFO  controller.customer.AuthServlet - User logged in: user@test.com (Role: CUSTOMER)
+2025-11-11 18:25:44.475 [main] INFO  util.SessionUtils - User logged in: admin@test.com (Role: ADMIN, ID: 1)
+2025-11-11 18:25:44.475 [main] INFO  controller.customer.AuthServlet - User logged in: admin@test.com (Role: ADMIN)
+2025-11-11 18:25:44.479 [main] INFO  util.SessionUtils - User logged in: staff@test.com (Role: STAFF, ID: 2)
+2025-11-11 18:25:44.480 [main] INFO  controller.customer.AuthServlet - User logged in: staff@test.com (Role: STAFF)
+2025-11-11 18:25:44.483 [main] WARN  controller.customer.AuthServlet - Login error: Email không hợp lệ
+2025-11-11 18:25:44.485 [main] WARN  controller.customer.AuthServlet - Login error: Yêu cầu không hợp lệ (CSRF)
+2025-11-11 18:25:44.487 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-11 18:25:44.489 [main] WARN  controller.customer.AuthServlet - Login error: Yêu cầu không hợp lệ (CSRF)
+2025-11-11 18:25:44.491 [main] WARN  controller.customer.AuthServlet - Login error: Mật khẩu không được để trống
+2025-11-11 18:25:44.494 [main] INFO  util.SessionUtils - User logged in: customer@test.com (Role: CUSTOMER, ID: 3)
+2025-11-11 18:25:44.494 [main] INFO  controller.customer.AuthServlet - User logged in: customer@test.com (Role: CUSTOMER)
+2025-11-11 18:25:44.496 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng
+2025-11-11 18:25:44.497 [main] INFO  util.SessionUtils - User logged in: staff@test.com (Role: STAFF, ID: 2)
+2025-11-11 18:25:44.498 [main] INFO  controller.customer.AuthServlet - User logged in: staff@test.com (Role: STAFF)
+2025-11-11 18:25:44.500 [main] WARN  controller.customer.AuthServlet - Login error: Email hoặc mật khẩu không đúng

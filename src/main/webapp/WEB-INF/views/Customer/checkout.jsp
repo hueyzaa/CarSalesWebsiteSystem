@@ -212,7 +212,6 @@
             </span>
                         </div>
 
-                        <!-- Thông báo nếu thiếu thông tin -->
                         <c:if test="${empty user.phone or empty user.address}">
                             <div style="margin-top: 15px; padding: 15px; background: rgba(220, 53, 69, 0.1);
                         border-left: 4px solid #dc3545; border-radius: 8px;">
@@ -234,13 +233,11 @@
                 </div>
 
                 <!-- Cart Items -->
-                <%-- UPDATED: Now using CartItemDTO with pre-calculated subtotal --%>
                 <div class="checkout-container">
                     <h3 class="section-title"><i class="fas fa-shopping-cart"></i> Sản Phẩm</h3>
                     <c:forEach var="item" items="${cartItems}">
                         <div style="display: flex; gap: 15px; padding: 15px; background: #0f0f0f;
                              border-radius: 10px; margin-bottom: 15px; border: 1px solid #333;">
-                                <%-- Access DTO properties (car is CarWithDiscountDTO) --%>
                             <img src="${item.car.imageUrl}" alt="${item.car.name}"
                                  style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
                             <div style="flex: 1;">
@@ -255,7 +252,6 @@
                                     × ${item.quantity}
                                 </div>
                             </div>
-                                <%-- Pre-calculated subtotal from DTO --%>
                             <div style="text-align: right; color: #ffd700; font-weight: 700; font-size: 1.1rem;">
                                 <fmt:formatNumber value="${item.subtotal}" pattern="#,##0" /> ₫
                             </div>
@@ -283,7 +279,6 @@
                 </div>
 
                 <!-- Promotion Selection -->
-                <%-- UPDATED: Now using PromotionDTO with pre-calculated properties --%>
                 <c:if test="${not empty availablePromotions}">
                     <div class="checkout-container" id="promotionContainer">
                         <h3 class="section-title"><i class="fas fa-ticket-alt"></i> Áp Dụng Khuyến Mãi</h3>
@@ -307,7 +302,7 @@
                             </label>
                         </div>
 
-                        <!-- Available Promotions - Using DTO properties -->
+                        <!-- Available Promotions -->
                         <c:forEach var="promo" items="${availablePromotions}" varStatus="status">
                             <div class="promotion-option-card" onclick="selectPromotion(${promo.promotionId}, this)">
                                 <input type="radio" name="promotionSelection" value="${promo.promotionId}"
@@ -326,14 +321,7 @@
                                              color: white; padding: 10px 18px; border-radius: 20px; font-weight: 700;
                                              display: flex; align-items: center; justify-content: center;
                                              min-width: 80px; text-align: center;">
-                                            <c:choose>
-                                                <c:when test="${promo.discountPercentage > 0}">
-                                                    -${promo.discountPercentage}%
-                                                </c:when>
-                                                <c:otherwise>
-                                                    -<fmt:formatNumber value="${promo.discountAmount}" pattern="#,##0" /> ₫
-                                                </c:otherwise>
-                                            </c:choose>
+                                            -${promo.discountPercentage}%
                                         </div>
                                     </div>
                                 </label>
@@ -382,12 +370,10 @@
     const originalTotal = ${total};
     const depositPercentage = ${depositPercentage} / 100;
     let selectedPromotionId = null;
-
     const promotionDiscounts = {
     <c:forEach var="promo" items="${availablePromotions}" varStatus="status">
     ${promo.promotionId}: {
-        percentage: ${promo.discountPercentage},
-        amount: ${promo.discountAmount}
+        percentage: ${promo.discountPercentage}
     }${!status.last ? ',' : ''}
     </c:forEach>
     };
@@ -395,21 +381,17 @@
     function selectPromotion(promotionId, element) {
         selectedPromotionId = promotionId;
 
-        // Remove selected class from all cards
         document.querySelectorAll('.promotion-option-card').forEach(card => {
             card.classList.remove('selected');
         });
 
-        // Add selected class to clicked card
         element.classList.add('selected');
 
-        // Check the radio button
         const radio = element.querySelector('input[type="radio"]');
         if (radio) {
             radio.checked = true;
         }
 
-        // Update or create hidden input for form submission
         let hiddenInput = document.getElementById('selectedPromotionInput');
         if (!hiddenInput) {
             hiddenInput = document.createElement('input');
@@ -424,29 +406,23 @@
     }
 
     function selectPayment(type, element) {
-        // Remove selected class from all payment options
         document.querySelectorAll('.payment-option').forEach(opt => {
             opt.classList.remove('selected');
         });
 
-        // Add selected class to clicked option
         element.classList.add('selected');
 
-        // Check the radio button
         const radio = element.querySelector('input[type="radio"]');
         if (radio) {
             radio.checked = true;
         }
 
-        // Handle promotion availability based on payment type
         const promotionContainer = document.getElementById('promotionContainer');
         if (promotionContainer) {
             if (type === 'SHOWROOM') {
-                // Disable promotions for showroom payment
                 promotionContainer.style.opacity = '0.5';
                 promotionContainer.style.pointerEvents = 'none';
 
-                // Select "no promotion" option
                 const noPromoRadio = document.getElementById('promo-none');
                 if (noPromoRadio) {
                     noPromoRadio.checked = true;
@@ -454,7 +430,6 @@
                     selectPromotion(null, noPromoCard);
                 }
 
-                // Add info message if not exists
                 let infoMsg = document.getElementById('showroom-promo-info');
                 if (!infoMsg) {
                     infoMsg = document.createElement('div');
@@ -464,11 +439,9 @@
                     promotionContainer.querySelector('.section-title').after(infoMsg);
                 }
             } else {
-                // Enable promotions for deposit payment
                 promotionContainer.style.opacity = '1';
                 promotionContainer.style.pointerEvents = 'auto';
 
-                // Remove info message if exists
                 const infoMsg = document.getElementById('showroom-promo-info');
                 if (infoMsg) {
                     infoMsg.remove();
@@ -483,19 +456,15 @@
         let discount = 0;
         const paymentType = document.querySelector('input[name="paymentType"]:checked');
 
-        // Only apply promotion if payment type is DEPOSIT
         if (paymentType && paymentType.value === 'DEPOSIT' && selectedPromotionId && promotionDiscounts[selectedPromotionId]) {
             const promo = promotionDiscounts[selectedPromotionId];
             if (promo.percentage > 0) {
                 discount = originalTotal * (promo.percentage / 100);
-            } else if (promo.amount > 0) {
-                discount = promo.amount;
             }
         }
 
         const finalTotal = originalTotal - discount;
 
-        // Update discount row
         let discountRow = document.getElementById('discountRow');
         if (discount > 0) {
             discountRow.innerHTML =
@@ -507,11 +476,9 @@
             discountRow.style.display = 'none';
         }
 
-        // Update total
         document.querySelector('.summary-value.total').textContent =
             new Intl.NumberFormat('vi-VN').format(finalTotal) + '₫';
 
-        // Update button text based on payment type
         if (paymentType) {
             if (paymentType.value === 'DEPOSIT') {
                 const depositAmount = finalTotal * depositPercentage;
@@ -525,7 +492,6 @@
         }
     }
 
-    // Add event listeners to radio buttons for accessibility
     document.querySelectorAll('input[name="paymentType"]').forEach(radio => {
         radio.addEventListener('change', function() {
             const parent = this.closest('.payment-option');
@@ -541,7 +507,6 @@
         });
     });
 
-    // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         updateTotals();
     });

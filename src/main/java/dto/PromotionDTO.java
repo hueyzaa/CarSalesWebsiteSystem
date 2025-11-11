@@ -4,9 +4,11 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * PromotionDTO - Data Transfer Object for Promotion with pre-calculated values
- * Used to pass promotion data with applicable cars to JSP views
- * All business logic calculations are done before creating this DTO
+ * PromotionDTO - Data Transfer Object for Promotion
+ * Pre-calculated values from PromotionService
+ *
+ * @author Nguyen Gia Huy
+ * @version 2.0 - Fixed: Only percentage discount
  */
 public class PromotionDTO {
     // Basic promotion information
@@ -16,20 +18,20 @@ public class PromotionDTO {
     private Date startDate;
     private Date endDate;
     private double discountPercentage;
-    private double discountAmount;
 
     // User-specific flags (pre-calculated)
     private boolean claimedByUser;
     private boolean usedByUser;
 
     // Status flags (pre-calculated)
-    private boolean active;      // Is promotion currently active
-    private boolean expired;     // Is promotion expired
+    private boolean active;
+    private boolean expired;
 
     // Applicable cars with pre-calculated discounts
     private List<CarWithDiscountDTO> applicableCars;
 
-    // Constructors
+    // ============ CONSTRUCTORS ============
+
     public PromotionDTO() {
     }
 
@@ -42,7 +44,8 @@ public class PromotionDTO {
         this.endDate = endDate;
     }
 
-    // Getters and Setters
+    // ============ GETTERS & SETTERS ============
+
     public int getPromotionId() {
         return promotionId;
     }
@@ -91,14 +94,6 @@ public class PromotionDTO {
         this.discountPercentage = discountPercentage;
     }
 
-    public double getDiscountAmount() {
-        return discountAmount;
-    }
-
-    public void setDiscountAmount(double discountAmount) {
-        this.discountAmount = discountAmount;
-    }
-
     public boolean isClaimedByUser() {
         return claimedByUser;
     }
@@ -144,13 +139,9 @@ public class PromotionDTO {
         return "PromotionDTO{" +
                 "promotionId=" + promotionId +
                 ", title='" + title + '\'' +
-                ", description='" + description + '\'' +
-                ", startDate=" + startDate +
-                ", endDate=" + endDate +
                 ", discountPercentage=" + discountPercentage +
-                ", discountAmount=" + discountAmount +
+                ", active=" + active +
                 ", claimedByUser=" + claimedByUser +
-                ", usedByUser=" + usedByUser +
                 ", applicableCars=" + (applicableCars != null ? applicableCars.size() + " cars" : "null") +
                 '}';
     }
