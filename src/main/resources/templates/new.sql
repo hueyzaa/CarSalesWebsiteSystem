@@ -141,7 +141,6 @@ CREATE TABLE Promotion (
                            start_date DATE NOT NULL,
                            end_date DATE NOT NULL,
                            discount_percentage DECIMAL(5,2) DEFAULT 0 NOT NULL,
-    -- ❌ REMOVED: discount_amount DECIMAL(15,2)
                            CONSTRAINT CHK_Promotion_Percentage CHECK (discount_percentage >= 0 AND discount_percentage <= 100),
                            CONSTRAINT CHK_Promotion_Dates CHECK (end_date >= start_date)
 );
@@ -199,8 +198,6 @@ GO
 CREATE TABLE CarPromotion (
                               car_id INT NOT NULL,
                               promotion_id INT NOT NULL,
-    -- ❌ REMOVED: discount_percentage DECIMAL(5,2)
-    -- ❌ REMOVED: discount_amount DECIMAL(15,2)
                               PRIMARY KEY(car_id, promotion_id),
                               FOREIGN KEY (car_id) REFERENCES Car(car_id) ON DELETE CASCADE,
                               FOREIGN KEY (promotion_id) REFERENCES Promotion(promotion_id) ON DELETE CASCADE

@@ -266,7 +266,7 @@
                     <div class="payment-option selected" onclick="selectPayment('DEPOSIT', this)">
                         <input type="radio" name="paymentType" value="DEPOSIT" id="payment-deposit" required checked>
                         <label for="payment-deposit">
-                            <i class="fas fa-hand-holding-usd"></i> Đặt Cọc 10% - Thanh Toán Online
+                            <i class="fas fa-hand-holding-usd"></i> Đặt Cọc ${depositPercentage}% - Thanh Toán Online
                         </label>
                     </div>
 
@@ -303,9 +303,12 @@
                         </div>
 
                         <!-- Available Promotions -->
-                        <c:forEach var="promo" items="${availablePromotions}" varStatus="status">
-                            <div class="promotion-option-card" onclick="selectPromotion(${promo.promotionId}, this)">
-                                <input type="radio" name="promotionSelection" value="${promo.promotionId}"
+                        <c:forEach var="promo" items="${availablePromotions}">
+                            <div class="promotion-option-card"
+                                 onclick="selectPromotion(${promo.promotionId}, this)"
+                                 data-promo-id="${promo.promotionId}">
+                                <input type="radio" name="promotionSelection"
+                                       value="${promo.promotionId}"
                                        id="promo-${promo.promotionId}">
                                 <label for="promo-${promo.promotionId}">
                                     <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
@@ -338,19 +341,22 @@
 
                     <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #333;">
                         <span style="color: #888;">Tổng giá trị:</span>
-                        <span style="color: #f8f9fa; font-weight: 600;">
-                            <fmt:formatNumber value="${total}" pattern="#,##0" /> ₫
+                        <span style="color: #f8f9fa; font-weight: 600;" id="originalTotal">
+                            <fmt:formatNumber value="${originalTotal}" pattern="#,##0" /> ₫
                         </span>
                     </div>
 
                     <div id="discountRow" style="display: none; color: #28a745; padding: 12px 0;
-                         border-bottom: 1px solid #333;"></div>
+                         border-bottom: 1px solid #333;">
+                        <span>Giảm giá:</span>
+                        <span id="discountAmount"></span>
+                    </div>
 
                     <div style="display: flex; justify-content: space-between; padding: 20px 0;
                          border-top: 2px solid #444; margin-top: 15px;">
                         <span style="color: #888; font-weight: 600;">Tổng thanh toán:</span>
-                        <span class="summary-value total" style="color: #ffd700; font-size: 1.5rem; font-weight: 700;">
-                            <fmt:formatNumber value="${total}" pattern="#,##0" /> ₫
+                        <span class="summary-value total" style="color: #ffd700; font-size: 1.5rem; font-weight: 700;" id="finalTotal">
+                            <fmt:formatNumber value="${originalTotal}" pattern="#,##0" /> ₫
                         </span>
                     </div>
 
@@ -366,33 +372,49 @@
 <jsp:include page="footer.jsp" />
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    const originalTotal = ${total};
-    const depositPercentage = ${depositPercentage} / 100;
-    let selectedPromotionId = null;
-    const promotionDiscounts = {
-    <c:forEach var="promo" items="${availablePromotions}" varStatus="status">
-    ${promo.promotionId}: {
-        percentage: ${promo.discountPercentage}
-    }${!status.last ? ',' : ''}
-    </c:forEach>
+    var preCalculatedData = {
+        originalTotal: ${originalTotal},
+        depositPercentage: ${depositPercentage},
+        noPromotionDeposit: {
+            finalTotal: ${noPromotionDeposit.finalTotal},
+            depositAmount: ${noPromotionDeposit.depositAmount},
+            hasDiscount: false
+        },
+        noPromotionShowroom: {
+            finalTotal: ${noPromotionShowroom.finalTotal},
+            hasDiscount: false
+        },
+        promotionPreviews: {
+            <c:if test="${not empty promotionPreviews}">
+            <c:forEach var="entry" items="${promotionPreviews}" varStatus="status">
+            "${entry.key}": {
+                finalTotal: ${entry.value.finalTotal},
+                discountAmount: ${empty entry.value.discountAmount ? 0 : entry.value.discountAmount},
+                discountPercentage: ${empty entry.value.discountPercentage ? 0 : entry.value.discountPercentage},
+                depositAmount: ${entry.value.depositAmount}
+            }<c:if test="${!status.last}">,</c:if>
+            </c:forEach>
+            </c:if>
+        }
     };
 
+    var currentPaymentType = 'DEPOSIT';
+    var currentPromotionId = null;
+
     function selectPromotion(promotionId, element) {
-        selectedPromotionId = promotionId;
-
-        document.querySelectorAll('.promotion-option-card').forEach(card => {
-            card.classList.remove('selected');
-        });
-
+        currentPromotionId = promotionId;
+        var allCards = document.querySelectorAll('.promotion-option-card');
+        for (var i = 0; i < allCards.length; i++) {
+            allCards[i].classList.remove('selected');
+        }
         element.classList.add('selected');
-
-        const radio = element.querySelector('input[type="radio"]');
+        var radio = element.querySelector('input[type="radio"]');
         if (radio) {
             radio.checked = true;
         }
-
-        let hiddenInput = document.getElementById('selectedPromotionInput');
+        var hiddenInput = document.getElementById('selectedPromotionInput');
         if (!hiddenInput) {
             hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';
@@ -401,36 +423,32 @@
             document.getElementById('checkoutForm').appendChild(hiddenInput);
         }
         hiddenInput.value = promotionId || '';
-
-        updateTotals();
+        updateSummaryDisplay();
     }
 
     function selectPayment(type, element) {
-        document.querySelectorAll('.payment-option').forEach(opt => {
-            opt.classList.remove('selected');
-        });
-
+        currentPaymentType = type;
+        var allOptions = document.querySelectorAll('.payment-option');
+        for (var i = 0; i < allOptions.length; i++) {
+            allOptions[i].classList.remove('selected');
+        }
         element.classList.add('selected');
-
-        const radio = element.querySelector('input[type="radio"]');
+        var radio = element.querySelector('input[type="radio"]');
         if (radio) {
             radio.checked = true;
         }
-
-        const promotionContainer = document.getElementById('promotionContainer');
+        var promotionContainer = document.getElementById('promotionContainer');
         if (promotionContainer) {
             if (type === 'SHOWROOM') {
                 promotionContainer.style.opacity = '0.5';
                 promotionContainer.style.pointerEvents = 'none';
-
-                const noPromoRadio = document.getElementById('promo-none');
+                var noPromoRadio = document.getElementById('promo-none');
                 if (noPromoRadio) {
                     noPromoRadio.checked = true;
-                    const noPromoCard = noPromoRadio.closest('.promotion-option-card');
+                    var noPromoCard = noPromoRadio.closest('.promotion-option-card');
                     selectPromotion(null, noPromoCard);
                 }
-
-                let infoMsg = document.getElementById('showroom-promo-info');
+                var infoMsg = document.getElementById('showroom-promo-info');
                 if (!infoMsg) {
                     infoMsg = document.createElement('div');
                     infoMsg.id = 'showroom-promo-info';
@@ -441,74 +459,65 @@
             } else {
                 promotionContainer.style.opacity = '1';
                 promotionContainer.style.pointerEvents = 'auto';
-
-                const infoMsg = document.getElementById('showroom-promo-info');
+                var infoMsg = document.getElementById('showroom-promo-info');
                 if (infoMsg) {
                     infoMsg.remove();
                 }
             }
         }
-
-        updateTotals();
+        updateSummaryDisplay();
     }
 
-    function updateTotals() {
-        let discount = 0;
-        const paymentType = document.querySelector('input[name="paymentType"]:checked');
-
-        if (paymentType && paymentType.value === 'DEPOSIT' && selectedPromotionId && promotionDiscounts[selectedPromotionId]) {
-            const promo = promotionDiscounts[selectedPromotionId];
-            if (promo.percentage > 0) {
-                discount = originalTotal * (promo.percentage / 100);
-            }
+    function updateSummaryDisplay() {
+        var summaryData;
+        if (currentPaymentType === 'SHOWROOM') {
+            summaryData = preCalculatedData.noPromotionShowroom;
+        } else if (currentPromotionId && preCalculatedData.promotionPreviews && preCalculatedData.promotionPreviews[currentPromotionId]) {
+            summaryData = preCalculatedData.promotionPreviews[currentPromotionId];
+        } else {
+            summaryData = preCalculatedData.noPromotionDeposit;
         }
-
-        const finalTotal = originalTotal - discount;
-
-        let discountRow = document.getElementById('discountRow');
-        if (discount > 0) {
-            discountRow.innerHTML =
-                '<span>Giảm giá:</span>' +
-                '<span>-' + new Intl.NumberFormat('vi-VN').format(discount) + '₫</span>';
+        var discountRow = document.getElementById('discountRow');
+        if (summaryData.discountAmount && summaryData.discountAmount > 0) {
+            document.getElementById('discountAmount').textContent = '-' + formatCurrency(summaryData.discountAmount) + '₫';
             discountRow.style.display = 'flex';
             discountRow.style.justifyContent = 'space-between';
         } else {
             discountRow.style.display = 'none';
         }
+        document.getElementById('finalTotal').textContent = formatCurrency(summaryData.finalTotal) + '₫';
+        updateButtonText(summaryData);
+    }
 
-        document.querySelector('.summary-value.total').textContent =
-            new Intl.NumberFormat('vi-VN').format(finalTotal) + '₫';
-
-        if (paymentType) {
-            if (paymentType.value === 'DEPOSIT') {
-                const depositAmount = finalTotal * depositPercentage;
-                document.getElementById('placeOrderBtn').innerHTML =
-                    '<i class="fas fa-check-circle"></i> Đặt Cọc ' +
-                    new Intl.NumberFormat('vi-VN').format(depositAmount) + '₫';
-            } else {
-                document.getElementById('placeOrderBtn').innerHTML =
-                    '<i class="fas fa-check-circle"></i> Xác Nhận Đặt Xe';
-            }
+    function updateButtonText(summaryData) {
+        var btn = document.getElementById('placeOrderBtn');
+        if (currentPaymentType === 'DEPOSIT') {
+            var depositAmount = summaryData.depositAmount || 0;
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> Đặt Cọc ' + formatCurrency(depositAmount) + '₫';
+        } else {
+            btn.innerHTML = '<i class="fas fa-check-circle"></i> Xác Nhận Đặt Xe';
         }
     }
 
-    document.querySelectorAll('input[name="paymentType"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const parent = this.closest('.payment-option');
-            selectPayment(this.value, parent);
-        });
-    });
-
-    document.querySelectorAll('input[name="promotionSelection"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const parent = this.closest('.promotion-option-card');
-            const promoId = this.value === '' ? null : parseInt(this.value);
-            selectPromotion(promoId, parent);
-        });
-    });
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN').format(Math.round(amount));
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
-        updateTotals();
+        updateSummaryDisplay();
+        document.querySelectorAll('input[name="paymentType"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                var parent = this.closest('.payment-option');
+                selectPayment(this.value, parent);
+            });
+        });
+        document.querySelectorAll('input[name="promotionSelection"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                var parent = this.closest('.promotion-option-card');
+                var promoId = this.value === '' ? null : parseInt(this.value);
+                selectPromotion(promoId, parent);
+            });
+        });
     });
 </script>
 </body>

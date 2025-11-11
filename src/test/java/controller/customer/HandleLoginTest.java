@@ -137,7 +137,7 @@ public class HandleLoginTest {
 
         // Assert
         verify(authDAO).login("staff@test.com", "Pass1234");
-        verify(response).sendRedirect(contains("/staff/dashboard"));
+        verify(response).sendRedirect(contains("/Staff/dashboard"));
     }
 
     @Test
@@ -163,7 +163,7 @@ public class HandleLoginTest {
 
         // Assert
         verify(authDAO).login("admin@test.com", "Pass1234");
-        verify(response).sendRedirect(contains("/admin/dashboard"));
+        verify(response).sendRedirect(contains("/Admin/dashboard"));
     }
 
     @Test
@@ -375,7 +375,7 @@ public class HandleLoginTest {
         servlet.doPost(request, response);
 
         // Assert
-        verify(response).sendRedirect(contains("/admin/dashboard"));
+        verify(response).sendRedirect(contains("/Admin/dashboard"));
     }
 
     @Test
@@ -399,7 +399,7 @@ public class HandleLoginTest {
         servlet.doPost(request, response);
 
         // Assert
-        verify(response).sendRedirect(contains("/staff/dashboard"));
+        verify(response).sendRedirect(contains("/Staff/dashboard"));
     }
 
     @Test
