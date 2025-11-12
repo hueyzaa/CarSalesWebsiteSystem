@@ -1,0 +1,20 @@
+2025-11-12 23:52:17.888 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 2147483647
+2025-11-12 23:52:17.933 [main] WARN  controller.customer.CartServlet - Insufficient stock for cart update: requested 101, available 100
+2025-11-12 23:52:17.950 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 1
+2025-11-12 23:52:17.955 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 1
+2025-11-12 23:52:17.959 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 0
+2025-11-12 23:52:17.968 [main] WARN  controller.customer.CartServlet - Failed to update cart item 1 for user 1
+2025-11-12 23:52:17.973 [main] WARN  controller.customer.CartServlet - Failed to remove cart item -1
+2025-11-12 23:52:17.977 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 100
+2025-11-12 23:52:17.985 [main] WARN  controller.customer.CartServlet - Insufficient stock for car 1: requested 101, available 100
+2025-11-12 23:52:17.990 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 1) to cart
+2025-11-12 23:52:17.994 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 5) to cart
+2025-11-12 23:52:17.998 [main] INFO  controller.customer.CartServlet - Removed cart item 1
+2025-11-12 23:52:18.002 [main] WARN  controller.customer.CartServlet - Failed to remove cart item 999
+2025-11-12 23:52:18.006 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 100) to cart
+2025-11-12 23:52:18.012 [main] INFO  controller.customer.CartServlet - Removed cart item 5
+2025-11-12 23:52:18.016 [main] INFO  controller.customer.CartServlet - User 1 added car 1 (qty: 99) to cart
+2025-11-12 23:52:18.019 [main] WARN  controller.customer.CartServlet - Cart item 999 not found for user 1
+2025-11-12 23:52:18.022 [main] WARN  controller.customer.CartServlet - Attempted to add non-existent car 999
+2025-11-12 23:52:18.025 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 5
+2025-11-12 23:52:18.028 [main] INFO  controller.customer.CartServlet - User 1 updated cart item 1 to quantity 99
