@@ -651,4 +651,75 @@ public class PromotionDAO {
 
         return promotion;
     }
+
+    public int createPromotionWithCars(Promotion promotion, List<Integer> carIds) {
+        Connection conn = null;
+        try {
+            conn = DBContext.getConnection();
+            conn.setAutoCommit(false);
+
+            // Step 1: Insert promotion
+            String promotionSql = "INSERT INTO Promotion (title, description, start_date, end_date, discount_percentage) " +
+                    "OUTPUT INSERTED.promotion_id " +
+                    "VALUES (?, ?, ?, ?, ?)";
+
+            int promotionId = -1;
+
+            try (PreparedStatement stmt = conn.prepareStatement(promotionSql)) {
+                stmt.setString(1, promotion.getTitle());
+                stmt.setString(2, promotion.getDescription());
+                stmt.setDate(3, new java.sql.Date(promotion.getStartDate().getTime()));
+                stmt.setDate(4, new java.sql.Date(promotion.getEndDate().getTime()));
+                stmt.setDouble(5, promotion.getDiscountPercentage());
+
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    promotionId = rs.getInt(1);
+                }
+            }
+
+            if (promotionId <= 0) {
+                throw new SQLException("Failed to create promotion");
+            }
+
+            // Step 2: Insert car associations
+            if (carIds != null && !carIds.isEmpty()) {
+                String carPromotionSql = "INSERT INTO CarPromotion (car_id, promotion_id) VALUES (?, ?)";
+
+                try (PreparedStatement stmt = conn.prepareStatement(carPromotionSql)) {
+                    for (Integer carId : carIds) {
+                        stmt.setInt(1, carId);
+                        stmt.setInt(2, promotionId);
+                        stmt.addBatch();
+                    }
+                    stmt.executeBatch();
+                }
+            }
+
+            conn.commit();
+            logger.info("Created promotion {} with {} cars", promotionId, carIds.size());
+            return promotionId;
+
+        } catch (SQLException e) {
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                    logger.error("Rolled back promotion creation", e);
+                } catch (SQLException ex) {
+                    logger.error("Error during rollback", ex);
+                }
+            }
+            logger.error("Error creating promotion with cars", e);
+            return -1;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                } catch (SQLException e) {
+                    logger.error("Error closing connection", e);
+                }
+            }
+        }
+    }
 }

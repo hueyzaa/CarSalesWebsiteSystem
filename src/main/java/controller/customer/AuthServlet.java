@@ -18,7 +18,8 @@ import java.util.UUID;
 
 /**
  * AuthServlet - Handles all authentication routes
- * UPDATED: Database-based email verification
+ * UPDATED: Stateless email verification (no session dependency)
+ * Version: 2.0 - Fixed for cross-device verification
  */
 @WebServlet(urlPatterns = {"/register", "/verify", "/login", "/logout", "/forgot-password", "/reset-password"})
 public class AuthServlet extends HttpServlet {
@@ -31,7 +32,7 @@ public class AuthServlet extends HttpServlet {
         super.init();
         authDAO = new AuthDAO();
         emailService = new EmailService();
-        logger.info("AuthServlet initialized");
+        logger.info("AuthServlet initialized - Stateless verification enabled");
     }
 
     private boolean isAdmin(User user) {
@@ -98,7 +99,7 @@ public class AuthServlet extends HttpServlet {
     }
 
     // ============================================
-    // REGISTRATION (Database-based)
+    // REGISTRATION (Stateless - No Session Dependency)
     // ============================================
 
     private void showRegisterPage(HttpServletRequest request, HttpServletResponse response)
@@ -156,9 +157,8 @@ public class AuthServlet extends HttpServlet {
             emailService.sendVerificationEmail(request, email, name, verifyUrl);
             logger.info("Verification email sent to: {}", email);
 
-            // Store email in session for verification page
-            HttpSession session = request.getSession();
-            session.setAttribute("registeredEmail", email);
+            request.setAttribute("registeredEmail", email);
+            request.setAttribute("registeredName", name);
 
             request.getRequestDispatcher("/WEB-INF/views/Customer/verification-pending.jsp")
                     .forward(request, response);
@@ -170,7 +170,7 @@ public class AuthServlet extends HttpServlet {
     }
 
     // ============================================
-    // EMAIL VERIFICATION (Database-based)
+    // EMAIL VERIFICATION (Stateless - Works from Any Device)
     // ============================================
 
     private void handleVerifyEmail(HttpServletRequest request, HttpServletResponse response)
@@ -189,12 +189,22 @@ public class AuthServlet extends HttpServlet {
 
             if ((boolean) result.get("success")) {
                 int userId = (int) result.get("userId");
-                User user = authDAO.getUserByEmail(getUserEmailById(userId));
 
-                logger.info("Email verified for user: {}", userId);
+                User user = authDAO.getUserById(userId);
 
+                if (user == null) {
+                    logger.error("User not found after successful verification: {}", userId);
+                    showVerifyError(request, response, "Không tìm thấy thông tin người dùng");
+                    return;
+                }
+
+                logger.info("Email verified successfully for user: {} (ID: {})", user.getEmail(), userId);
+
+                // Set attributes for success page
                 request.setAttribute("success", "Email đã được xác thực thành công!");
-                request.setAttribute("email", user != null ? user.getEmail() : "");
+                request.setAttribute("email", user.getEmail());
+                request.setAttribute("userName", user.getName());
+
                 request.getRequestDispatcher("/WEB-INF/views/Customer/verify-success.jsp")
                         .forward(request, response);
             } else {
@@ -203,18 +213,8 @@ public class AuthServlet extends HttpServlet {
             }
 
         } catch (Exception e) {
-            logger.error("Verification error", e);
+            logger.error("Verification error for token: {}", token, e);
             showVerifyError(request, response, "Đã xảy ra lỗi. Vui lòng thử lại.");
-        }
-    }
-
-    private String getUserEmailById(int userId) {
-        try {
-            User user = authDAO.getUserByEmail("");
-            // This is a workaround - ideally get user by ID
-            return user != null ? user.getEmail() : "";
-        } catch (Exception e) {
-            return "";
         }
     }
 

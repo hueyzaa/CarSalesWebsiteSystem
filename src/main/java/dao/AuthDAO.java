@@ -12,7 +12,7 @@ import java.util.Map;
 
 /**
  * AuthDAO - All authentication operations
- * UPDATED: Database-based email verification
+ * UPDATED: Public getUserById() for stateless email verification
  */
 public class AuthDAO {
     private static final Logger logger = LoggerFactory.getLogger(AuthDAO.class);
@@ -503,7 +503,7 @@ public class AuthDAO {
         return user;
     }
 
-    private User getUserById(int userId) throws SQLException {
+    public User getUserById(int userId) {
         String sql = "SELECT u.user_id, u.email, u.role, u.is_active, u.email_verified, " +
                 "u.created_at, u.last_login, " +
                 "COALESCE(c.name, s.name) as name, " +
@@ -524,6 +524,8 @@ public class AuthDAO {
             if (rs.next()) {
                 return mapUserFromResultSet(rs);
             }
+        } catch (SQLException e) {
+            logger.error("Error getting user by ID: {}", userId, e);
         }
 
         return null;
