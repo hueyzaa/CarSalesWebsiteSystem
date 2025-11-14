@@ -5,3 +5,10 @@
 2025-11-14 11:25:20.614 [main] INFO  service.GoogleOAuthService - Generated Google OAuth URL
 2025-11-14 11:25:20.614 [main] INFO  test.TestGoogleOAuth - ✅ Auth URL generated successfully
 2025-11-14 11:25:20.614 [main] INFO  test.TestGoogleOAuth - URL: https://accounts.google.com/o/oauth2/v2/auth?client_id=161916960797-iuq1qbpsmtt035nk8342516ebake1988.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2FCarSalesWebsiteSystem%2Foauth2%2Fcallback%2Fgoogle&response_type=code&scope=openid+email+profile&state=test-state-123&access_type=offline&prompt=consent
+2025-11-14 19:19:20.358 [main] INFO  test.TestGoogleOAuth - Testing Google OAuth Configuration
+2025-11-14 19:19:20.360 [main] INFO  util.GoogleOAuthConfig - Google OAuth config loaded
+2025-11-14 19:19:20.361 [main] INFO  test.TestGoogleOAuth - Client ID: Loaded
+2025-11-14 19:19:20.362 [main] INFO  test.TestGoogleOAuth - Client Secret: Loaded
+2025-11-14 19:19:20.387 [main] INFO  service.GoogleOAuthService - Generated Google OAuth URL
+2025-11-14 19:19:20.387 [main] INFO  test.TestGoogleOAuth - Auth URL generated successfully
+2025-11-14 19:19:20.387 [main] INFO  test.TestGoogleOAuth - URL: https://accounts.google.com/o/oauth2/v2/auth?client_id=161916960797-iuq1qbpsmtt035nk8342516ebake1988.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2FCarSalesWebsiteSystem%2Foauth2%2Fcallback%2Fgoogle&response_type=code&scope=openid+email+profile&state=test-state-123&access_type=offline&prompt=consent
