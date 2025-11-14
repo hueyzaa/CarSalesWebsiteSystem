@@ -59,9 +59,8 @@ public class UpdateCarServlet extends HttpServlet {
             throws ServletException, IOException {
         try {
             int id = ValidationUtil.validatePositiveInt(request.getParameter("id"), "ID xe");
-            String name = ValidationUtil.validateString(request.getParameter("model"), "Tên xe", 100);
+            String name = ValidationUtil.validateString(request.getParameter("name"), "Tên xe", 100);
             int brandId = ValidationUtil.validatePositiveInt(request.getParameter("brandId"), "Hãng xe");
-            double price = ValidationUtil.validatePrice(request.getParameter("price")).doubleValue();
             String status = ValidationUtil.validateStatus(request.getParameter("status"));
             String description = request.getParameter("description");
             Integer year = null;
@@ -81,7 +80,6 @@ public class UpdateCarServlet extends HttpServlet {
             car.setId(id);
             car.setName(name);
             car.setBrandId(brandId);
-            car.setPrice(price);
             car.setStatus(status);
             car.setDescription(description);
             if (year != null) car.setYear(year);

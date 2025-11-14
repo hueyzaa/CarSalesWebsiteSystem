@@ -47,11 +47,6 @@
                     </c:forEach>
                 </select>
             </div>
-
-            <div class="col-md-4">
-                <label class="form-label">Giá (₫)</label>
-                <input type="number" step="0.01" name="price" value="${car.price}" class="form-control" required>
-            </div>
             <div class="col-md-4">
                 <label class="form-label">Năm sản xuất</label>
                 <input type="number" name="year" value="${car.year}" class="form-control">

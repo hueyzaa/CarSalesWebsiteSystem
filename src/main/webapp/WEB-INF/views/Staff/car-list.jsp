@@ -102,12 +102,6 @@
 
 
 <div class="list-wrap">
-    <div class="list-head">
-        <h4><i class="fas fa-car"></i> Danh sách xe</h4>
-        <div class="tools">
-            <input type="text" placeholder="Tìm nhanh..." oninput="filterRows(this.value)">
-        </div>
-    </div>
 
     <table class="tablex">
         <thead>
@@ -146,20 +140,8 @@
                         <i class="fas fa-circle-info" aria-hidden="true"></i> Xem Chi Tiết
                     </a>
                 </td>
-
             </tr>
         </c:forEach>
         </tbody>
     </table>
 </div>
-
-<script>
-    function filterRows(q){
-        const rows = document.querySelectorAll('#carRows tr');
-        q = (q||'').toLowerCase();
-        rows.forEach(r=>{
-            const text = r.textContent.toLowerCase();
-            r.style.display = text.includes(q) ? '' : 'none';
-        });
-    }
-</script>
