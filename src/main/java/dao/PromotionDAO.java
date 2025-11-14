@@ -1,11 +1,12 @@
 package dao;
 
+import dto.PromotionDTO;
 import model.Promotion;
 import model.Car;
 import util.DBContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import java.util.Date;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,6 +77,56 @@ public class PromotionDAO {
             throw new RuntimeException("Không thể lấy danh sách khuyến mãi đang hoạt động", e);
         }
     }
+
+    // dao/PromotionDAO.java
+    public List<PromotionDTO> getAllPromotionsWithCars() {
+        String sql =
+                "SELECT promotion_id, title, description, start_date, end_date, " +
+                        "       discount_percentage, discount_amount " +
+                        "FROM Promotion ORDER BY start_date DESC";
+
+        List<PromotionDTO> result = new ArrayList<>();
+        CarDAO carDAO = new CarDAO();
+
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            Date now = new Date();
+
+            while (rs.next()) {
+                PromotionDTO dto = new PromotionDTO();
+                int pid = rs.getInt("promotion_id");
+
+                dto.setPromotionId(pid);
+                dto.setTitle(rs.getString("title"));
+                dto.setDescription(rs.getString("description"));
+                dto.setStartDate(rs.getDate("start_date"));
+                dto.setEndDate(rs.getDate("end_date"));
+
+                double p = rs.getDouble("discount_percentage");
+                if (rs.wasNull()) p = 0;
+                dto.setDiscountPercentage(p);
+
+                double a = rs.getDouble("discount_amount");
+                if (rs.wasNull()) a = 0;
+                dto.setDiscountAmount(a);
+
+                dto.setActive(dto.getStartDate()!=null && dto.getEndDate()!=null
+                        && !now.before(dto.getStartDate()) && !now.after(dto.getEndDate()));
+                dto.setExpired(dto.getEndDate()!=null && now.after(dto.getEndDate()));
+
+                // nạp list xe áp dụng
+                dto.setApplicableCars(carDAO.getCarsWithDiscountByPromotionId(pid));
+
+                result.add(dto);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to load promotions with cars", e);
+        }
+        return result;
+    }
+
 
     /**
      * Get all active promotions with user claim status

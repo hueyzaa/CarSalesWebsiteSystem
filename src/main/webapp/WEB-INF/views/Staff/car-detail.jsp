@@ -278,5 +278,23 @@
         </div>
     </article>
 </main>
+<script>
+    function changeImage(url, thumbElement) {
+        // đổi ảnh chính
+        const mainImg = document.getElementById("mainImage");
+        if (mainImg) {
+            mainImg.src = url;
+        }
+
+        // đổi trạng thái active cho thumbnail
+        const allThumbs = document.querySelectorAll(".thumbnail");
+        allThumbs.forEach(t => t.classList.remove("active"));
+
+        if (thumbElement) {
+            thumbElement.classList.add("active");
+        }
+    }
+</script>
+
 </body>
 </html>

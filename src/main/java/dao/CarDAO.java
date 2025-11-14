@@ -1,5 +1,6 @@
 package dao;
 
+import dto.CarWithDiscountDTO;
 import model.Car;
 import model.CarImage;
 import util.DBContext;
@@ -349,6 +350,81 @@ public class CarDAO {
             return new ArrayList<>();
         }
     }
+
+    // dao/CarDAO.java
+    public List<CarWithDiscountDTO> getCarsWithDiscountByPromotionId(int promotionId) {
+        String sql =
+                "SELECT c.car_id, c.model, c.year, c.color, c.price, c.status, c.stock, " +
+                        "       b.brand_name, " +
+                        "       cp.discount_percentage, cp.discount_amount " +
+                        "FROM CarPromotion cp " +
+                        "JOIN Car c        ON c.car_id = cp.car_id " +
+                        "LEFT JOIN Brand b ON b.brand_id = c.brand_id " +
+                        "WHERE cp.promotion_id = ?";
+
+        List<CarWithDiscountDTO> list = new ArrayList<>();
+
+        try (Connection con = DBContext.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, promotionId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    CarWithDiscountDTO dto = new CarWithDiscountDTO();
+
+                    int carId = rs.getInt("car_id");
+                    String brandName = rs.getString("brand_name");
+                    String model = rs.getString("model");
+                    int year = rs.getObject("year") != null ? rs.getInt("year") : 0;
+                    String color = rs.getString("color");
+                    double price = rs.getDouble("price");
+                    String status = rs.getString("status");
+                    int quantity = rs.getObject("stock") != null ? rs.getInt("stock") : 0;
+
+                    // Lấy discount từ bảng CarPromotion
+                    double percent = rs.getDouble("discount_percentage");
+                    boolean hasPercent = !rs.wasNull();
+                    double amount = rs.getDouble("discount_amount");
+                    boolean hasAmount = !rs.wasNull();
+
+                    // Tính toán giá trị giảm
+                    double discountValue = 0;
+                    if (hasPercent && percent > 0) {
+                        discountValue = price * percent / 100.0;
+                    } else if (hasAmount && amount > 0) {
+                        discountValue = amount;
+                    }
+                    double discountedPrice = Math.max(0, price - discountValue);
+
+                    // Gán vào DTO theo đúng getter/setter bạn có
+                    dto.setCarId(carId);
+                    dto.setBrandName(brandName);
+                    dto.setName(model);                 // JSP đang dùng ${car.name}
+                    dto.setYear(year);
+                    dto.setColor(color);
+                    dto.setPrice(price);
+                    dto.setStatus(status);
+                    dto.setQuantity(quantity);
+
+                    dto.setHasDiscount(discountValue > 0);
+                    dto.setDiscountPercentage(hasPercent ? percent : 0);
+                    dto.setDiscountAmount(hasAmount ? amount : 0);
+                    dto.setDiscountValue(discountValue);
+                    dto.setDiscountedPrice(discountedPrice);
+
+                    // Nếu có cột/ảnh chính thì setImageUrl(...) ở đây
+
+                    list.add(dto);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to load cars for promotion " + promotionId, e);
+        }
+        return list;
+    }
+
+
 
     /**
      * Add car images

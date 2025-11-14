@@ -280,7 +280,7 @@ public class AuthServlet extends HttpServlet {
         if (isAdmin(user)) {
             return request.getContextPath() + "/Admin/dashboard";
         } else if (isStaff(user)) {
-            return request.getContextPath() + "/Staff/dashboard";
+            return request.getContextPath() + "/staff/dashboard";
         } else {
             String redirect = request.getParameter("redirect");
             if (redirect != null && !redirect.isEmpty()) {

@@ -523,9 +523,9 @@
 </head>
 <body>
 
+<!-- Page Header -->
 <div class="container">
     <div class="main-container">
-        <!-- Content Area -->
         <div class="content-area">
 
             <!-- Alerts -->
@@ -564,6 +564,9 @@
                             <!-- Header -->
                             <div class="promotion-header">
                                 <h2 class="promotion-title">${promotion.title}</h2>
+                                <span class="promotion-badge">
+                                    <i class="fas fa-fire"></i> HOT
+                                </span>
                             </div>
 
                             <!-- Description -->
@@ -596,7 +599,7 @@
                                 </c:if>
                             </div>
 
-                            <!-- Cars Section -->
+                            <!-- Cars Section - UPDATED: Using DTO properties -->
                             <c:if test="${not empty promotion.applicableCars}">
                                 <div class="cars-section">
                                     <div class="cars-section-title">
@@ -613,7 +616,8 @@
                                                         <span><i class="far fa-calendar"></i> ${car.year}</span>
                                                         <span><i class="fas fa-palette"></i> ${car.color}</span>
                                                     </div>
-                                                    <c:if test="${car.hasDiscount()}">
+                                                        <%-- CHANGED: car.hasDiscount() → car.hasDiscount (property access) --%>
+                                                    <c:if test="${car.hasDiscount}">
                                                         <div class="car-discount-badge">
                                                             <i class="fas fa-tag"></i>
                                                             <c:choose>
@@ -628,15 +632,18 @@
                                                     </c:if>
                                                 </div>
 
+                                                    <%-- CHANGED: Use pre-calculated DTO values --%>
                                                 <div class="car-price-section">
                                                     <c:choose>
-                                                        <c:when test="${car.hasDiscount()}">
+                                                        <c:when test="${car.hasDiscount}">
                                                             <div class="car-price-original">
                                                                 <fmt:formatNumber value="${car.price}" type="number" maxFractionDigits="0"/>₫
                                                             </div>
+                                                            <%-- CHANGED: Use pre-calculated discountedPrice from DTO --%>
                                                             <div class="car-price-discounted">
                                                                 <fmt:formatNumber value="${car.discountedPrice}" type="number" maxFractionDigits="0"/>₫
                                                             </div>
+                                                            <%-- CHANGED: Use pre-calculated discountValue from DTO --%>
                                                             <div class="car-savings">
                                                                 Tiết kiệm: <fmt:formatNumber value="${car.discountValue}" type="number" maxFractionDigits="0"/>₫
                                                             </div>
@@ -661,14 +668,15 @@
                     <div class="no-promotions">
                         <i class="fas fa-gift"></i>
                         <h3>Không Tìm Thấy Khuyến Mãi Nào</h3>
-                        <a href="${pageContext.request.contextPath}/staff/dashboard" class="btn-view-cars">Quay Lại
-                        </a>
+                        <p>Các chương trình khuyến mãi mới sẽ được cập nhật sớm. Vui lòng quay lại sau!</p>
+                        <a href="${pageContext.request.contextPath}/cars" class="btn-view-cars">Xem Danh Sách Xe</a>
                     </div>
                 </c:otherwise>
             </c:choose>
         </div>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Auto dismiss alerts
