@@ -1,0 +1,2 @@
+INSERT INTO AppUsers (email, password_hash, role, is_active, email_verified)
+VALUES ('carsaleswebsite.showroom@gmail.com', '$2a$12$EUqzr4/kBgOgMdD0VQRrqOW7V9v6Vjjvpnso2QaE/urRSYZAfmXdS', 'ADMIN', 1, 1);
