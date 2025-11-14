@@ -82,14 +82,14 @@
                 <td class="action-buttons">
                     <a href="${pageContext.request.contextPath}/Admin/update-brand?id=${brand.brandId}"
                        class="btn btn-warning btn-sm">
-                        <i class="fas fa-edit"></i> Sửa
+                        <i class="fas fa-edit"></i>
                     </a>
                     <form action="${pageContext.request.contextPath}/Admin/delete-brand"
                           method="post" style="display:inline;">
                         <input type="hidden" name="brandId" value="${brand.brandId}">
                         <button type="submit" class="btn btn-danger btn-sm"
                                 onclick="return confirm('Bạn có chắc muốn xóa hãng xe này?');">
-                            <i class="fas fa-trash"></i> Xóa
+                            <i class="fas fa-trash"></i>
                         </button>
                     </form>
                 </td>

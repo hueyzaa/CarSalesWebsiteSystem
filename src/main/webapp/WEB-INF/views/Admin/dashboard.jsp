@@ -282,7 +282,7 @@
             loadSection("${pageContext.request.contextPath}/Admin/car-list");
         });
 
-        document.getElementById("viewStaffBtn").addEventListener("click", function() {
+        document.getElementById("viewStaffBtn").addEventListener("cli ck", function() {
             loadSection("${pageContext.request.contextPath}/Admin/staff-list");
         });
         document.getElementById("btnManageUsers").addEventListener("click", function(e) {

@@ -82,7 +82,7 @@ public class PromotionDAO {
     public List<PromotionDTO> getAllPromotionsWithCars() {
         String sql =
                 "SELECT promotion_id, title, description, start_date, end_date, " +
-                        "       discount_percentage, discount_amount " +
+                        "       discount_percentage " +  // ← ĐÃ XÓA discount_amount
                         "FROM Promotion ORDER BY start_date DESC";
 
         List<PromotionDTO> result = new ArrayList<>();
@@ -108,9 +108,7 @@ public class PromotionDAO {
                 if (rs.wasNull()) p = 0;
                 dto.setDiscountPercentage(p);
 
-                double a = rs.getDouble("discount_amount");
-                if (rs.wasNull()) a = 0;
-                dto.setDiscountAmount(a);
+                // ← ĐÃ XÓA 3 dòng code về discount_amount
 
                 dto.setActive(dto.getStartDate()!=null && dto.getEndDate()!=null
                         && !now.before(dto.getStartDate()) && !now.after(dto.getEndDate()));
