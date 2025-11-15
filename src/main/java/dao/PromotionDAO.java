@@ -78,7 +78,6 @@ public class PromotionDAO {
         }
     }
 
-    // dao/PromotionDAO.java
     public List<PromotionDTO> getAllPromotionsWithCars() {
         String sql =
                 "SELECT promotion_id, title, description, start_date, end_date, " +
