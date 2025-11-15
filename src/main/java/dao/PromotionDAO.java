@@ -82,7 +82,7 @@ public class PromotionDAO {
     public List<PromotionDTO> getAllPromotionsWithCars() {
         String sql =
                 "SELECT promotion_id, title, description, start_date, end_date, " +
-                        "       discount_percentage " +  // ← ĐÃ XÓA discount_amount
+                        "       discount_percentage " +
                         "FROM Promotion ORDER BY start_date DESC";
 
         List<PromotionDTO> result = new ArrayList<>();

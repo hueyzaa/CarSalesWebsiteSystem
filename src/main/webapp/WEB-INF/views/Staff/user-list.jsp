@@ -22,8 +22,8 @@
         border: 1px solid var(--line);
         border-radius: 14px;
         padding: 14px;
-        width: 100%;              /* 🔹 chiếm hết chiều ngang parent */
-        box-sizing: border-box;   /* 🔹 tính luôn padding vào 100% */
+        width: 100%;
+        box-sizing: border-box;
     }
 
     th, td {
@@ -45,7 +45,7 @@
     }
 
     table {
-        width: 100%;              /* 🔹 bảng trải hết trong .list-wrap */
+        width: 100%;
         border-collapse: collapse;
     }
 

@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import model.Brand;
 import model.Car;
+import model.CarImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.ValidationUtil;
@@ -21,7 +22,6 @@ public class UpdateCarServlet extends HttpServlet {
     private static final Logger logger = LoggerFactory.getLogger(controller.staff.UpdateCarServlet.class);
     private CarDAO carDAO;
     private BrandDAO brandDAO;
-
     @Override
     public void init() {
         carDAO = new CarDAO();
@@ -66,7 +66,6 @@ public class UpdateCarServlet extends HttpServlet {
             Integer year = null;
             Integer stock = null;
             String color = request.getParameter("color");
-
 
             if (request.getParameter("year") != null && !request.getParameter("year").isEmpty()) {
                 year = ValidationUtil.validatePositiveInt(request.getParameter("year"), "Năm sản xuất");

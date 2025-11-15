@@ -31,10 +31,6 @@ public class UserListServlet extends HttpServlet {
 
         request.setAttribute("customerList", userList);
 
-        // Nếu bạn render như một trang riêng:
-        // request.getRequestDispatcher("/WEB-INF/views/Staff/user-list.jsp").forward(request, response);
-
-        // Nếu trang này là fragment để nhúng vào dashboard qua fetch:
         request.getRequestDispatcher("/WEB-INF/views/Staff/user-list.jsp").forward(request, response);
     }
 }

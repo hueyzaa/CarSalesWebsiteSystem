@@ -17,10 +17,8 @@
         :root{ --line:#2a2a2a; --gold:#ffd700; --text:#f1f1f1; }
         body{background:#0b0b0b; font-family:system-ui,Segoe UI,Roboto,Arial; color:var(--text); margin:16px}
         .panel{background:linear-gradient(180deg,#151515,#131313); border:1px solid var(--line); border-radius:14px; padding:14px}
-        .toolbox{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px}
         .toolbox input, .toolbox select{background:#0f0f0f; color:#fff; border:1px solid var(--line); border-radius:10px; padding:8px 10px}
-        .btn-gold{background:var(--gold); color:#111; font-weight:700; border:none; border-radius:10px; padding:8px 14px}
-        .tablex{width:100%; border-collapse:separate; border-spacing:0; border:1px solid var(--line); border-radius:12px; overflow:hidden}
+        .tablex{width:100%; border-collapse:separate; border-spacing:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; text-align: center}
         .tablex thead th{background:#1a1a1a; color:var(--gold); text-transform:uppercase; font-size:12px; letter-spacing:.5px; padding:10px; border-bottom:1px solid var(--line)}
         .tablex tbody td{padding:12px; border-bottom:1px solid #1f1f1f; color:#eee; text-align:center}
         .chip{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700;font-size:.85rem}
@@ -30,14 +28,10 @@
         .chip.full{background:rgba(34,197,94,.12); color:#b8ffce; border:1px solid rgba(34,197,94,.3)}
         .chip.deposit{background:rgba(245,158,11,.12); color:#ffe1b3; border:1px solid rgba(245,158,11,.3)}
         .chip.showroom{background:rgba(239,68,68,.12); color:#ffb6b6; border:1px solid rgba(239,68,68,.3)}
-        .badge-type{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,215,0,.45);background:rgba(255,215,0,.12);color:#fff;font-weight:700}
-        .pager{display:flex; gap:6px; justify-content:flex-end; margin-top:10px}
         .pager a, .pager span{padding:6px 10px;border:1px solid var(--line);border-radius:8px;color:#ddd;text-decoration:none}
         .pager .act{background:rgba(255,215,0,.18); border-color:rgba(255,215,0,.5); color:#fff}
         .title{display:flex; align-items:center; gap:10px; margin-bottom:12px}
-        .muted{color:#bbb; font-size:.95rem}
         .empty{padding:28px; text-align:center; color:#cfcfcf}
-        .err{background:#2a0000; border:1px solid #550000; color:#ffcdcd; padding:10px 12px; border-radius:10px; margin-bottom:12px}
         .nowrap{white-space:nowrap}
     </style>
 </head>

@@ -21,9 +21,9 @@
         border-radius:14px;
         padding:14px;
     }
-    .list-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px }
+
     .list-head h4{ margin:0; color:var(--gold); font-weight:800 }
-    .tools{ display:flex; gap:8px }
+
     .tools input{
         background:#0f0f0f; color:var(--text);
         border:1px solid var(--line); border-radius:10px; padding:8px 10px;
@@ -55,8 +55,6 @@
         color:#ffb6b6; border:1px solid rgba(239,68,68,.3);
     }
 
-    /* --- BUTTONS --- */
-    /* ---- BUTTONS: đồng bộ với .chip ---- */
     .btnx{
         display:inline-flex; align-items:center; gap:6px;
         padding:6px 12px; border-radius:999px;
@@ -68,7 +66,6 @@
     .btnx i{ color:inherit; }
     .btnx + .btnx{ margin-left:8px; }
 
-    /* VÀNG = giống chip.ok vibe (gold, translucent) */
     .btnx.update{
         background:rgba(255,215,0,.12);
         color:#ffe37a;
@@ -81,9 +78,8 @@
         transform:translateY(-1px);
     }
 
-    /* XANH DƯƠNG = tạo “chip” xanh đồng bộ */
     .btnx.view{
-        /* dùng tông #3b82f6 (xanh dương dịu) ở chế độ translucent */
+
         background:rgba(59,130,246,.12);
         color:#b9d6ff;
         border-color:rgba(59,130,246,.35);
@@ -95,7 +91,6 @@
         transform:translateY(-1px);
     }
 
-    /* Không gạch chân & không viền focus khó chịu */
     .btnx:focus, .btnx:active { outline:none; box-shadow:none; text-decoration:none; }
 
 </style>

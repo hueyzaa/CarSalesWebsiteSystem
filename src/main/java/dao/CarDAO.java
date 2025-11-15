@@ -351,13 +351,12 @@ public class CarDAO {
         }
     }
 
-    // dao/CarDAO.java
-    // dao/CarDAO.java
     public List<CarWithDiscountDTO> getCarsWithDiscountByPromotionId(int promotionId) {
         String sql =
                 "SELECT c.car_id, c.model, c.year, c.color, c.price, c.status, c.stock, " +
                         "       b.brand_name, " +
                         "       p.discount_percentage " +
+                        "FROM CarPromotion cp " +
                         "JOIN Car c ON c.car_id = cp.car_id " +
                         "LEFT JOIN Brand b ON b.brand_id = c.brand_id " +
                         "JOIN Promotion p ON p.promotion_id = cp.promotion_id " +

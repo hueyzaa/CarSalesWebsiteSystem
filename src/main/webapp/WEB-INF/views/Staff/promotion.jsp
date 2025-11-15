@@ -523,12 +523,10 @@
 </head>
 <body>
 
-<!-- Page Header -->
 <div class="container">
     <div class="main-container">
         <div class="content-area">
 
-            <!-- Alerts -->
             <c:if test="${not empty sessionScope.successMessage}">
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle"></i>
@@ -582,7 +580,7 @@
                                     <i class="far fa-calendar-check"></i>
                                     <span>Đến <fmt:formatDate value="${promotion.endDate}" pattern="dd/MM/yyyy"/></span>
                                 </div>
-                                <c:if test="${promotion.discountPercentage > 0 || promotion.discountAmount > 0}">
+                                <c:if test="${promotion.discountPercentage > 0}">
                                     <div class="meta-item">
                                         <i class="fas fa-tags"></i>
                                         <span>
@@ -590,16 +588,12 @@
                                                 <c:when test="${promotion.discountPercentage > 0}">
                                                     Giảm ${promotion.discountPercentage}%
                                                 </c:when>
-                                                <c:otherwise>
-                                                    Giảm <fmt:formatNumber value="${promotion.discountAmount}" type="currency" currencySymbol="₫"/>
-                                                </c:otherwise>
                                             </c:choose>
                                         </span>
                                     </div>
                                 </c:if>
                             </div>
 
-                            <!-- Cars Section - UPDATED: Using DTO properties -->
                             <c:if test="${not empty promotion.applicableCars}">
                                 <div class="cars-section">
                                     <div class="cars-section-title">
@@ -616,7 +610,7 @@
                                                         <span><i class="far fa-calendar"></i> ${car.year}</span>
                                                         <span><i class="fas fa-palette"></i> ${car.color}</span>
                                                     </div>
-                                                        <%-- CHANGED: car.hasDiscount() → car.hasDiscount (property access) --%>
+
                                                     <c:if test="${car.hasDiscount}">
                                                         <div class="car-discount-badge">
                                                             <i class="fas fa-tag"></i>
@@ -624,26 +618,20 @@
                                                                 <c:when test="${car.discountPercentage > 0}">
                                                                     Giảm ${car.discountPercentage}%
                                                                 </c:when>
-                                                                <c:otherwise>
-                                                                    Giảm <fmt:formatNumber value="${car.discountAmount}" type="number" maxFractionDigits="0"/>₫
-                                                                </c:otherwise>
                                                             </c:choose>
                                                         </div>
                                                     </c:if>
                                                 </div>
 
-                                                    <%-- CHANGED: Use pre-calculated DTO values --%>
                                                 <div class="car-price-section">
                                                     <c:choose>
                                                         <c:when test="${car.hasDiscount}">
                                                             <div class="car-price-original">
                                                                 <fmt:formatNumber value="${car.price}" type="number" maxFractionDigits="0"/>₫
                                                             </div>
-                                                            <%-- CHANGED: Use pre-calculated discountedPrice from DTO --%>
                                                             <div class="car-price-discounted">
                                                                 <fmt:formatNumber value="${car.discountedPrice}" type="number" maxFractionDigits="0"/>₫
                                                             </div>
-                                                            <%-- CHANGED: Use pre-calculated discountValue from DTO --%>
                                                             <div class="car-savings">
                                                                 Tiết kiệm: <fmt:formatNumber value="${car.discountValue}" type="number" maxFractionDigits="0"/>₫
                                                             </div>

@@ -20,10 +20,8 @@
         :root{ --bg:#0f0f0f; --panel:#151515; --line:#2a2a2a; --gold:#ffd700; --muted:#b9b9b9; }
         body{background:var(--bg); color:#eaeaea}
 
-        /* khung trang */
         main.container{max-width:1200px; margin:24px auto}
 
-        /* ------- LEFT: image & thumbs ------- */
         .main-image-container{
             position:relative; background:#101010; border:1px solid var(--line);
             border-radius:14px; padding:8px
@@ -48,7 +46,6 @@
         .thumbnail img{ width:100%; height:100%; object-fit:cover; display:block }
         .thumbnail.active, .thumbnail:hover{ border-color:rgba(255,215,0,.7) }
 
-        /* ------- RIGHT: info ------- */
         .brand-name{ color:var(--gold); font-weight:700; letter-spacing:.3px; margin-bottom:4px }
         .car-title{ margin:0 0 10px; font-weight:800; line-height:1.2 }
 
@@ -62,17 +59,14 @@
         .spec-label{ color:#e5e5e5 }
         .spec-value{ color:#bfbfbf }
 
-        /* description */
         .description-section{ margin-top:14px }
         .description-title{ font-size:1.05rem; margin-bottom:8px }
         .description-text{ color:#d0d0d0; border:1px solid var(--line); background:#0f0f0f; border-radius:12px; padding:14px }
 
-        /* responsive */
         @media (max-width: 991.98px){
             .main-image{ height:360px }
         }
 
-        /* actions (Back / Update) */
         .actions-section{
             border:1px solid var(--line);
             background:#121212;
@@ -102,7 +96,7 @@
 <body>
 
 <main class="container">
-    <!-- Messages -->
+
     <c:if test="${not empty sessionScope.success}">
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="fas fa-check-circle" aria-hidden="true"></i> ${sessionScope.success}
@@ -119,12 +113,12 @@
         <c:remove var="error" scope="session"/>
     </c:if>
 
-    <!-- Car Detail -->
+
     <article class="car-detail-container">
         <div class="row">
-            <!-- Left: Images & Description -->
+
             <div class="col-lg-7 mb-4">
-                <!-- Main Image -->
+
                 <div class="main-image-container">
                     <c:choose>
                         <c:when test="${not empty car.images}">
@@ -172,7 +166,6 @@
                     </span>
                 </div>
 
-                <!-- Thumbnails -->
                 <c:if test="${not empty car.images and car.images.size() > 1}">
                     <div class="thumbnail-gallery" role="list">
                         <c:forEach var="img" items="${car.images}" varStatus="status">
@@ -190,7 +183,6 @@
                     </div>
                 </c:if>
 
-                <!-- Description -->
                 <c:if test="${not empty car.description}">
                     <section class="description-section">
                         <h3 class="description-title">
@@ -201,15 +193,13 @@
                 </c:if>
             </div>
 
-            <!-- Right: Info & Purchase -->
             <div class="col-lg-5">
-                <!-- Brand & Title -->
+
                 <div class="brand-name">
                     <i class="fas fa-award" aria-hidden="true"></i> ${car.brandName}
                 </div>
                 <h1 class="car-title">${car.name}</h1>
 
-                <!-- Price -->
                 <section class="price-section">
                     <div class="price-label">Giá Xe</div>
                     <p class="price">
@@ -217,7 +207,6 @@
                     </p>
                 </section>
 
-                <!-- Specs -->
                 <section class="specs-section">
                     <h3 class="specs-title">
                         <i class="fas fa-info-circle" aria-hidden="true"></i> Thông Số Kỹ Thuật
@@ -253,11 +242,11 @@
                         </div>
                     </c:if>
                 </section>
-                <!-- Actions: Back & Update -->
+
                 <section class="actions-section" aria-label="Thao tác nhanh">
                     <h3 class="actions-title"><i class="fas fa-wrench" aria-hidden="true"></i> Thao Tác</h3>
                     <div class="actions">
-                        <!-- Quay lại -->
+
                         <a class="btn-action btn-back"
                                 href="${pageContext.request.contextPath}/staff/dashboard"
                                 title="Quay lại trang trước"
@@ -265,7 +254,6 @@
                             <i class="fas fa-arrow-left" aria-hidden="true"></i> Quay lại
                         </a>
 
-                        <!-- Cập nhật (đi tới trang edit cho staff) -->
                         <a class="btn-action btn-update"
                            href="${pageContext.request.contextPath}/staff/update-car?id=${car.id}"
                            title="Cập nhật thông tin xe"
@@ -280,13 +268,11 @@
 </main>
 <script>
     function changeImage(url, thumbElement) {
-        // đổi ảnh chính
         const mainImg = document.getElementById("mainImage");
         if (mainImg) {
             mainImg.src = url;
         }
 
-        // đổi trạng thái active cho thumbnail
         const allThumbs = document.querySelectorAll(".thumbnail");
         allThumbs.forEach(t => t.classList.remove("active"));
 
@@ -295,6 +281,5 @@
         }
     }
 </script>
-
 </body>
 </html>
