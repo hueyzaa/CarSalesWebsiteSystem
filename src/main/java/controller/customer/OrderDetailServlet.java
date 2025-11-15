@@ -21,10 +21,9 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 /**
- * OrderDetailServlet - Display detailed order information
- * UPDATED: Uses OrderDTO with pre-calculated business logic
- * Customers: View their own orders
- * Admins: View any order
+ * OrderDetailServlet - Display detailed order information for customers
+ * Customers can only view their own orders
+ * Uses OrderDTO with pre-calculated business logic
  */
 @WebServlet("/order-detail")
 public class OrderDetailServlet extends HttpServlet {
@@ -43,133 +42,170 @@ public class OrderDetailServlet extends HttpServlet {
         transactionDAO = new TransactionDAO();
         customerDAO = new CustomerDAO();
         orderService = new OrderService();
-        logger.info("OrderDetailServlet initialized with OrderService");
+        logger.info("OrderDetailServlet initialized");
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-
-        if (!SessionUtils.isLoggedIn(session)) {
-            redirect(response, request.getContextPath() + "/login");
-            return;
-        }
+        // Validate user authentication
+        Integer userId = validateUser(request, response);
+        if (userId == null) return;
 
         try {
-            Integer currentUserId = SessionUtils.getUserId(session);
-            boolean isAdmin = SessionUtils.isAdmin(session);
-
-            String orderIdParam = request.getParameter("id");
-            if (isEmpty(orderIdParam)) {
+            // Get and validate order ID parameter
+            Integer orderId = getOrderId(request);
+            if (orderId == null) {
                 logger.warn("Order ID parameter is missing");
-                redirectWithError(session, response, "/orders", "Không tìm thấy đơn hàng!");
+                redirectWithError(request, response, "/orders", "Order not found!");
                 return;
             }
 
-            int orderId = Integer.parseInt(orderIdParam);
-            logger.info("Loading order {} for user {} (isAdmin: {})",
-                    orderId, currentUserId, isAdmin);
+            logger.info("Loading order {} for user {}", orderId, userId);
 
-            // Get Order Model from DAO
+            // Load order from database
             Order order = ordersDAO.getOrderById(orderId);
             if (order == null) {
                 logger.warn("Order not found: {}", orderId);
-                redirectWithError(session, response, "/orders", "Đơn hàng không tồn tại!");
+                redirectWithError(request, response, "/orders", "Order does not exist!");
                 return;
             }
 
-            if (!hasPermission(currentUserId, isAdmin, order)) {
+            // Verify customer owns this order
+            if (!isOrderOwner(userId, order)) {
                 logger.warn("User {} attempted to access order {} (owner: {})",
-                        currentUserId, orderId, order.getUserId());
-                redirectWithError(session, response, "/orders",
-                        "Bạn không có quyền xem đơn hàng này!");
+                        userId, orderId, order.getUserId());
+                redirectWithError(request, response, "/orders",
+                        "You do not have permission to view this order!");
                 return;
             }
 
-            // Enrich order with details
-            enrichOrder(order);
+            // Enrich order with complete details
+            enrichOrderWithDetails(order);
 
-            // Convert Model to DTO with pre-calculated values
+            // Convert Model to DTO with pre-calculated business logic
             OrderDTO orderDTO = orderService.toOrderDTO(order);
 
-            logger.debug("Converted order {} to DTO - canCancel: {}, fullyPaid: {}",
-                    orderId, orderDTO.isCanBeCancelled(), orderDTO.isFullyPaid());
-
+            // Load customer information
             Customer customer = customerDAO.getCustomerById(order.getUserId());
 
+            // Log order summary for debugging
             logOrderSummary(orderId, orderDTO, customer);
 
-            // Pass DTO to view (not Model)
-            setOrderAttributes(request, session, orderDTO, customer, isAdmin, currentUserId);
+            // Set attributes and forward to JSP
+            request.setAttribute("order", orderDTO);
+            request.setAttribute("customer", customer);
+            request.setAttribute("userId", userId);
+
             forward(request, response, "/WEB-INF/views/Customer/order-detail.jsp");
 
         } catch (NumberFormatException e) {
             logger.error("Invalid order ID format", e);
-            redirectWithError(session, response, "/orders", "ID đơn hàng không hợp lệ!");
+            redirectWithError(request, response, "/orders", "Invalid order ID!");
         } catch (RuntimeException e) {
-            logger.error("Database error in OrderDetailServlet", e);
-            handleError(request, response, "Không thể tải thông tin đơn hàng: " + e.getMessage());
+            logger.error("Database error loading order", e);
+            handleError(request, response, "Cannot load order information.");
         } catch (Exception e) {
-            logger.error("Unexpected error in OrderDetailServlet", e);
-            handleError(request, response, "Đã xảy ra lỗi không mong muốn.");
+            logger.error("Unexpected error loading order", e);
+            handleError(request, response, "An unexpected error occurred.");
         }
     }
 
-    // ============ BUSINESS LOGIC (moved from Model) ============
+    // ============ PRIVATE METHODS ============
 
     /**
-     * Check if order is fully paid
-     * NOTE: This is now pre-calculated in OrderDTO
+     * Validate user authentication
+     * @return userId if authenticated, null otherwise
      */
-    private boolean isOrderFullyPaid(Order order) {
-        return order.getPaidAmount() >= order.getTotalAmount();
+    private Integer validateUser(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        HttpSession session = request.getSession(false);
+
+        if (!SessionUtils.isLoggedIn(session)) {
+            logger.warn("Unauthenticated access attempt to order detail");
+            redirect(response, request.getContextPath() + "/login");
+            return null;
+        }
+
+        return SessionUtils.getUserId(session);
     }
 
-    // ============ ORDER PROCESSING ============
+    /**
+     * Get and parse order ID from request parameter
+     * @return orderId if valid, null if missing or invalid
+     */
+    private Integer getOrderId(HttpServletRequest request) {
+        String orderIdParam = request.getParameter("id");
 
-    private void enrichOrder(Order order) {
-        order.setOrderDetails(orderDetailDAO.getOrderDetailsByOrderId(order.getOrderId()));
-        order.setTransactions(transactionDAO.getTransactionsByOrderId(order.getOrderId()));
+        if (isEmpty(orderIdParam)) {
+            return null;
+        }
 
-        double total = orderDetailDAO.calculateOrderTotal(order.getOrderId());
-        double paid = transactionDAO.getTotalPaidAmount(order.getOrderId());
-
-        order.setTotalAmount(total);
-        order.setPaidAmount(paid);
+        try {
+            return Integer.parseInt(orderIdParam);
+        } catch (NumberFormatException e) {
+            logger.error("Cannot parse order ID: {}", orderIdParam, e);
+            return null;
+        }
     }
 
-    private void setOrderAttributes(HttpServletRequest request, HttpSession session,
-                                    OrderDTO orderDTO, Customer customer,
-                                    boolean isAdmin, Integer currentUserId) {
-        request.setAttribute("order", orderDTO);  // Pass DTO
-        request.setAttribute("customer", customer);
-        request.setAttribute("isAdmin", isAdmin);
-        request.setAttribute("currentUserId", currentUserId);
-        request.setAttribute("userRole", SessionUtils.getUserRole(session));
+    /**
+     * Check if user is the owner of the order
+     */
+    private boolean isOrderOwner(Integer userId, Order order) {
+        return order.getUserId() == userId;
     }
 
-    // ============ VALIDATION ============
+    /**
+     * Enrich order with order details, transactions, and calculated amounts
+     */
+    private void enrichOrderWithDetails(Order order) {
+        // Load order details (items with car info, images)
+        order.setOrderDetails(
+                orderDetailDAO.getOrderDetailsByOrderId(order.getOrderId())
+        );
 
-    private boolean hasPermission(Integer userId, boolean isAdmin, Order order) {
-        return isAdmin || order.getUserId() == userId;
+        // Load transactions (payment history)
+        order.setTransactions(
+                transactionDAO.getTransactionsByOrderId(order.getOrderId())
+        );
+
+        // Calculate total and paid amounts
+        double totalAmount = orderDetailDAO.calculateOrderTotal(order.getOrderId());
+        double paidAmount = transactionDAO.getTotalPaidAmount(order.getOrderId());
+
+        order.setTotalAmount(totalAmount);
+        order.setPaidAmount(paidAmount);
+
+        logger.debug("Order {} enriched: {} items, {} transactions, total: {}, paid: {}",
+                order.getOrderId(),
+                order.getOrderDetails().size(),
+                order.getTransactions().size(),
+                totalAmount,
+                paidAmount);
     }
 
-    // ============ LOGGING ============
-
+    /**
+     * Log order summary for debugging and monitoring
+     */
     private void logOrderSummary(int orderId, OrderDTO orderDTO, Customer customer) {
-        logger.info("Order {} details:", orderId);
+        logger.info("Order {} details loaded successfully:", orderId);
         logger.info("  Customer: {} (ID: {})",
-                customer != null ? customer.getName() : "Unknown", orderDTO.getUserId());
-        logger.info("  Payment Type: {}, Status: {}",
+                customer != null ? customer.getName() : "Unknown",
+                orderDTO.getUserId());
+        logger.info("  Payment: {} | Status: {}",
                 orderDTO.getPaymentType(), orderDTO.getStatus());
-        logger.info("  Total: {}, Paid: {}, Remaining: {}",
-                orderDTO.getTotalAmount(), orderDTO.getPaidAmount(), orderDTO.getRemainingAmount());
-        logger.info("  Items: {}, Transactions: {}, Fully Paid: {}",
-                orderDTO.getOrderDetails().size(), orderDTO.getTransactions().size(),
-                orderDTO.isFullyPaid());
-        logger.info("  Can be cancelled: {}", orderDTO.isCanBeCancelled());
+        logger.info("  Total: {}₫ | Paid: {}₫ | Remaining: {}₫",
+                orderDTO.getTotalAmount(),
+                orderDTO.getPaidAmount(),
+                orderDTO.getRemainingAmount());
+        logger.info("  Items: {} | Transactions: {}",
+                orderDTO.getOrderDetails().size(),
+                orderDTO.getTransactions().size());
+        logger.info("  Fully Paid: {} | Can Cancel: {}",
+                orderDTO.isFullyPaid(),
+                orderDTO.isCanBeCancelled());
     }
 
     // ============ UTILITY METHODS ============
@@ -182,14 +218,13 @@ public class OrderDetailServlet extends HttpServlet {
         response.sendRedirect(url);
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private void redirectWithError(HttpSession session, HttpServletResponse response,
+    private void redirectWithError(HttpServletRequest request, HttpServletResponse response,
                                    String path, String errorMessage) throws IOException {
+        HttpSession session = request.getSession();
         session.setAttribute("error", errorMessage);
-        redirect(response, session.getServletContext().getContextPath() + path);
+        redirect(response, request.getContextPath() + path);
     }
 
-    @SuppressWarnings("SameParameterValue")
     private void handleError(HttpServletRequest request, HttpServletResponse response,
                              String errorMessage) throws ServletException, IOException {
         request.setAttribute("error", errorMessage);
