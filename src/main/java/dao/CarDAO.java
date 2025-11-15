@@ -545,7 +545,7 @@ public class CarDAO {
     }
 
     /**
-     * Update car stock
+     * Update car stock (chỉ cập nhật số lượng, không thay đổi trạng thái)
      */
     public boolean updateCarStock(int carId, int stock) {
         String sql = "UPDATE Car SET stock = ? WHERE car_id = ?";
@@ -569,6 +569,8 @@ public class CarDAO {
             throw new RuntimeException("Failed to update car stock", e);
         }
     }
+
+
     /**
      * Increase car stock (for cancelled orders)
      */

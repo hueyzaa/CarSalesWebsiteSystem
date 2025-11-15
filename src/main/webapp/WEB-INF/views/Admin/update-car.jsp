@@ -133,7 +133,7 @@
                 <label class="form-label">Trạng thái</label>
                 <select name="status" class="form-select">
                     <option value="AVAILABLE" ${car.status == 'AVAILABLE' ? 'selected' : ''}>Còn hàng</option>
-                    <option value="OUT_OF_STOCK" ${car.status == 'OUT_OF_STOCK' ? 'selected' : ''}>Hết hàng</option>
+                    <option value="UNAVAILABLE" ${car.status == 'UNAVAILABLE' ? 'selected' : ''}>Hết hàng</option>
                 </select>
             </div>
         </div>

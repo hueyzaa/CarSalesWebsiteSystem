@@ -94,7 +94,8 @@
     </c:if>
 
     <form method="post" action="${pageContext.request.contextPath}/Admin/update-staff">
-        <input type="hidden" name="userId" value="${staff.staffId}">
+        <!-- Hidden field gửi staffId -->
+        <input type="hidden" name="id" value="${staff.staffId}">
 
         <div class="mb-3">
             <label class="form-label">Tên nhân viên</label>
@@ -115,26 +116,16 @@
             <label class="form-label">Địa chỉ</label>
             <input type="text" name="address" value="${staff.address}" class="form-control">
         </div>
-
-        <div class="mb-3">
-            <label class="form-label">Trạng thái tài khoản</label>
-            <select name="status" class="form-select">
-                <option value="ACTIVE" ${staff.active ? 'selected' : ''}>Hoạt động</option>
-                <option value="INACTIVE" ${!staff.active ? 'selected' : ''}>Vô hiệu hóa</option>
-            </select>
-        </div>
-
         <div class="text-center mt-4">
             <button type="submit" class="btn btn-primary me-2">
                 <i class="fas fa-save"></i> Lưu thay đổi
             </button>
-            <a href="${pageContext.request.contextPath}/Admin/dashboard?section=staff" class="btn btn-secondary">
+            <a href="${pageContext.request.contextPath}/admin/staff-list" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Quay lại danh sách
             </a>
         </div>
     </form>
 </div>
-
 </body>
 </html>
 

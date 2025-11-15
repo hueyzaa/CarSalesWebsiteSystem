@@ -38,15 +38,23 @@
             margin-bottom: 25px;
         }
 
-        .form-control {
-            background-color: #2a2a2a;
-            color: #fff;
-            border: 1px solid #444;
+        .form-label {
+            color: #ffd700;
+            font-weight: 600;
         }
 
-        .form-control:focus {
+        .form-select {
+            background-color: #2a2a2a;
+            color: #fff;
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 16px;
+        }
+
+        .form-select:focus {
             border-color: #ffd700;
-            box-shadow: 0 0 6px #ffd700;
+            box-shadow: 0 0 8px #ffd700;
         }
 
         .btn-primary {
@@ -54,20 +62,17 @@
             border: none;
             color: #000;
             font-weight: bold;
+            padding: 10px 25px;
+            font-size: 16px;
+            border-radius: 10px;
         }
 
         .btn-primary:hover {
             background-color: #e5c100;
         }
 
-        .btn-secondary {
-            background-color: #444;
-            border: none;
-            color: #fff;
-        }
-
-        .btn-secondary:hover {
-            background-color: #555;
+        .alert {
+            font-weight: bold;
         }
     </style>
 </head>
@@ -89,16 +94,20 @@
 
         <div class="mb-3">
             <label class="form-label">Tên hãng xe</label>
-            <input type="text" name="brandName" value="${brand.brandName}" class="form-control" required maxlength="100">
+            <select name="brandName" class="form-select" required>
+                <c:forEach var="b" items="${brandList}">
+                    <option value="${b.brandName}"
+                            <c:if test="${b.brandId == brand.brandId}">selected</c:if>>
+                            ${b.brandName}
+                    </option>
+                </c:forEach>
+            </select>
         </div>
 
         <div class="text-center mt-4">
-            <button type="submit" class="btn btn-primary me-2">
+            <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save"></i> Lưu thay đổi
             </button>
-            <a href="${pageContext.request.contextPath}/Admin/brand-list" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Quay lại danh sách
-            </a>
         </div>
     </form>
 </div>

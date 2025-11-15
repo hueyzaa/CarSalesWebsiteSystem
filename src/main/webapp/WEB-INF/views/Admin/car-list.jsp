@@ -7,6 +7,7 @@
 --%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+
 <style>
     .admin-table-container {
         background: #1a1a1a;
@@ -103,9 +104,9 @@
                 </td>
                 <td>${car.stock}</td>
                 <td>
-                    <span class="badge ${car.status == 'AVAILABLE' ? 'bg-success' : 'bg-danger'}">
-                            ${car.status == 'AVAILABLE' ? 'Còn hàng' : 'Hết hàng'}
-                    </span>
+                        <span class="badge ${car.status == 'AVAILABLE' ? 'bg-success' : 'bg-danger'}">
+                                ${car.status == 'AVAILABLE' ? 'Còn hàng' : 'Hết hàng'}
+                        </span>
                 </td>
                 <td class="action-buttons">
                     <a href="${pageContext.request.contextPath}/Admin/update-car?id=${car.id}"
@@ -125,4 +126,11 @@
         </c:forEach>
         </tbody>
     </table>
+
+    <c:if test="${empty cars}">
+        <div class="alert alert-warning text-center mt-3">
+            Chưa có xe nào trong hệ thống.
+        </div>
+    </c:if>
 </div>
+

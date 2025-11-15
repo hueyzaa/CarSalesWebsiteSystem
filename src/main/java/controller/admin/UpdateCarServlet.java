@@ -56,20 +56,27 @@ public class UpdateCarServlet extends HttpServlet {
             String name = ValidationUtil.validateString(request.getParameter("model"), "Tên xe", 100);
             int brandId = ValidationUtil.validatePositiveInt(request.getParameter("brandId"), "Hãng xe");
             double price = ValidationUtil.validatePrice(request.getParameter("price")).doubleValue();
-            String status = ValidationUtil.validateStatus(request.getParameter("status"));
+            String status = ValidationUtil.validateStatus(request.getParameter("status")); // Chọn từ form
             String description = request.getParameter("description");
             Integer year = null;
             Integer stock = null;
             String color = request.getParameter("color");
 
 
+            if (request.getParameter("stock") != null && !request.getParameter("stock").isEmpty()) {
+                try {
+                    stock = Integer.parseInt(request.getParameter("stock"));
+                    if (stock < 0) {
+                        throw new IllegalArgumentException("Tồn kho không được âm");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Tồn kho phải là số hợp lệ");
+                }
+            }
+
             if (request.getParameter("year") != null && !request.getParameter("year").isEmpty()) {
                 year = ValidationUtil.validatePositiveInt(request.getParameter("year"), "Năm sản xuất");
             }
-            if (request.getParameter("stock") != null && !request.getParameter("stock").isEmpty()) {
-                stock = ValidationUtil.validatePositiveInt(request.getParameter("stock"), "Tồn kho");
-            }
-
 
             Car car = new Car();
             car.setId(id);
@@ -82,11 +89,11 @@ public class UpdateCarServlet extends HttpServlet {
             if (color != null) car.setColor(color);
             if (stock != null) car.setStock(stock);
 
-
             boolean updated = carDAO.updateCar(car);
             if (!updated) {
                 throw new Exception("Không thể cập nhật xe, vui lòng thử lại.");
             }
+
             request.getSession().setAttribute("success", "Cập nhật xe thành công!");
             response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
 
@@ -95,6 +102,7 @@ public class UpdateCarServlet extends HttpServlet {
             handleError(request, response, "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.");
         }
     }
+
 
     private void handleError(HttpServletRequest request, HttpServletResponse response, String message)
             throws ServletException, IOException {

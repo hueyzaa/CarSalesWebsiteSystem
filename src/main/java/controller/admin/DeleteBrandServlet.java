@@ -1,7 +1,7 @@
 package controller.admin;
 
 import dao.BrandDAO;
-import jakarta.servlet.*;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -14,11 +14,10 @@ public class DeleteBrandServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-
-        String idParam = request.getParameter("id");
+        String idParam = request.getParameter("id"); // phải khớp với JSP
 
         if (idParam == null || idParam.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/admin/brand?error=missingId");
+            response.sendRedirect(request.getContextPath() + "/Admin/dashboard?error=missingId");
             return;
         }
 
@@ -28,21 +27,16 @@ public class DeleteBrandServlet extends HttpServlet {
             boolean success = brandDAO.deleteBrand(brandId);
 
             if (success) {
-
-                response.sendRedirect(request.getContextPath() + "/admin/brand?success=deleted");
+                response.sendRedirect(request.getContextPath() + "/Admin/dashboard?success=deleted");
             } else {
-
-                response.sendRedirect(request.getContextPath() + "/admin/brand?error=notfound");
+                response.sendRedirect(request.getContextPath() + "/Admin/dashboard?error=notfound");
             }
 
         } catch (NumberFormatException e) {
-
-            response.sendRedirect(request.getContextPath() + "/admin/brand?error=invalidId");
-
+            response.sendRedirect(request.getContextPath() + "/Admin/dashboard?error=invalidId");
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/admin/brand?error=exception");
+            response.sendRedirect(request.getContextPath() + "/Admin/dashboard?error=exception");
         }
     }
 }
-

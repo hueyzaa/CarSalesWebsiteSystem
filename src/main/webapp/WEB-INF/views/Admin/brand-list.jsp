@@ -66,6 +66,17 @@
         </a>
     </div>
 
+    <c:if test="${not empty param.success}">
+        <div class="alert alert-success text-center mb-3">
+            Hãng xe đã được xóa thành công.
+        </div>
+    </c:if>
+    <c:if test="${not empty param.error}">
+        <div class="alert alert-danger text-center mb-3">
+            Lỗi khi xóa hãng xe. Hãng có thể đang được sử dụng hoặc không tồn tại.
+        </div>
+    </c:if>
+
     <table class="table table-dark table-striped table-hover align-middle text-center">
         <thead>
         <tr>
@@ -80,15 +91,18 @@
                 <td>${brand.brandId}</td>
                 <td>${brand.brandName}</td>
                 <td class="action-buttons">
+                    <!-- Cập nhật hãng -->
                     <a href="${pageContext.request.contextPath}/Admin/update-brand?id=${brand.brandId}"
-                       class="btn btn-warning btn-sm">
+                       class="btn btn-warning btn-sm" title="Cập nhật">
                         <i class="fas fa-edit"></i>
                     </a>
+                    <!-- Xóa hãng -->
                     <form action="${pageContext.request.contextPath}/Admin/delete-brand"
                           method="post" style="display:inline;">
-                        <input type="hidden" name="brandId" value="${brand.brandId}">
+                        <input type="hidden" name="id" value="${brand.brandId}">
                         <button type="submit" class="btn btn-danger btn-sm"
-                                onclick="return confirm('Bạn có chắc muốn xóa hãng xe này?');">
+                                onclick="return confirm('Bạn có chắc muốn xóa hãng xe này?');"
+                                title="Xóa">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>
@@ -104,4 +118,5 @@
         </div>
     </c:if>
 </div>
+
 

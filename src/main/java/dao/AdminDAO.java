@@ -27,6 +27,7 @@ public class AdminDAO {
         try (Connection conn = DBContext.getConnection();
              CallableStatement stmt = conn.prepareCall(sql)) {
 
+            // Hash mật khẩu trước khi gửi xuống DB
             String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));
 
             stmt.setInt(1, adminId);
@@ -36,14 +37,17 @@ public class AdminDAO {
             stmt.setString(5, phone);
             stmt.setString(6, address);
 
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                String result = rs.getString("Result");
-                if ("SUCCESS".equals(result)) {
-                    logger.info("Admin {} created staff: {}", adminId, email);
-                    return true;
-                } else {
-                    logger.warn("Failed to create staff: {}", rs.getString("Message"));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String result = rs.getString("Result");
+                    String message = rs.getString("Message");
+
+                    if ("SUCCESS".equalsIgnoreCase(result)) {
+                        logger.info("Admin {} created staff: {}", adminId, email);
+                        return true;
+                    } else {
+                        logger.warn("Failed to create staff: {}", message);
+                    }
                 }
             }
 
@@ -84,6 +88,25 @@ public class AdminDAO {
 
         return false;
     }
+
+    /**
+     * Delete Staff
+     */
+    public boolean deleteStaff(int staffId) {
+        String sql = "DELETE FROM AppUsers WHERE user_id = ?";
+        try (Connection conn = DBContext.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, staffId);
+            int affected = stmt.executeUpdate();
+            return affected > 0;
+
+        } catch (SQLException e) {
+            logger.error("Error deleting staff", e);
+        }
+        return false;
+    }
+
 
     /**
      * Admin toggles Staff active status
@@ -314,4 +337,7 @@ public class AdminDAO {
 
         return staff;
     }
+
+
+
 }

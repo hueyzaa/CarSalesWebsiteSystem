@@ -24,24 +24,25 @@ public class UpdateBrandServlet extends HttpServlet {
         brandDAO = new BrandDAO();
     }
 
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         try {
-            int brandId = ValidationUtil.validatePositiveInt(
-                    request.getParameter("id"), "Mã hãng"
-            );
-
+            // Lấy brand hiện tại theo id
+            int brandId = ValidationUtil.validatePositiveInt(request.getParameter("id"), "Mã hãng");
             Brand brand = brandDAO.getBrandById(brandId);
+
             if (brand == null) {
-                request.setAttribute("error", "Không tìm thấy hãng cần cập nhật!");
-                response.sendRedirect(request.getContextPath() + "/Admin/brand-list");
+                request.getSession().setAttribute("error", "Không tìm thấy hãng cần cập nhật!");
+                response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
                 return;
             }
 
+            // Lấy tất cả brand để hiển thị trong select
+            List<Brand> brandList = brandDAO.getAllBrands();
+            request.setAttribute("brandList", brandList);
             request.setAttribute("brand", brand);
+
             request.getRequestDispatcher("/WEB-INF/views/Admin/update-brand.jsp").forward(request, response);
 
         } catch (Exception e) {
@@ -51,11 +52,9 @@ public class UpdateBrandServlet extends HttpServlet {
         }
     }
 
-
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
         request.setCharacterEncoding("UTF-8");
 
         try {
@@ -70,7 +69,7 @@ public class UpdateBrandServlet extends HttpServlet {
 
             if (updated) {
                 request.getSession().setAttribute("success", "Cập nhật hãng thành công!");
-                response.sendRedirect(request.getContextPath() + "/Admin/brand-list");
+                response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
             } else {
                 throw new Exception("Không thể cập nhật hãng, vui lòng thử lại.");
             }
@@ -86,6 +85,7 @@ public class UpdateBrandServlet extends HttpServlet {
         request.setAttribute("error", message);
 
         try {
+            // Nạp lại tất cả brand để hiển thị trong form nếu có lỗi
             List<Brand> brandList = brandDAO.getAllBrands();
             request.setAttribute("brandList", brandList);
         } catch (Exception e) {

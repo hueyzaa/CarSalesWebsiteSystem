@@ -1,7 +1,7 @@
 package controller.admin;
 
 import dao.CarDAO;
-import jakarta.servlet.*;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
@@ -14,34 +14,32 @@ public class DeleteCarServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-
-        String idParam = request.getParameter("id");
-
-        if (idParam == null || idParam.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/admin/cars?error=missingId");
+        HttpSession session = request.getSession(false);
+        if (session == null || !"ADMIN".equalsIgnoreCase((String) session.getAttribute("userRole"))) {
+            response.sendRedirect(request.getContextPath() + "/access-denied.jsp");
             return;
         }
 
+        String idParam = request.getParameter("id");
+        if (idParam == null || idParam.isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/Admin/dashboard?error=missingId");
+            return;
+        }
+
+        int carId;
         try {
-            int carId = Integer.parseInt(idParam);
-
-            boolean success = carDAO.deleteCar(carId);
-
-            if (success) {
-
-                response.sendRedirect(request.getContextPath() + "/admin/cars?success=deleted");
-            } else {
-
-                response.sendRedirect(request.getContextPath() + "/admin/cars?error=notfound");
-            }
-
+            carId = Integer.parseInt(idParam);
         } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/Admin/dashboard?error=invalidId");
+            return;
+        }
 
-            response.sendRedirect(request.getContextPath() + "/admin/cars?error=invalidId");
+        boolean success = carDAO.deleteCar(carId);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/admin/cars?error=exception");
+        if (success) {
+            response.sendRedirect(request.getContextPath() + "/Admin/dashboard?success=deleted");
+        } else {
+            response.sendRedirect(request.getContextPath() + "/Admin/dashboard?error=notfound");
         }
     }
 }

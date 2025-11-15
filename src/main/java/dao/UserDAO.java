@@ -207,6 +207,110 @@ public class UserDAO {
         }
     }
 
+
+    /**
+     * Update user info (name, phone, address, role, active)
+     */
+    public boolean updateUserInfo(int userId, String name, String phone, String address,
+                                  String role, boolean active) {
+        String sqlUser = "UPDATE AppUsers SET role = ?, is_active = ? WHERE user_id = ?";
+        String sqlDetail = ""; // bảng chi tiết riêng nếu là Customer hoặc Staff
+
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false);
+
+            // 1. Cập nhật bảng AppUsers
+            try (PreparedStatement stmt = conn.prepareStatement(sqlUser)) {
+                stmt.setString(1, role);
+                stmt.setBoolean(2, active);
+                stmt.setInt(3, userId);
+                stmt.executeUpdate();
+            }
+
+            // 2. Cập nhật bảng chi tiết
+            if ("CUSTOMER".equalsIgnoreCase(role)) {
+                sqlDetail = "UPDATE Customers SET name = ?, phone = ?, address = ? WHERE customer_id = ?";
+            } else if ("STAFF".equalsIgnoreCase(role)) {
+                sqlDetail = "UPDATE Staff SET name = ?, phone = ?, address = ? WHERE staff_id = ?";
+            }
+
+            if (!sqlDetail.isEmpty()) {
+                try (PreparedStatement stmt = conn.prepareStatement(sqlDetail)) {
+                    stmt.setString(1, name);
+                    stmt.setString(2, phone);
+                    stmt.setString(3, address);
+                    stmt.setInt(4, userId);
+                    stmt.executeUpdate();
+                }
+            }
+
+            conn.commit();
+            logger.info("Updated user info for userId={}", userId);
+            return true;
+
+        } catch (SQLException e) {
+            logger.error("Error updating user info for userId={}", userId, e);
+            return false;
+        }
+    }
+
+
+    /**
+     * Delete user permanently from database (hard delete)
+     * This will delete both user in AppUsers and related details in Staff/Customers tables
+     */
+    public boolean deleteUser(int userId) {
+        String sqlUser = "DELETE FROM AppUsers WHERE user_id = ?";
+        String sqlCustomer = "DELETE FROM Customers WHERE customer_id = ?";
+        String sqlStaff = "DELETE FROM Staff WHERE staff_id = ?";
+
+        try (Connection conn = DBContext.getConnection()) {
+            conn.setAutoCommit(false); // ensure transaction
+
+            // 1. Determine role first
+            User user = getUserById(userId);
+            if (user == null) {
+                return false; // user not found
+            }
+
+            // 2. Delete from details table
+            String role = user.getRole();
+            if ("CUSTOMER".equalsIgnoreCase(role)) {
+                try (PreparedStatement stmt = conn.prepareStatement(sqlCustomer)) {
+                    stmt.setInt(1, userId);
+                    stmt.executeUpdate();
+                }
+            } else if ("STAFF".equalsIgnoreCase(role)) {
+                try (PreparedStatement stmt = conn.prepareStatement(sqlStaff)) {
+                    stmt.setInt(1, userId);
+                    stmt.executeUpdate();
+                }
+            }
+
+            // 3. Delete from AppUsers
+            try (PreparedStatement stmt = conn.prepareStatement(sqlUser)) {
+                stmt.setInt(1, userId);
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
+            logger.info("Deleted user permanently: userId={}", userId);
+            return true;
+
+        } catch (SQLException e) {
+            logger.error("Error deleting user permanently: userId={}", userId, e);
+            try {
+                if (!DBContext.getConnection().isClosed()) {
+                    DBContext.getConnection().rollback();
+                }
+            } catch (SQLException ex) {
+                logger.error("Error rolling back transaction", ex);
+            }
+            return false;
+        }
+    }
+
+
     /**
      * Register new customer using stored procedure
      * UPDATED: Added email verification parameters

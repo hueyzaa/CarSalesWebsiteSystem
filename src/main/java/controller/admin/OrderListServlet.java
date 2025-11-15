@@ -24,6 +24,7 @@ public class OrderListServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
         String action = request.getParameter("action");
         int orderId = Integer.parseInt(request.getParameter("orderId"));
 
@@ -64,6 +65,7 @@ public class OrderListServlet extends HttpServlet {
             request.getSession().setAttribute("error", "Lỗi khi xử lý đơn hàng: " + e.getMessage());
         }
 
-        response.sendRedirect(request.getContextPath() + "/Admin/order-list");
+
+        response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
     }
 }

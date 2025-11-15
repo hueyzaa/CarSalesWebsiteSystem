@@ -12,12 +12,9 @@
 <div class="admin-table-container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h4><i class="fas fa-users"></i> Danh sách người dùng</h4>
-        <a href="${pageContext.request.contextPath}/Admin/add-user" class="btn btn-warning btn-sm">
-            <i class="fas fa-plus-circle"></i> Thêm người dùng
-        </a>
     </div>
 
-
+    <!-- Alerts -->
     <c:if test="${not empty success}">
         <div class="alert alert-success text-center">${success}</div>
     </c:if>
@@ -25,6 +22,7 @@
         <div class="alert alert-danger text-center">${error}</div>
     </c:if>
 
+    <!-- User Table -->
     <table class="table table-dark table-striped table-hover text-center align-middle">
         <thead>
         <tr>
@@ -40,18 +38,26 @@
             <th>Hành động</th>
         </tr>
         </thead>
-
         <tbody>
-        <c:forEach var="user" items="${userList}" varStatus="loops">
+        <c:forEach var="user" items="${userList}" varStatus="loop">
             <tr>
-                <td>${loops.count}</td>
+                <td>${loop.count}</td>
+
+                <!-- Role Badge -->
                 <td>
-                    <span class="badge
-                        ${user.role eq 'ADMIN' ? 'bg-danger' :
-                          (user.role eq 'STAFF' ? 'bg-primary' : 'bg-success')}">
-                            ${user.role}
-                    </span>
+                    <c:choose>
+                        <c:when test="${user.role eq 'STAFF'}">
+                            <span class="badge bg-primary">Nhân viên</span>
+                        </c:when>
+                        <c:when test="${user.role eq 'CUSTOMER'}">
+                            <span class="badge bg-success">Khách hàng</span>
+                        </c:when>
+                        <c:otherwise>
+                            <span class="badge bg-danger">${user.role}</span>
+                        </c:otherwise>
+                    </c:choose>
                 </td>
+
                 <td>${user.name}</td>
                 <td>${user.email}</td>
                 <td>${user.phone}</td>
@@ -65,17 +71,30 @@
                         <c:otherwise>-</c:otherwise>
                     </c:choose>
                 </td>
+
+                <!-- Status Badge -->
                 <td>
-                    <span class="badge ${user.active ? 'bg-success' : 'bg-secondary'}">
-                            ${user.active ? 'Hoạt động' : 'Bị khóa'}
-                    </span>
+                    <c:choose>
+                        <c:when test="${user.active}">
+                            <span class="badge bg-success">Hoạt động</span>
+                        </c:when>
+                        <c:otherwise>
+                            <span class="badge bg-secondary">Bị khóa</span>
+                        </c:otherwise>
+                    </c:choose>
                 </td>
+
+                <!-- Action Buttons -->
                 <td>
+                    <!-- Update Button -->
                     <a href="${pageContext.request.contextPath}/Admin/update-user?id=${user.userId}"
                        class="btn btn-sm btn-warning" title="Cập nhật">
                         <i class="fas fa-edit"></i>
                     </a>
 
+
+
+                    <!-- Delete Form -->
                     <form action="${pageContext.request.contextPath}/Admin/delete-user"
                           method="post" style="display:inline;">
                         <input type="hidden" name="id" value="${user.userId}">
@@ -97,7 +116,6 @@
         </div>
     </c:if>
 </div>
-
 
 
 

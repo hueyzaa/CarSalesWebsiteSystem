@@ -11,9 +11,10 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Thêm xe mới</title>
+    <title>Thêm hãng xe mới</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
     <style>
         body {
             background-color: #0f0f0f;
@@ -28,28 +29,35 @@
             padding: 30px;
             max-width: 900px;
             margin: auto;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
         }
 
         .card h3 {
             color: #ffd700;
             margin-bottom: 25px;
             text-align: center;
+            font-weight: 700;
         }
 
         .form-label {
-            color: #ddd;
+            color: #ffd700;
+            font-size: 18px;
+            font-weight: 600;
         }
 
-        .form-control, .form-select {
+        .form-control {
             background-color: #2a2a2a;
             color: #fff;
-            border: 1px solid #444;
+            border: 2px solid #444;
+            padding: 14px 18px;
+            font-size: 18px;
+            border-radius: 10px;
+            transition: all 0.2s ease-in-out;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus {
             border-color: #ffd700;
-            box-shadow: 0 0 6px #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
         }
 
         .btn-primary {
@@ -57,90 +65,52 @@
             border: none;
             color: #000;
             font-weight: bold;
+            padding: 10px 30px;
+            border-radius: 10px;
+            font-size: 18px;
         }
 
         .btn-primary:hover {
             background-color: #e5c100;
         }
 
-        .btn-secondary {
-            background-color: #444;
-            border: none;
-        }
-
-        .btn-secondary:hover {
-            background-color: #555;
-        }
-
-        .image-input-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .image-input-row input[type="radio"] {
-            accent-color: #ffd700;
-        }
-
         .alert {
-            text-align: center;
+            font-size: 17px;
             font-weight: bold;
         }
-
     </style>
 </head>
+
 <body>
 
 <div class="card">
     <h3><i class="fas fa-plus-circle"></i> Thêm Hãng Xe Mới</h3>
 
     <c:if test="${not empty error}">
-        <div class="alert alert-danger">${error}</div>
+        <div class="alert alert-danger text-center">${error}</div>
     </c:if>
 
     <form method="post" action="${pageContext.request.contextPath}/Admin/add-brand">
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label class="form-label">Hãng xe</label>
-                <select name="brandId" class="form-select" required>
-                    <c:forEach var="brand" items="${brandList}">
-                        <option value="${brand.brandId}">${brand.brandName}</option>
-                    </c:forEach>
-                </select>
-            </div>
+
+        <div class="mb-4">
+            <label class="form-label">Tên hãng xe</label>
+            <input type="text"
+                   name="brandName"
+                   class="form-control"
+                   placeholder="Ví dụ: Honda, Yamaha, Suzuki..."
+                   value="${brandName}"
+                   required>
         </div>
-        <div class="text-center">
-            <button type="submit" id="btnBackToDashboard" class="btn btn-primary px-4">
-                <i class="fas fa-save"></i> Thêm hãng xe
+
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Thêm Hãng Xe
             </button>
         </div>
+
     </form>
 </div>
-<script>
-
-    document.getElementById("addImageBtn").addEventListener("click", function () {
-        const container = document.getElementById("imageContainer");
-        const index = container.querySelectorAll(".image-input-row").length;
-        const div = document.createElement("div");
-        div.className = "image-input-row";
-        div.innerHTML = `
-            <input type="text" name="imageUrls" class="form-control" placeholder="Nhập link ảnh...">
-            <label><input type="radio" name="primaryImage" value="${index}"> Ảnh chính</label>
-        `;
-        container.appendChild(div);
-    });
-
-    document.getElementById("btnBackToDashboard").addEventListener("click",function () {
-        if(window.parent && window.parent.document.getElementById("adminDynamicContent")) {
-            const overview = window.parent.document.getElementById("overviewSection");
-            dynamicContent.style.display = "none";
-            overview.style.display = "block";
-        } else {
-            window.location.href = "${pageContext.request.contextPath}/Admin/dashboard";
-        }
-    });
-</script>
 </body>
 </html>
+
 
