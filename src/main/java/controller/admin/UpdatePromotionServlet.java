@@ -90,7 +90,7 @@ public class UpdatePromotionServlet extends HttpServlet {
             if (success) {
                 logger.info("Updated promotion {} successfully", id);
                 request.getSession().setAttribute("success", "Cập nhật khuyến mãi thành công!");
-                response.sendRedirect(request.getContextPath() + "/Admin/promotion-list");
+                response.sendRedirect(request.getContextPath() + "/Admin/dashboard");
             } else {
                 logger.warn("Failed to update promotion {}", id);
                 request.setAttribute("error", "Không thể cập nhật khuyến mãi.");

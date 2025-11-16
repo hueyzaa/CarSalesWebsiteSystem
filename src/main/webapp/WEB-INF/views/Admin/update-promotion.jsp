@@ -127,7 +127,7 @@
             <button type="submit" class="btn btn-primary px-4 me-2">
                 <i class="fas fa-save"></i> Lưu thay đổi
             </button>
-            <a href="${pageContext.request.contextPath}/Admin/promotion-list" class="btn btn-secondary px-4">
+            <a href="${pageContext.request.contextPath}/Admin/dashboard" class="btn btn-secondary px-4">
                 <i class="fas fa-arrow-left"></i> Quay lại
             </a>
         </div>
