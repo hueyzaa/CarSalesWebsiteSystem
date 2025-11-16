@@ -314,9 +314,6 @@ public class TransactionDAO {
         }
     }
 
-    /**
-     * Lấy lịch sử giao dịch của khách hàng (dành cho staff)
-     */
     public List<TransactionCustomerHistory> getTransactionCustomerHistory() {
         List<TransactionCustomerHistory> list = new ArrayList<>();
 
